@@ -33,6 +33,18 @@ export const intakeSubmissions = pgTable('intake_submissions', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+export const memberCodes = pgTable('member_codes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  code: text('code').notNull(),
+  usedBy: uuid('used_by').references(() => members.id),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type MemberCode = typeof memberCodes.$inferSelect
+export type NewMemberCode = typeof memberCodes.$inferInsert
+
 // append-only, never deleted, legal record of acceptance
 export const termsAcceptances = pgTable('terms_acceptances', {
   id: uuid('id').primaryKey().defaultRandom(),
