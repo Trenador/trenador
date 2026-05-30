@@ -1,3 +1,4 @@
+import { after } from 'next/server'
 import { z } from 'zod'
 import { Redis } from '@upstash/redis'
 import { eq, and, desc } from 'drizzle-orm'
@@ -6,6 +7,7 @@ import { db } from '@/db'
 import { members, intakeSubmissions, threads, messages as chatMessages } from '@/db/schema'
 import { anthropic } from '@/lib/ai/client'
 import { buildSystemPrompt, buildMessages } from '@/lib/ai/prompt'
+import { generateThreadTitle } from '@/lib/ai/titler'
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -84,6 +86,13 @@ export async function POST(request: Request) {
     .orderBy(desc(chatMessages.createdAt))
     .limit(HISTORY_LIMIT)
   history.reverse()
+
+  // schedule auto-title after the 2nd user message (thread has no title yet)
+  const priorUserMessages = history.filter((m) => m.role === 'user')
+  if (!thread.title && priorUserMessages.length === 1) {
+    const firstUserContent = priorUserMessages[0]!.content
+    after(() => generateThreadTitle(threadId, firstUserContent, content))
+  }
 
   // 8. save user message
   const [savedUserMsg] = await db

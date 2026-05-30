@@ -20,5 +20,5 @@ export async function GET(request: NextRequest) {
     await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
   }
 
-  return NextResponse.redirect(`${origin}/home`)
+  return NextResponse.redirect(`${origin}/chat`)
 }
