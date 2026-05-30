@@ -27,19 +27,20 @@ export default function VerifyMemberPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="flex min-h-screen items-center justify-center px-6">
+      <div className="w-full max-w-sm space-y-8">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">verify your membership</h1>
+          <p className="label-mono normal-case tracking-wide">Powerhouse Gym</p>
+          <h1 className="text-3xl font-bold tracking-tight mt-2">Verify membership</h1>
           <p className="text-sm text-muted-foreground">
-            enter the member code from your gym welcome email or front desk
+            Enter the member code from your gym welcome email or front desk.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label htmlFor="code" className="text-sm font-medium">
-              member code
+              Member code
             </label>
             <input
               id="code"
@@ -47,7 +48,7 @@ export default function VerifyMemberPage() {
               type="text"
               required
               autoComplete="off"
-              className="w-full rounded-md border px-3 py-2 text-sm uppercase tracking-widest outline-none focus:ring-2 focus:ring-ring"
+              className="w-full h-11 rounded-xl border bg-background px-3 text-sm uppercase tracking-widest outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground placeholder:normal-case placeholder:tracking-normal"
               placeholder="PHC-XXXX-XXXX"
             />
           </div>
@@ -57,9 +58,9 @@ export default function VerifyMemberPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            className="w-full h-11 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {loading ? 'verifying...' : 'verify membership'}
+            {loading ? 'Verifying…' : 'Verify membership'}
           </button>
         </form>
       </div>

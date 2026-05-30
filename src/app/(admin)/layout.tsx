@@ -31,21 +31,24 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-56 shrink-0 border-r bg-muted/40 p-6 flex flex-col gap-1">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-          admin
-        </p>
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            {item.label}
-          </Link>
-        ))}
+      <aside className="w-56 shrink-0 border-r bg-sidebar flex flex-col">
+        <div className="h-[60px] flex items-center px-5 border-b">
+          <span className="text-sm font-bold tracking-tight text-sidebar-foreground">Trenador</span>
+          <span className="ml-2 label-mono normal-case tracking-wide text-[10px]">admin</span>
+        </div>
+        <nav className="flex-1 px-3 py-4 space-y-px">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center rounded-md px-3 py-2 text-[13px] text-sidebar-foreground hover:bg-foreground/[0.04] transition-colors capitalize"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       </aside>
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 overflow-auto">
         {children}
       </main>
     </div>

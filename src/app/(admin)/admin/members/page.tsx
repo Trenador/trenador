@@ -14,70 +14,56 @@ export default async function AdminMembersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">members</h1>
-        <p className="text-sm text-muted-foreground">{allMembers.length} total</p>
+        <h1 className="text-xl font-semibold tracking-tight">Members</h1>
+        <p className="label-mono normal-case tracking-wide">{allMembers.length} total</p>
       </div>
 
-      <div className="rounded-lg border overflow-hidden">
+      <div className="rounded-xl border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50">
+          <thead className="bg-muted/40">
             <tr>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">name</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">joined</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">verified</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">suspended</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">actions</th>
+              {['Name', 'Joined', 'Verified', 'Status', 'Actions'].map((h) => (
+                <th key={h} className="px-4 py-3 text-left text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y">
             {allMembers.map((member) => (
-              <tr key={member.id} className="hover:bg-muted/20">
-                <td className="px-4 py-3 font-medium">{member.displayName}</td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {new Date(member.createdAt).toLocaleDateString()}
+              <tr key={member.id} className="hover:bg-muted/20 transition-colors">
+                <td className="px-4 py-3 font-medium text-[13px]">{member.displayName}</td>
+                <td className="px-4 py-3 text-[13px] text-muted-foreground">
+                  {new Date(member.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                 </td>
                 <td className="px-4 py-3">
                   {member.memberVerifiedAt ? (
-                    <span className="text-green-600 font-medium">verified</span>
+                    <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Verified</span>
                   ) : (
-                    <span className="text-muted-foreground">unverified</span>
+                    <span className="text-xs text-muted-foreground">Unverified</span>
                   )}
                 </td>
                 <td className="px-4 py-3">
                   {member.suspendedAt ? (
-                    <span className="text-destructive font-medium">suspended</span>
+                    <span className="text-xs font-medium text-destructive bg-destructive/10 px-2 py-0.5 rounded-full">Suspended</span>
                   ) : (
-                    <span className="text-muted-foreground">active</span>
+                    <span className="text-xs text-muted-foreground">Active</span>
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <form action={toggleMemberVerified}>
                       <input type="hidden" name="memberId" value={member.id} />
-                      <input
-                        type="hidden"
-                        name="verified"
-                        value={member.memberVerifiedAt ? 'true' : 'false'}
-                      />
-                      <button
-                        type="submit"
-                        className="text-xs underline underline-offset-2 hover:text-foreground text-muted-foreground"
-                      >
-                        {member.memberVerifiedAt ? 'unverify' : 'verify'}
+                      <input type="hidden" name="verified" value={member.memberVerifiedAt ? 'true' : 'false'} />
+                      <button type="submit" className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors">
+                        {member.memberVerifiedAt ? 'Unverify' : 'Verify'}
                       </button>
                     </form>
                     <form action={toggleMemberSuspended}>
                       <input type="hidden" name="memberId" value={member.id} />
-                      <input
-                        type="hidden"
-                        name="suspended"
-                        value={member.suspendedAt ? 'true' : 'false'}
-                      />
-                      <button
-                        type="submit"
-                        className="text-xs underline underline-offset-2 hover:text-foreground text-muted-foreground"
-                      >
-                        {member.suspendedAt ? 'unsuspend' : 'suspend'}
+                      <input type="hidden" name="suspended" value={member.suspendedAt ? 'true' : 'false'} />
+                      <button type="submit" className="text-xs text-muted-foreground hover:text-destructive underline underline-offset-2 transition-colors">
+                        {member.suspendedAt ? 'Unsuspend' : 'Suspend'}
                       </button>
                     </form>
                   </div>

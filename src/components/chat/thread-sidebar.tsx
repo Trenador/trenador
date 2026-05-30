@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Plus, Trash2, MessageSquare, PanelLeft, Inbox } from 'lucide-react'
+import { Plus, Trash2, PanelLeft, Inbox, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { deleteThread } from '@/actions/chat'
+import { createClient } from '@/lib/supabase/client'
 
 type ThreadItem = {
   id: string
@@ -19,18 +20,25 @@ type Props = {
   initialThreads: ThreadItem[]
 }
 
+function dateBucket(date: Date | null): string {
+  if (!date) return 'Older'
+  const diffDays = (Date.now() - new Date(date).getTime()) / 86_400_000
+  if (diffDays < 1) return 'Today'
+  if (diffDays < 7) return 'Last 7 days'
+  if (diffDays < 30) return 'Last 30 days'
+  return 'Older'
+}
+
 function relativeTime(date: Date | null): string {
   if (!date) return ''
-  const diff = Date.now() - new Date(date).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  if (days < 7) return `${days}d ago`
-  return new Date(date).toLocaleDateString()
+  const d = new Date(date)
+  const now = new Date()
+  const sameDay = d.toDateString() === now.toDateString()
+  if (sameDay) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
+
+const BUCKET_ORDER = ['Today', 'Last 7 days', 'Last 30 days', 'Older']
 
 export function ThreadSidebar({ initialThreads }: Props) {
   const pathname = usePathname()
@@ -39,7 +47,6 @@ export function ThreadSidebar({ initialThreads }: Props) {
   const [collapsed, setCollapsed] = useState(false)
   const [, startTransition] = useTransition()
 
-  // when the server re-renders (e.g. after router.refresh()), sync the new thread list
   const prevRef = useRef(initialThreads)
   useEffect(() => {
     if (prevRef.current !== initialThreads) {
@@ -58,6 +65,19 @@ export function ThreadSidebar({ initialThreads }: Props) {
     })
   }
 
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
+  // group threads into date buckets
+  const grouped = threads.reduce<Record<string, ThreadItem[]>>((acc, t) => {
+    const key = dateBucket(t.lastMessageAt ?? t.createdAt)
+    ;(acc[key] ??= []).push(t)
+    return acc
+  }, {})
+
   return (
     <aside
       className={cn(
@@ -66,34 +86,34 @@ export function ThreadSidebar({ initialThreads }: Props) {
       )}
     >
       {/* header */}
-      <div className={cn('flex items-center h-14 px-2 border-b gap-1', !collapsed && 'px-3')}>
+      <div className={cn('flex items-center h-[60px] px-2 border-b gap-1', !collapsed && 'px-3')}>
         {!collapsed && (
           <Link
             href="/chat"
-            className="flex-1 text-sm font-semibold text-sidebar-foreground truncate px-1"
+            className="flex-1 text-sm font-bold text-sidebar-foreground truncate px-1 tracking-tight"
           >
-            Trenador AI
+            Trenador
           </Link>
         )}
         <Button
           variant="ghost"
           size="icon-sm"
           onClick={() => setCollapsed(!collapsed)}
-          className="shrink-0 text-sidebar-foreground"
+          className="shrink-0 text-muted-foreground hover:text-foreground"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <PanelLeft className="size-4" />
         </Button>
       </div>
 
-      {/* new chat button */}
-      <div className={cn('p-2', !collapsed && 'px-3')}>
+      {/* new chat */}
+      <div className={cn('p-2', !collapsed && 'px-3 pt-3')}>
         <Link href="/chat">
           <Button
-            variant="ghost"
+            variant="outline"
             size={collapsed ? 'icon-sm' : 'sm'}
             className={cn(
-              'w-full text-sidebar-foreground',
+              'w-full border-border/80 bg-background/60 font-normal text-foreground hover:bg-foreground/[0.06]',
               !collapsed && 'justify-start gap-2',
             )}
           >
@@ -105,46 +125,57 @@ export function ThreadSidebar({ initialThreads }: Props) {
 
       {/* thread list — expanded */}
       {!collapsed && (
-        <nav className="flex-1 overflow-y-auto px-2 pb-4 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto px-2 pb-4 mt-2">
           {threads.length === 0 ? (
-            <p className="text-xs text-muted-foreground px-2 py-6 text-center">
+            <p className="text-xs text-muted-foreground px-3 py-6 text-center">
               No conversations yet
             </p>
           ) : (
-            threads.map((thread) => {
-              const isActive = pathname === `/chat/${thread.id}`
-              return (
-                <Link
-                  key={thread.id}
-                  href={`/chat/${thread.id}`}
-                  className={cn(
-                    'group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground',
-                    'hover:bg-sidebar-accent transition-colors',
-                    isActive && 'bg-sidebar-accent',
-                  )}
-                >
-                  <MessageSquare className="size-3.5 shrink-0 text-muted-foreground" />
-                  <span className="flex-1 truncate">
-                    {thread.title ?? 'New conversation'}
-                  </span>
-                  <span className="text-xs text-muted-foreground shrink-0 group-hover:hidden">
-                    {relativeTime(thread.lastMessageAt ?? thread.createdAt)}
-                  </span>
-                  <button
-                    onClick={(e) => handleDelete(e, thread.id)}
-                    className="hidden group-hover:flex items-center justify-center size-5 rounded hover:text-destructive shrink-0"
-                    aria-label="Delete thread"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
-                </Link>
-              )
-            })
+            BUCKET_ORDER.filter((b) => grouped[b]?.length).map((bucket) => (
+              <div key={bucket} className="mb-4">
+                <div className="label-mono px-3 pb-2 pt-1">{bucket}</div>
+                <div className="space-y-px">
+                  {grouped[bucket]!.map((thread) => {
+                    const isActive = pathname === `/chat/${thread.id}`
+                    const title = thread.title ?? 'New conversation'
+                    const truncated = title.length > 24 ? title.slice(0, 24) + '…' : title
+                    return (
+                      <Link
+                        key={thread.id}
+                        href={`/chat/${thread.id}`}
+                        className={cn(
+                          'group flex items-start gap-2 rounded-md px-3 py-2 cursor-pointer',
+                          isActive
+                            ? 'bg-foreground/[0.06]'
+                            : 'hover:bg-foreground/[0.04]',
+                        )}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-[13px] font-medium leading-tight text-sidebar-foreground">
+                            {truncated}
+                          </div>
+                          <div className="label-mono normal-case tracking-[0.08em] mt-1">
+                            {relativeTime(thread.lastMessageAt ?? thread.createdAt)}
+                          </div>
+                        </div>
+                        <button
+                          onClick={(e) => handleDelete(e, thread.id)}
+                          className="mt-0.5 rounded p-1 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
+                          aria-label="Delete"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            ))
           )}
         </nav>
       )}
 
-      {/* thread list — collapsed (icons only) */}
+      {/* collapsed icon list */}
       {collapsed && (
         <nav className="flex-1 overflow-y-auto py-2 flex flex-col items-center gap-0.5">
           {threads.map((thread) => {
@@ -155,33 +186,48 @@ export function ThreadSidebar({ initialThreads }: Props) {
                 href={`/chat/${thread.id}`}
                 title={thread.title ?? 'New conversation'}
                 className={cn(
-                  'flex items-center justify-center size-8 rounded-md hover:bg-sidebar-accent transition-colors',
-                  isActive && 'bg-sidebar-accent',
+                  'flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-sidebar-accent transition-colors text-xs font-medium',
+                  isActive && 'bg-sidebar-accent text-foreground',
                 )}
               >
-                <MessageSquare className="size-4 text-muted-foreground" />
+                {(thread.title ?? 'N')[0]?.toUpperCase()}
               </Link>
             )
           })}
         </nav>
       )}
 
-      {/* coach inbox link — bottom of sidebar */}
-      <div className={cn('border-t p-2', !collapsed && 'px-3')}>
+      {/* coach inbox */}
+      <div className={cn('px-2', !collapsed && 'px-3')}>
         <Link href="/messages">
           <Button
             variant="ghost"
             size={collapsed ? 'icon-sm' : 'sm'}
             className={cn(
-              'w-full text-sidebar-foreground',
+              'w-full text-muted-foreground hover:text-foreground',
               !collapsed && 'justify-start gap-2',
-              pathname === '/messages' && 'bg-sidebar-accent',
+              pathname === '/messages' && 'bg-sidebar-accent text-foreground',
             )}
           >
             <Inbox className="size-4" />
             {!collapsed && 'Coach Inbox'}
           </Button>
         </Link>
+      </div>
+
+      {/* user menu */}
+      <div className={cn('border-t mt-1', collapsed ? 'p-2' : 'px-3 py-3')}>
+        <button
+          onClick={handleSignOut}
+          className={cn(
+            'flex w-full items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04] transition-colors',
+            collapsed && 'justify-center px-0',
+          )}
+          aria-label="Sign out"
+        >
+          <LogOut className="size-4 shrink-0" />
+          {!collapsed && 'Sign out'}
+        </button>
       </div>
     </aside>
   )

@@ -12,6 +12,13 @@ const STARTER_PROMPTS = [
   'How do I recover faster between sessions?',
 ]
 
+function getGreeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 18) return 'Good afternoon'
+  return 'Good evening'
+}
+
 export default function ChatWelcomePage() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -24,25 +31,30 @@ export default function ChatWelcomePage() {
   }
 
   return (
-    <div className="flex flex-col h-full items-center justify-center gap-8 px-4">
+    <div className="flex flex-col h-full items-center justify-center gap-10 px-4">
+      {/* greeting */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Trenador AI</h1>
-        <p className="text-sm text-muted-foreground">Your personal fitness guide</p>
+        <h1 className="font-serif text-5xl leading-tight tracking-wide">
+          {getGreeting()}
+        </h1>
+        <p className="label-mono">How may I be of service?</p>
       </div>
 
+      {/* starter prompts */}
       <div className="flex flex-wrap justify-center gap-2 max-w-xl">
         {STARTER_PROMPTS.map((prompt) => (
           <button
             key={prompt}
             onClick={() => handleSubmit(prompt)}
             disabled={isPending}
-            className="rounded-full border px-4 py-2 text-sm hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
+            className="rounded-full border border-border px-4 py-2 text-sm hover:bg-muted transition-colors disabled:opacity-50 cursor-pointer"
           >
             {prompt}
           </button>
         ))}
       </div>
 
+      {/* composer */}
       <div className="w-full max-w-2xl">
         <Composer onSubmit={handleSubmit} disabled={isPending} />
       </div>
