@@ -23,7 +23,7 @@ export default function IntakePage() {
       return
     }
 
-    router.push('/home')
+    router.push('/subscribe')
   }
 
   return (

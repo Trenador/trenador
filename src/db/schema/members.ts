@@ -13,6 +13,10 @@ export const members = pgTable('members', {
   memberVerifiedAt: timestamp('member_verified_at', { withTimezone: true }),
   suspendedAt: timestamp('suspended_at', { withTimezone: true }),
   isAdmin: boolean('is_admin').notNull().default(false),
+  // stripe
+  stripeCustomerId: text('stripe_customer_id').unique(),
+  // 'inactive' | 'active' | 'canceled' | 'past_due'
+  subscriptionStatus: text('subscription_status').notNull().default('inactive'),
   // reserved for future ABC Fitness integration
   externalMemberId: text('external_member_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

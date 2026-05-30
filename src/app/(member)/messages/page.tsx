@@ -1,7 +1,9 @@
 import { getCoachConversation } from '@/actions/messages'
 import { CoachConversation } from '@/components/messages/coach-conversation'
+import { requireActiveSubscription } from '@/lib/subscription'
 
 export default async function MessagesPage() {
+  await requireActiveSubscription()
   const messages = await getCoachConversation()
 
   return (
