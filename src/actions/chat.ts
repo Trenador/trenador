@@ -1,10 +1,11 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { eq, desc, and, isNull } from 'drizzle-orm'
+import { eq, desc, asc, and, isNull } from 'drizzle-orm'
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/db'
-import { members, threads } from '@/db/schema'
+import { members, threads, messages as chatMessages } from '@/db/schema'
+import type { Message } from '@/db/schema'
 import { APP_CONFIG } from '@/lib/config'
 
 async function getAuthenticatedMember() {
@@ -70,4 +71,23 @@ export async function deleteThread(threadId: string) {
         eq(threads.memberId, member.id),
       ),
     )
+}
+
+export async function getMessages(threadId: string): Promise<Message[] | null> {
+  const member = await getAuthenticatedMember()
+
+  // verify the thread belongs to this member
+  const [thread] = await db
+    .select({ id: threads.id })
+    .from(threads)
+    .where(and(eq(threads.id, threadId), eq(threads.memberId, member.id)))
+    .limit(1)
+
+  if (!thread) return null
+
+  return db
+    .select()
+    .from(chatMessages)
+    .where(eq(chatMessages.threadId, threadId))
+    .orderBy(asc(chatMessages.createdAt))
 }
