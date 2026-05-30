@@ -7,6 +7,7 @@ import Link from 'next/link'
 
 const navItems = [
   { label: 'members', href: '/admin/members' },
+  { label: 'messages', href: '/admin/messages' },
   { label: 'coaches', href: '/admin/coaches' },
   { label: 'workouts', href: '/admin/workouts' },
   { label: 'knowledge base', href: '/admin/knowledge-base' },
@@ -26,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .where(eq(members.authUserId, user.id))
     .limit(1)
 
-  if (!member?.isAdmin) redirect('/home')
+  if (!member?.isAdmin) redirect('/chat')
 
   return (
     <div className="flex min-h-screen">

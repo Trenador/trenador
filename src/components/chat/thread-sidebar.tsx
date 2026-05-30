@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Plus, Trash2, MessageSquare, PanelLeft } from 'lucide-react'
+import { Plus, Trash2, MessageSquare, PanelLeft, Inbox } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { deleteThread } from '@/actions/chat'
@@ -165,6 +165,24 @@ export function ThreadSidebar({ initialThreads }: Props) {
           })}
         </nav>
       )}
+
+      {/* coach inbox link — bottom of sidebar */}
+      <div className={cn('border-t p-2', !collapsed && 'px-3')}>
+        <Link href="/messages">
+          <Button
+            variant="ghost"
+            size={collapsed ? 'icon-sm' : 'sm'}
+            className={cn(
+              'w-full text-sidebar-foreground',
+              !collapsed && 'justify-start gap-2',
+              pathname === '/messages' && 'bg-sidebar-accent',
+            )}
+          >
+            <Inbox className="size-4" />
+            {!collapsed && 'Coach Inbox'}
+          </Button>
+        </Link>
+      </div>
     </aside>
   )
 }
