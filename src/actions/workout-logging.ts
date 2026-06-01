@@ -49,14 +49,11 @@ export async function seedLogSessionAction(source: SeedSource) {
 
 // saving a log is a write — requires active subscription
 export async function saveWorkoutLogAction(input: {
-  workoutType?: string
-  durationMinutes?: number
-  energyPre?: number
-  energyPost?: number
-  notes?: string
-  sourceWorkoutId?: string
-  sourceMemberWorkoutId?: string
-  loggedAt?: Date
+  workoutType: string | undefined
+  durationMinutes: number | undefined
+  notes: string | undefined
+  sourceWorkoutId: string | undefined
+  sourceMemberWorkoutId: string | undefined
   exercises: LogExerciseInput[]
 }) {
   const member = await getAuthenticatedMember()

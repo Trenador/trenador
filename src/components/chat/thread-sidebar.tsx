@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Plus, Trash2, PanelLeft, Inbox, LogOut } from 'lucide-react'
+import { Plus, Trash2, PanelLeft, Inbox, LogOut, Dumbbell, BookOpen, ClipboardList, History } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { deleteThread } from '@/actions/chat'
@@ -196,6 +196,32 @@ export function ThreadSidebar({ initialThreads }: Props) {
           })}
         </nav>
       )}
+
+      {/* training nav */}
+      <div className={cn('border-t pt-2 pb-1', collapsed ? 'px-2' : 'px-3')}>
+        {!collapsed && <div className="label-mono px-1 pb-2">Training</div>}
+        {[
+          { href: '/workouts', icon: Dumbbell, label: 'Workout Library' },
+          { href: '/workouts/mine', icon: BookOpen, label: 'My Workouts' },
+          { href: '/log', icon: ClipboardList, label: 'Log Workout' },
+          { href: '/log/history', icon: History, label: 'History' },
+        ].map(({ href, icon: Icon, label }) => (
+          <Link key={href} href={href}>
+            <Button
+              variant="ghost"
+              size={collapsed ? 'icon-sm' : 'sm'}
+              className={cn(
+                'w-full text-muted-foreground hover:text-foreground',
+                !collapsed && 'justify-start gap-2',
+                pathname.startsWith(href) && 'bg-sidebar-accent text-foreground',
+              )}
+            >
+              <Icon className="size-4" />
+              {!collapsed && label}
+            </Button>
+          </Link>
+        ))}
+      </div>
 
       {/* coach inbox */}
       <div className={cn('px-2', !collapsed && 'px-3')}>

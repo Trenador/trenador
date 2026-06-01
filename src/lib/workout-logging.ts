@@ -20,19 +20,19 @@ export type SeedSource =
   | { type: 'member_workout'; workoutId: string }
 
 export type LogExerciseInput = {
-  exerciseId?: string
+  exerciseId: string | undefined
   exerciseName: string
   orderIndex: number
-  notes?: string
+  notes: string | undefined
   sets: Array<{
     setNumber: number
-    reps?: number
-    weightKg?: number
-    durationSeconds?: number
-    distanceMeters?: number
-    rpe?: number
-    isWarmup?: boolean
-    notes?: string
+    reps: number | undefined
+    weightKg: number | undefined
+    durationSeconds: number | undefined
+    distanceMeters: number | undefined
+    rpe: number | undefined
+    isWarmup: boolean | undefined
+    notes: string | undefined
   }>
 }
 
@@ -144,14 +144,11 @@ export async function seedLogSession(source: SeedSource): Promise<{
 export async function saveWorkoutLog(
   memberId: string,
   input: {
-    workoutType?: string
-    durationMinutes?: number
-    energyPre?: number
-    energyPost?: number
-    notes?: string
-    sourceWorkoutId?: string
-    sourceMemberWorkoutId?: string
-    loggedAt?: Date
+    workoutType: string | undefined
+    durationMinutes: number | undefined
+    notes: string | undefined
+    sourceWorkoutId: string | undefined
+    sourceMemberWorkoutId: string | undefined
     exercises: LogExerciseInput[]
   }
 ) {
@@ -160,14 +157,12 @@ export async function saveWorkoutLog(
     .values({
       tenantId: APP_CONFIG.tenantId,
       memberId,
-      workoutType: input.workoutType ?? undefined,
-      durationMinutes: input.durationMinutes ?? undefined,
-      energyPre: input.energyPre ?? undefined,
-      energyPost: input.energyPost ?? undefined,
-      notes: input.notes ?? undefined,
-      sourceWorkoutId: input.sourceWorkoutId ?? undefined,
-      sourceMemberWorkoutId: input.sourceMemberWorkoutId ?? undefined,
-      loggedAt: input.loggedAt ?? new Date(),
+      workoutType: input.workoutType,
+      durationMinutes: input.durationMinutes,
+      notes: input.notes,
+      sourceWorkoutId: input.sourceWorkoutId,
+      sourceMemberWorkoutId: input.sourceMemberWorkoutId,
+      loggedAt: new Date(),
     } satisfies NewWorkoutLog)
     .returning()
 
