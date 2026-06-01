@@ -1,5 +1,5 @@
 import 'server-only'
-import { eq, and, isNull, isNotNull, gte, desc, sql } from 'drizzle-orm'
+import { eq, and, isNull, isNotNull, gte, desc, sql, inArray } from 'drizzle-orm'
 import { db } from '@/db'
 import {
   workoutLogs,
@@ -222,6 +222,7 @@ export async function getWorkoutLogHistory(memberId: string) {
       )
     )
     .orderBy(desc(workoutLogs.loggedAt))
+    .limit(100)
 }
 
 export async function getWorkoutLogDetail(memberId: string, logId: string) {
@@ -245,16 +246,26 @@ export async function getWorkoutLogDetail(memberId: string, logId: string) {
     .where(eq(workoutLogExercises.workoutLogId, logId))
     .orderBy(workoutLogExercises.orderIndex)
 
-  const exercisesWithSets = await Promise.all(
-    exercises.map(async exercise => {
-      const sets = await db
+  const exerciseIds = exercises.map(e => e.id)
+  const allSets = exerciseIds.length > 0
+    ? await db
         .select()
         .from(workoutLogSets)
-        .where(eq(workoutLogSets.workoutLogExerciseId, exercise.id))
+        .where(inArray(workoutLogSets.workoutLogExerciseId, exerciseIds))
         .orderBy(workoutLogSets.setNumber)
-      return { ...exercise, sets }
-    })
-  )
+    : []
+
+  const setsByExercise = new Map<string, typeof allSets>()
+  for (const set of allSets) {
+    const bucket = setsByExercise.get(set.workoutLogExerciseId) ?? []
+    bucket.push(set)
+    setsByExercise.set(set.workoutLogExerciseId, bucket)
+  }
+
+  const exercisesWithSets = exercises.map(exercise => ({
+    ...exercise,
+    sets: setsByExercise.get(exercise.id) ?? [],
+  }))
 
   return { ...log, exercises: exercisesWithSets }
 }

@@ -6,10 +6,17 @@ import { toggleMemberVerified, toggleMemberSuspended } from '@/actions/admin'
 
 export default async function AdminMembersPage() {
   const allMembers = await db
-    .select()
+    .select({
+      id: members.id,
+      displayName: members.displayName,
+      createdAt: members.createdAt,
+      memberVerifiedAt: members.memberVerifiedAt,
+      suspendedAt: members.suspendedAt,
+    })
     .from(members)
     .where(eq(members.tenantId, APP_CONFIG.tenantId))
     .orderBy(members.createdAt)
+    .limit(500)
 
   return (
     <div className="space-y-6">
