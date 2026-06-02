@@ -4,7 +4,7 @@ import { db } from '@/db'
 import { threads } from '@/db/schema'
 import { anthropic } from './client'
 
-const MODEL = 'claude-haiku-4-5-20251001'
+const MODEL = 'claude-haiku-4-5'
 
 // Called after the 2nd user message in a thread.
 // Generates a short title from the first two exchanges and saves it to the thread row.

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { db } from '@/db'
 import { members, intakeSubmissions, threads, messages as chatMessages } from '@/db/schema'
 import { anthropic } from '@/lib/ai/client'
-import { buildSystemPrompt, buildMessages } from '@/lib/ai/prompt'
+import { buildSystemBlocks, buildMessages } from '@/lib/ai/prompt'
 import { generateThreadTitle } from '@/lib/ai/titler'
 
 const redis = new Redis({
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
   }
 
   // 9. build prompt
-  const systemPrompt = buildSystemPrompt(latestIntake?.data ?? null)
+  const systemBlocks = buildSystemBlocks(latestIntake?.data ?? null)
   const anthropicMessages = buildMessages(history, content)
 
   // 10. stream
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
         const claudeStream = anthropic.messages.stream({
           model: MODEL,
           max_tokens: 1024,
-          system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+          system: systemBlocks,
           messages: anthropicMessages,
         })
 

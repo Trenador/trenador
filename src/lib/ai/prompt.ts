@@ -1,5 +1,5 @@
 import 'server-only'
-import type { MessageParam } from '@anthropic-ai/sdk/resources/messages'
+import type { MessageParam, TextBlockParam } from '@anthropic-ai/sdk/resources/messages'
 import type { Message } from '@/db/schema'
 import { TRENADOR_AI_SYSTEM_PROMPT } from './personas'
 
@@ -41,14 +41,24 @@ function formatMemberContext(data: IntakeData): string {
   return lines.join('\n')
 }
 
-// layers 1+2 (safety preamble + persona) are static and get a shared cache prefix
-// layer 4 (member context snapshot) is per-member and injected after the cached block
-export function buildSystemPrompt(intake: unknown | null): string {
-  const data = intake as IntakeData | null
-  if (!data) return TRENADOR_AI_SYSTEM_PROMPT
+// Returns two system blocks so the static persona can be cached globally across all members.
+// Block 1 (static): cache_control marks end of cacheable prefix — shared across every request.
+// Block 2 (per-member): member context appended without a cache marker.
+export function buildSystemBlocks(intake: unknown | null): TextBlockParam[] {
+  const staticBlock: TextBlockParam = {
+    type: 'text',
+    text: TRENADOR_AI_SYSTEM_PROMPT,
+    cache_control: { type: 'ephemeral' },
+  }
 
-  const context = formatMemberContext(data)
-  return `${TRENADOR_AI_SYSTEM_PROMPT}\n\n---\n\n${context}`
+  const data = intake as IntakeData | null
+  if (!data) return [staticBlock]
+
+  const memberBlock: TextBlockParam = {
+    type: 'text',
+    text: `---\n\n${formatMemberContext(data)}`,
+  }
+  return [staticBlock, memberBlock]
 }
 
 // converts DB message rows into the alternating user/assistant array Claude expects
