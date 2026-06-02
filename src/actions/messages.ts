@@ -62,6 +62,7 @@ export async function getCoachInbox() {
     .select()
     .from(coachMessages)
     .orderBy(desc(coachMessages.createdAt))
+    .limit(500)
 
   // group by memberId — latest message + unread member messages per thread
   const byMember = new Map<

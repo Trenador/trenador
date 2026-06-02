@@ -70,22 +70,19 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Thread not found' }, { status: 404 })
   }
 
-  // 6. latest intake
-  const [latestIntake] = await db
-    .select()
-    .from(intakeSubmissions)
-    .where(eq(intakeSubmissions.memberId, member.id))
-    .orderBy(desc(intakeSubmissions.createdAt))
-    .limit(1)
-
-  // 7. recent history (before the current message)
-  const history = await db
-    .select()
-    .from(chatMessages)
-    .where(eq(chatMessages.threadId, threadId))
-    .orderBy(desc(chatMessages.createdAt))
-    .limit(HISTORY_LIMIT)
-  history.reverse()
+  // 6+7. latest intake + recent history — independent, fetch in parallel
+  const [intakeRows, historyDesc] = await Promise.all([
+    db.select().from(intakeSubmissions)
+      .where(eq(intakeSubmissions.memberId, member.id))
+      .orderBy(desc(intakeSubmissions.createdAt))
+      .limit(1),
+    db.select().from(chatMessages)
+      .where(eq(chatMessages.threadId, threadId))
+      .orderBy(desc(chatMessages.createdAt))
+      .limit(HISTORY_LIMIT),
+  ])
+  const latestIntake = intakeRows[0]
+  const history = historyDesc.toReversed()
 
   // schedule auto-title after the 2nd user message (thread has no title yet)
   const priorUserMessages = history.filter((m) => m.role === 'user')
