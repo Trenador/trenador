@@ -89,14 +89,14 @@ export async function remixWorkout(memberId: string, sourceWorkoutId: string) {
 
   // deep-copy blocks into member_workout_exercises rows
   const exerciseRows: NewMemberWorkoutExercise[] = blocks.flatMap(block => {
-    const exercises = block.exercises as Array<{
+    const exercises = Array.isArray(block.exercises) ? block.exercises as Array<{
       name: string
       exerciseId?: string
       targetSets?: number
       targetReps?: number
       targetWeightKg?: number
       notes?: string
-    }>
+    }> : []
     return exercises.map((ex, idx) => ({
       memberWorkoutId: newWorkout.id,
       exerciseId: ex.exerciseId ?? undefined,

@@ -108,13 +108,13 @@ export async function seedLogSession(source: SeedSource): Promise<{
       .orderBy(workoutBlocks.dayIndex, workoutBlocks.orderIndex)
 
     const exercises = blocks.flatMap(block => {
-      const exList = block.exercises as Array<{
+      const exList = Array.isArray(block.exercises) ? block.exercises as Array<{
         name: string
         exerciseId?: string
         targetSets?: number
         targetReps?: number
         targetWeightKg?: number
-      }>
+      }> : []
       return exList.map(ex => ({
         name: ex.name,
         exerciseId: ex.exerciseId,

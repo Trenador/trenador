@@ -104,8 +104,8 @@ export async function submitIntake(formData: FormData) {
     tenantId: APP_CONFIG.tenantId,
     memberId: member.id,
     data,
-    goalPrimary: data.goal_primary as string,
-    locationPref: data.location_pref as string,
+    goalPrimary: data.goal_primary?.toString() ?? '',
+    locationPref: data.location_pref?.toString() ?? '',
   })
 
   return { success: true }
