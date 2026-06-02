@@ -1,7 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { eq, desc, and, isNull } from 'drizzle-orm'
+import { eq, desc, and, isNull, inArray } from 'drizzle-orm'
 import { db } from '@/db'
 import { members, coachMessages } from '@/db/schema'
 import { APP_CONFIG } from '@/lib/config'
@@ -86,11 +86,7 @@ export async function getCoachInbox() {
   const memberRows = await db
     .select({ id: members.id, displayName: members.displayName })
     .from(members)
-    .where(
-      memberIds.length === 1
-        ? eq(members.id, memberIds[0]!)
-        : eq(members.tenantId, APP_CONFIG.tenantId),
-    )
+    .where(inArray(members.id, memberIds))
 
   const memberMap = new Map(memberRows.map((m) => [m.id, m.displayName]))
 

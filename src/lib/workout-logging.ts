@@ -13,9 +13,17 @@ import {
 import { APP_CONFIG } from '@/lib/config'
 import type { NewWorkoutLog, NewWorkoutLogExercise, NewWorkoutLogSet } from '@/db/schema'
 
+// Internal type — memberId always resolved server-side before calling seedLogSession
 export type SeedSource =
   | { type: 'blank' }
   | { type: 'repeat_last'; memberId: string }
+  | { type: 'org_workout'; workoutId: string }
+  | { type: 'member_workout'; workoutId: string; memberId: string }
+
+// Client-facing type — memberId omitted, injected by the action layer
+export type SeedSourceInput =
+  | { type: 'blank' }
+  | { type: 'repeat_last' }
   | { type: 'org_workout'; workoutId: string }
   | { type: 'member_workout'; workoutId: string }
 
@@ -81,7 +89,14 @@ export async function seedLogSession(source: SeedSource): Promise<{
     const [workout] = await db
       .select({ title: workouts.title })
       .from(workouts)
-      .where(eq(workouts.id, source.workoutId))
+      .where(
+        and(
+          eq(workouts.id, source.workoutId),
+          eq(workouts.tenantId, APP_CONFIG.tenantId),
+          isNotNull(workouts.publishedAt),
+          isNull(workouts.deletedAt),
+        )
+      )
       .limit(1)
 
     if (!workout) return { title: 'New Workout', exercises: [], sourceWorkoutId: undefined, sourceMemberWorkoutId: undefined }
@@ -112,11 +127,17 @@ export async function seedLogSession(source: SeedSource): Promise<{
     return { title: workout.title, exercises, sourceWorkoutId: source.workoutId, sourceMemberWorkoutId: undefined }
   }
 
-  // member_workout
+  // member_workout — enforce ownership so members can't read each other's workouts
   const [workout] = await db
     .select({ title: memberWorkouts.title })
     .from(memberWorkouts)
-    .where(eq(memberWorkouts.id, source.workoutId))
+    .where(
+      and(
+        eq(memberWorkouts.id, source.workoutId),
+        eq(memberWorkouts.memberId, source.memberId),
+        isNull(memberWorkouts.deletedAt),
+      )
+    )
     .limit(1)
 
   if (!workout) return { title: 'New Workout', exercises: [], sourceWorkoutId: undefined, sourceMemberWorkoutId: undefined }

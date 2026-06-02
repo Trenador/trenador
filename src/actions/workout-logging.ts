@@ -6,20 +6,22 @@ import {
   saveWorkoutLog,
   getWorkoutLogHistory,
   getWorkoutLogDetail,
-  type SeedSource,
+  type SeedSourceInput,
   type LogExerciseInput,
 } from '@/lib/workout-logging'
 import { getAuthenticatedMember, assertActiveSubscription } from './_auth'
 
 // seeds the log composer — read, no subscription gate (available in read-only mode)
-export async function seedLogSessionAction(source: SeedSource) {
+export async function seedLogSessionAction(source: SeedSourceInput) {
   const member = await getAuthenticatedMember()
 
   // inject memberId for repeat_last source
-  const resolvedSource: SeedSource =
+  const resolvedSource: Parameters<typeof seedLogSession>[0] =
     source.type === 'repeat_last'
       ? { type: 'repeat_last', memberId: member.id }
-      : source
+      : source.type === 'member_workout'
+        ? { type: 'member_workout', workoutId: source.workoutId, memberId: member.id }
+        : source
 
   return seedLogSession(resolvedSource)
 }
