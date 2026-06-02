@@ -2,10 +2,6 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { eq } from 'drizzle-orm'
-import { createClient } from '@/lib/supabase/server'
-import { db } from '@/db'
-import { members } from '@/db/schema'
 import {
   getPublishedWorkouts,
   getPublishedWorkout,
@@ -21,25 +17,7 @@ import {
   upsertMemberWorkoutExercises,
 } from '@/lib/member-workouts'
 import type { NewMemberWorkoutExercise } from '@/db/schema'
-
-async function getAuthenticatedMember() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const [member] = await db
-    .select()
-    .from(members)
-    .where(eq(members.authUserId, user.id))
-    .limit(1)
-
-  if (!member) redirect('/login')
-  return member
-}
-
-function assertActiveSubscription(member: { subscriptionStatus: string }) {
-  if (member.subscriptionStatus !== 'active') redirect('/subscribe')
-}
+import { getAuthenticatedMember, assertActiveSubscription } from './_auth'
 
 // --- Org Library (reads only — available in read-only mode) ---
 

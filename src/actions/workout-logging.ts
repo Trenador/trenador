@@ -1,11 +1,6 @@
 'use server'
 
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { eq } from 'drizzle-orm'
-import { createClient } from '@/lib/supabase/server'
-import { db } from '@/db'
-import { members } from '@/db/schema'
 import {
   seedLogSession,
   saveWorkoutLog,
@@ -14,25 +9,7 @@ import {
   type SeedSource,
   type LogExerciseInput,
 } from '@/lib/workout-logging'
-
-async function getAuthenticatedMember() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const [member] = await db
-    .select()
-    .from(members)
-    .where(eq(members.authUserId, user.id))
-    .limit(1)
-
-  if (!member) redirect('/login')
-  return member
-}
-
-function assertActiveSubscription(member: { subscriptionStatus: string }) {
-  if (member.subscriptionStatus !== 'active') redirect('/subscribe')
-}
+import { getAuthenticatedMember, assertActiveSubscription } from './_auth'
 
 // seeds the log composer — read, no subscription gate (available in read-only mode)
 export async function seedLogSessionAction(source: SeedSource) {

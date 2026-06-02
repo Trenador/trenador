@@ -1,23 +1,15 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import { db } from '@/db'
 import { members } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
+import { getAuthenticatedMember } from './_auth'
 
 async function requireAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('not authenticated')
-
-  const [member] = await db
-    .select()
-    .from(members)
-    .where(eq(members.authUserId, user.id))
-    .limit(1)
-
-  if (!member?.isAdmin) throw new Error('not authorized')
+  const member = await getAuthenticatedMember()
+  if (!member.isAdmin) redirect('/chat')
   return member
 }
 

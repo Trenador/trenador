@@ -2,25 +2,10 @@
 
 import { redirect } from 'next/navigation'
 import { eq, desc, and, isNull } from 'drizzle-orm'
-import { createClient } from '@/lib/supabase/server'
 import { db } from '@/db'
 import { members, coachMessages } from '@/db/schema'
 import { APP_CONFIG } from '@/lib/config'
-
-async function getAuthenticatedMember() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const [member] = await db
-    .select()
-    .from(members)
-    .where(eq(members.authUserId, user.id))
-    .limit(1)
-
-  if (!member) redirect('/login')
-  return member
-}
+import { getAuthenticatedMember } from './_auth'
 
 async function requireAdmin() {
   const member = await getAuthenticatedMember()
