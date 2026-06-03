@@ -25,7 +25,7 @@ export default function NewWorkoutPage() {
   }
 
   return (
-    <div className="px-6 py-8 max-w-md mx-auto">
+    <div className="px-4 md:px-6 py-8 pt-14 md:pt-8 max-w-md mx-auto">
       <div className="mb-6">
         <Link href="/workouts/mine" className="label-mono text-muted-foreground hover:text-foreground transition-colors normal-case tracking-wide text-xs">
           ← My Workouts

@@ -31,7 +31,7 @@ export default function IntakePage() {
   const textareaCls = 'w-full rounded-xl border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground'
 
   return (
-    <div className="flex min-h-screen items-center justify-center py-12 px-6">
+    <div className="flex min-h-screen items-center justify-center py-12 px-4 md:px-6">
       <div className="w-full max-w-lg space-y-8">
         <div className="space-y-1">
           <p className="label-mono normal-case tracking-wide">Step 2 of 2</p>

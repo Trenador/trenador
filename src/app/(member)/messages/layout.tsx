@@ -2,12 +2,12 @@ import { getThreads } from '@/actions/chat'
 import { ChatShell } from '@/components/chat/chat-shell'
 import { requireActiveSubscription } from '@/lib/subscription'
 
-export default async function LogLayout({ children }: { children: React.ReactNode }) {
+export default async function MessagesLayout({ children }: { children: React.ReactNode }) {
   await requireActiveSubscription()
   const threads = await getThreads()
 
   return (
-    <ChatShell initialThreads={threads} scrollableMain>
+    <ChatShell initialThreads={threads}>
       {children}
     </ChatShell>
   )

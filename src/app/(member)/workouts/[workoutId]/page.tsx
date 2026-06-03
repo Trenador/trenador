@@ -13,7 +13,7 @@ export default async function WorkoutDetailPage({
   if (!workout) notFound()
 
   return (
-    <div className="px-6 py-8 max-w-2xl mx-auto">
+    <div className="px-4 md:px-6 py-8 pt-14 md:pt-8 max-w-2xl mx-auto">
       <div className="mb-2">
         <Link href="/workouts" className="label-mono text-muted-foreground hover:text-foreground transition-colors normal-case tracking-wide text-xs">
           ← Workout Library

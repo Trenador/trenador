@@ -34,7 +34,7 @@ export default function SignupPage() {
   if (confirmationSent) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center space-y-3 max-w-sm px-6">
+        <div className="text-center space-y-3 max-w-sm px-4 md:px-6">
           <h1 className="text-xl font-semibold">Check your email</h1>
           <p className="text-sm text-muted-foreground">
             We sent a confirmation link to{' '}
@@ -62,7 +62,7 @@ export default function SignupPage() {
       </div>
 
       {/* Right — form */}
-      <div className="flex items-center justify-center min-h-screen md:min-h-0 px-6 py-12">
+      <div className="flex items-center justify-center min-h-screen md:min-h-0 px-4 md:px-6 py-12">
         <div className="w-full max-w-sm space-y-8">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Get started</h1>

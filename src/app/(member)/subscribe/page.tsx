@@ -23,7 +23,7 @@ export default function SubscribePage() {
       </div>
 
       {/* Right — pricing */}
-      <div className="flex items-center justify-center min-h-screen md:min-h-0 px-6 py-12">
+      <div className="flex items-center justify-center min-h-screen md:min-h-0 px-4 md:px-6 py-12">
         <div className="w-full max-w-sm space-y-8">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Start your membership</h1>

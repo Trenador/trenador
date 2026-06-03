@@ -14,9 +14,11 @@ type ThreadItem = {
 export function ChatShell({
   initialThreads,
   children,
+  scrollableMain = false,
 }: {
   initialThreads: ThreadItem[]
   children: React.ReactNode
+  scrollableMain?: boolean
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -47,7 +49,7 @@ export function ChatShell({
         </button>
       )}
 
-      <main className="flex-1 min-w-0 overflow-hidden">
+      <main className={`flex-1 min-w-0 ${scrollableMain ? 'overflow-auto' : 'overflow-hidden'}`}>
         {children}
       </main>
     </div>

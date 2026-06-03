@@ -27,7 +27,7 @@ export default function VerifyMemberPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-6">
+    <div className="flex min-h-screen items-center justify-center px-4 md:px-6">
       <div className="w-full max-w-sm space-y-8">
         <div className="space-y-1">
           <p className="label-mono normal-case tracking-wide">Powerhouse Gym</p>

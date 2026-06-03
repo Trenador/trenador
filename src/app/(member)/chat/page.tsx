@@ -31,10 +31,10 @@ export default function ChatWelcomePage() {
   }
 
   return (
-    <div className="flex flex-col h-full items-center justify-center gap-10 px-4">
+    <div className="flex flex-col h-full items-center justify-center gap-10 px-4 pt-14 md:pt-0">
       {/* greeting */}
       <div className="text-center space-y-2">
-        <h1 className="font-serif text-5xl leading-tight tracking-wide">
+        <h1 className="font-serif text-4xl md:text-5xl leading-tight tracking-wide">
           {getGreeting()}
         </h1>
         <p className="label-mono">How may I be of service?</p>

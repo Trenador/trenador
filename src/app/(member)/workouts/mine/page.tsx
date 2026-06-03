@@ -6,7 +6,7 @@ export default async function MyWorkoutsPage() {
   const workouts = await getMyWorkoutsAction()
 
   return (
-    <div className="px-6 py-8 max-w-4xl mx-auto">
+    <div className="px-4 md:px-6 py-8 pt-14 md:pt-8 max-w-4xl mx-auto">
       <div className="flex items-start justify-between mb-8">
         <div>
           <p className="label-mono mb-1">Personal Library</p>

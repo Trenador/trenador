@@ -1,5 +1,5 @@
 import { getThreads } from '@/actions/chat'
-import { ThreadSidebar } from '@/components/chat/thread-sidebar'
+import { ChatShell } from '@/components/chat/chat-shell'
 import { requireActiveSubscription } from '@/lib/subscription'
 
 export default async function WorkoutsLayout({ children }: { children: React.ReactNode }) {
@@ -7,11 +7,8 @@ export default async function WorkoutsLayout({ children }: { children: React.Rea
   const threads = await getThreads()
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <ThreadSidebar initialThreads={threads} />
-      <main className="flex-1 min-w-0 overflow-auto">
-        {children}
-      </main>
-    </div>
+    <ChatShell initialThreads={threads} scrollableMain>
+      {children}
+    </ChatShell>
   )
 }

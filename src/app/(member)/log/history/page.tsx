@@ -5,7 +5,7 @@ export default async function LogHistoryPage() {
   const logs = await getWorkoutLogHistoryAction()
 
   return (
-    <div className="px-6 py-8 max-w-2xl mx-auto">
+    <div className="px-4 md:px-6 py-8 pt-14 md:pt-8 max-w-2xl mx-auto">
       <div className="mb-8">
         <p className="label-mono mb-1">Training</p>
         <h1 className="text-2xl font-bold tracking-tight">Workout History</h1>
