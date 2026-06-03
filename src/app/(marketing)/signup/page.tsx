@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { OAuthButtons } from '@/components/shared/oauth-buttons'
 
 export default function SignupPage() {
   const [displayName, setDisplayName] = useState('')
@@ -68,6 +69,14 @@ export default function SignupPage() {
             <p className="text-sm text-muted-foreground">
               Create your Trenador account
             </p>
+          </div>
+
+          <OAuthButtons />
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="label-mono normal-case tracking-wide">or</span>
+            <div className="h-px flex-1 bg-border" />
           </div>
 
           <form onSubmit={handleSignup} className="space-y-4">

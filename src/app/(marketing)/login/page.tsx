@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { OAuthButtons } from '@/components/shared/oauth-buttons'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -77,6 +78,14 @@ export default function LoginPage() {
             </p>
           </div>
 
+          <OAuthButtons />
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="label-mono normal-case tracking-wide">or</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-sm font-medium">
@@ -120,12 +129,6 @@ export default function LoginPage() {
               {loading ? 'Signing in…' : 'Log in'}
             </button>
           </form>
-
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="label-mono normal-case tracking-wide">or</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
 
           <button
             onClick={handleMagicLink}
