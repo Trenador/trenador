@@ -244,7 +244,7 @@ export function ThreadSidebar({
           */}
           <SidebarTab
             icon={<MessageCircle className="h-4 w-4" />}
-            label="Coach Inbox"
+            label="Message Center"
             onClick={() => { router.push('/messages'); closeOnMobile() }}
             active={pathname === '/messages'}
           />
