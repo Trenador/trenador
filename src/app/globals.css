@@ -45,7 +45,7 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #F7F6F2;
+  --background: oklch(1 0 0);
   --foreground: oklch(0.18 0.012 60);
   --card: #F7F6F2;
   --card-foreground: oklch(0.18 0.012 60);
@@ -63,7 +63,7 @@
   --border: #E2DFD7;
   --input: #C9C4B8;
   --ring: oklch(0.6 0.04 60);
-  --sidebar: #F7F6F2;
+  --sidebar: #FFFFFF;
   --sidebar-foreground: oklch(0.18 0.012 60);
   --sidebar-primary: oklch(0.18 0.012 60);
   --sidebar-primary-foreground: #F7F6F2;
