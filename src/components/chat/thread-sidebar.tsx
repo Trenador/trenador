@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Plus, Trash2, PanelLeft, LogOut, Dumbbell, BookOpen,
-  ClipboardList, History, MessageCircle, User,
+  MessageCircle, User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -228,6 +228,7 @@ export function ThreadSidebar({
             onClick={() => { router.push('/workouts/mine'); closeOnMobile() }}
             active={pathname === '/workouts/mine' || pathname.startsWith('/workouts/mine/')}
           />
+          {/* Log Workout and History are hidden until enabled by product
           <SidebarTab
             icon={<ClipboardList className="h-4 w-4" />}
             label="Log Workout"
@@ -240,6 +241,7 @@ export function ThreadSidebar({
             onClick={() => { router.push('/log/history'); closeOnMobile() }}
             active={pathname.startsWith('/log/history')}
           />
+          */}
           <SidebarTab
             icon={<MessageCircle className="h-4 w-4" />}
             label="Coach Inbox"
