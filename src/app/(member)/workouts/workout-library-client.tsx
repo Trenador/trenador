@@ -1,9 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Clock, Gauge, Bookmark } from 'lucide-react'
+import { Clock, Gauge, Bookmark, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 
 type Workout = {
   id: string
@@ -20,7 +23,7 @@ type Workout = {
 }
 
 const CATEGORIES = ['Strength', 'Hypertrophy', 'Cardio', 'Mobility'] as const
-const LEVELS = ['All Levels', 'Beginner', 'Intermediate', 'Advanced'] as const
+const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'] as const
 
 const CATEGORY_IMAGE: Record<string, string> = {
   Strength: '/assets/workout-strength.jpg',
@@ -146,21 +149,77 @@ function WorkoutCard({ workout }: { workout: Workout }) {
   )
 }
 
+const ALL = '__all__'
+
+function FilterSelect({
+  label,
+  options,
+  active,
+  onChange,
+}: {
+  label: string
+  options: string[]
+  active: string | null
+  onChange: (val: string | null) => void
+}) {
+  return (
+    <Select value={active ?? ALL} onValueChange={v => onChange(v === ALL ? null : v)}>
+      <SelectTrigger
+        className={cn(
+          'h-8 w-auto gap-1 rounded-full border-0 bg-foreground/[0.04] px-3 text-[12px] shadow-none focus:ring-0',
+          'text-muted-foreground hover:bg-foreground/[0.07]',
+          active && 'bg-foreground text-background hover:bg-foreground/90',
+        )}
+      >
+        <span>{active ? `${label}:` : label}</span>
+        {active && <SelectValue />}
+      </SelectTrigger>
+      <SelectContent className="rounded-xl border-border/60 bg-popover/95 p-1 shadow-lg backdrop-blur-xl" sideOffset={6}>
+        <SelectItem value={ALL} className="rounded-lg text-[13px]">All</SelectItem>
+        {options.map(o => (
+          <SelectItem key={o} value={o} className="rounded-lg text-[13px]">{o}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+function formatDuration(min: number | null) {
+  if (!min) return null
+  if (min >= 60) return '1 hr'
+  return `${min} min`
+}
+
 export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
-  const [activeLevel, setActiveLevel] = useState<string>('All Levels')
-  const [search, setSearch] = useState('')
+  const [query, setQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [activeLevel, setActiveLevel] = useState<string | null>(null)
+  const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [activeDuration, setActiveDuration] = useState<string | null>(null)
 
-  const filtered = workouts.filter(w => {
-    const matchLevel = activeLevel === 'All Levels' || w.level === activeLevel
-    const q = search.toLowerCase()
-    const matchSearch = !q ||
-      w.title.toLowerCase().includes(q) ||
-      (w.summary ?? '').toLowerCase().includes(q) ||
-      w.muscleGroups.some(t => t.toLowerCase().includes(q))
-    return matchLevel && matchSearch
-  })
+  const tags = useMemo(() => {
+    const set = new Set<string>()
+    workouts.forEach(w => w.muscleGroups.forEach(t => set.add(t)))
+    return Array.from(set).sort()
+  }, [workouts])
 
-  const isFiltered = activeLevel !== 'All Levels' || search.length > 0
+  const durationLabels = useMemo(() => {
+    const set = new Set<string>()
+    workouts.forEach(w => { const l = formatDuration(w.durationMinutes); if (l) set.add(l) })
+    return Array.from(set)
+  }, [workouts])
+
+  const filtered = useMemo(() => workouts.filter(w => {
+    if (activeCategory && w.category !== activeCategory) return false
+    if (activeLevel && w.level !== activeLevel) return false
+    if (activeTag && !w.muscleGroups.includes(activeTag)) return false
+    if (activeDuration && formatDuration(w.durationMinutes) !== activeDuration) return false
+    const q = query.toLowerCase()
+    if (q && !w.title.toLowerCase().includes(q) && !(w.summary ?? '').toLowerCase().includes(q) && !w.muscleGroups.some(t => t.toLowerCase().includes(q))) return false
+    return true
+  }), [workouts, activeCategory, activeLevel, activeTag, activeDuration, query])
+
+  const isFiltered = !!(activeCategory || activeLevel || activeTag || activeDuration || query.trim())
 
   const grouped = CATEGORIES.reduce<Record<string, Workout[]>>((acc, cat) => {
     const items = filtered.filter(w => w.category === cat)
@@ -170,38 +229,35 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      {/* Header */}
-      <div className="px-4 pt-14 pb-4 md:px-6 md:pt-8">
-        <h1 className="font-serif text-[2.75rem] italic leading-tight tracking-[0.02em]">
+      {/* Header + filters */}
+      <div className="sticky top-0 z-10 bg-background pb-3 pt-10 md:pt-14 px-4 md:px-6 lg:px-10">
+        <h1 className="font-serif text-[44px] leading-[1.05] tracking-tight">
           Workout library
         </h1>
-      </div>
 
-      {/* Filters */}
-      <div className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-        <div className="flex items-center gap-3 overflow-x-auto px-4 py-3 md:px-6 [&::-webkit-scrollbar]:hidden">
-          {LEVELS.map(lvl => (
-            <button
-              key={lvl}
-              type="button"
-              onClick={() => setActiveLevel(lvl)}
-              className={cn(
-                'label-mono shrink-0 rounded-full border px-3 py-1.5 text-[11px] normal-case tracking-wide transition-colors',
-                activeLevel === lvl
-                  ? 'border-foreground bg-foreground text-background'
-                  : 'border-border hover:border-foreground/40',
-              )}
-            >
-              {lvl}
-            </button>
-          ))}
-          <div className="ml-2 shrink-0">
+        <div className="mt-6 flex flex-col gap-3">
+          {/* Search */}
+          <div className="relative w-full">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search…"
-              className="h-8 rounded-full border border-border bg-transparent px-3 text-[13px] outline-none placeholder:text-muted-foreground focus:border-foreground/40"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search workout"
+              className="h-9 w-full rounded-none border-0 border-b border-border bg-transparent pl-8 pr-7 text-[13px] outline-none placeholder:text-muted-foreground focus:border-b-foreground"
             />
+            {query && (
+              <button onClick={() => setQuery('')} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter pills */}
+          <div className="flex flex-wrap gap-1.5">
+            <FilterSelect label="Function" options={[...CATEGORIES]} active={activeCategory} onChange={setActiveCategory} />
+            <FilterSelect label="Level" options={[...LEVELS]} active={activeLevel} onChange={setActiveLevel} />
+            <FilterSelect label="Muscle" options={tags} active={activeTag} onChange={setActiveTag} />
+            <FilterSelect label="Duration" options={durationLabels} active={activeDuration} onChange={setActiveDuration} />
           </div>
         </div>
       </div>
