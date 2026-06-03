@@ -1,13 +1,14 @@
 import { getThreads } from '@/actions/chat'
 import { ChatShell } from '@/components/chat/chat-shell'
+import { getAuthenticatedMember } from '@/actions/_auth'
 import { requireActiveSubscription } from '@/lib/subscription'
 
 export default async function ChatLayout({ children }: { children: React.ReactNode }) {
   await requireActiveSubscription()
-  const threads = await getThreads()
+  const [threads, member] = await Promise.all([getThreads(), getAuthenticatedMember()])
 
   return (
-    <ChatShell initialThreads={threads}>
+    <ChatShell initialThreads={threads} member={{ displayName: member.displayName }}>
       {children}
     </ChatShell>
   )

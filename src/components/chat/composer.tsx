@@ -1,24 +1,28 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { ArrowUp } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Props = {
   onSubmit: (content: string) => void
   disabled?: boolean
+  placeholder?: string
 }
 
-export function Composer({ onSubmit, disabled }: Props) {
+export function Composer({ onSubmit, disabled, placeholder = 'Message Trenador AI…' }: Props) {
   const [value, setValue] = useState('')
+  const [multiline, setMultiline] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   function submit() {
     const trimmed = value.trim()
     if (!trimmed || disabled) return
     setValue('')
+    setMultiline(false)
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = '0px'
+      textareaRef.current.dataset.multiline = 'false'
     }
     onSubmit(trimmed)
   }
@@ -33,35 +37,57 @@ export function Composer({ onSubmit, disabled }: Props) {
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setValue(e.target.value)
     const el = e.target
-    el.style.height = 'auto'
-    el.style.height = `${Math.min(el.scrollHeight, 200)}px`
+    el.style.height = '0px'
+    const next = Math.min(el.scrollHeight, 192)
+    el.style.height = `${next}px`
+    setMultiline(next > 32)
   }
 
   return (
     <div
       className={cn(
-        'flex items-end gap-2 rounded-xl border bg-background px-4 py-3',
-        'focus-within:ring-2 focus-within:ring-ring/50 transition-shadow',
+        'flex items-end gap-2 border bg-muted/50 px-1 py-1 transition-all',
+        multiline ? 'rounded-2xl flex-wrap' : 'rounded-full',
+        'focus-within:ring-2 focus-within:ring-ring/40',
       )}
     >
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Message Trenador AI…"
-        disabled={disabled}
-        rows={1}
-        className="flex-1 resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 leading-relaxed"
-        style={{ minHeight: '24px', maxHeight: '200px' }}
-      />
+      {multiline && (
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={disabled}
+          rows={1}
+          className="w-full resize-none bg-transparent px-3 py-1 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 leading-5 min-h-0 overflow-hidden"
+          style={{ maxHeight: '192px' }}
+        />
+      )}
+      {!multiline && (
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={disabled}
+          rows={1}
+          className="flex-1 resize-none bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 leading-5 min-h-0 overflow-hidden"
+          style={{ maxHeight: '192px', height: '28px' }}
+        />
+      )}
       <button
         onClick={submit}
         disabled={disabled || !value.trim()}
         aria-label="Send message"
-        className="shrink-0 size-8 flex items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-40 hover:opacity-90 transition-opacity"
+        className={cn(
+          'shrink-0 flex h-8 w-8 items-center justify-center rounded-full transition-opacity',
+          'bg-[oklch(0.58_0.17_40)] text-white hover:opacity-90 disabled:opacity-40',
+          multiline && 'self-end mb-0.5 mr-0.5',
+        )}
       >
-        <ArrowUp className="size-4" />
+        <ArrowRight className="h-4 w-4" />
       </button>
     </div>
   )

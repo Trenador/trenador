@@ -3,9 +3,19 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Plus, Trash2, PanelLeft, Inbox, LogOut, Dumbbell, BookOpen, ClipboardList, History } from 'lucide-react'
+import {
+  Plus, Trash2, PanelLeft, LogOut, Dumbbell, BookOpen,
+  ClipboardList, History, MessageCircle, User,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { deleteThread } from '@/actions/chat'
 import { createClient } from '@/lib/supabase/client'
 
@@ -16,18 +26,25 @@ type ThreadItem = {
   createdAt: Date
 }
 
+type Member = {
+  displayName: string
+}
+
 type Props = {
   initialThreads: ThreadItem[]
-  mobileOpen?: boolean
-  onMobileClose?: () => void
+  member: Member
+  collapsed: boolean
+  onToggle: () => void
+  mobileTransform: string
+  mobileTransition: string
+  backdropOpacity: number
 }
 
 function dateBucket(date: Date | null): string {
   if (!date) return 'Older'
-  const diffDays = (Date.now() - new Date(date).getTime()) / 86_400_000
-  if (diffDays < 1) return 'Today'
-  if (diffDays < 7) return 'Last 7 days'
-  if (diffDays < 30) return 'Last 30 days'
+  const diff = (Date.now() - new Date(date).getTime()) / 86_400_000
+  if (diff < 7) return 'Recent'
+  if (diff < 30) return 'Last 30 Days'
   return 'Older'
 }
 
@@ -40,22 +57,45 @@ function relativeTime(date: Date | null): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-const BUCKET_ORDER = ['Today', 'Last 7 days', 'Last 30 days', 'Older']
+const BUCKET_ORDER = ['Recent', 'Last 30 Days', 'Older']
 
-export function ThreadSidebar({ initialThreads, mobileOpen = false, onMobileClose }: Props) {
+function SidebarTab({
+  icon,
+  label,
+  onClick,
+  active,
+}: {
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+  active?: boolean
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex w-full items-center gap-2 rounded-md px-3 py-2 text-[13px] font-medium text-foreground transition-colors',
+        active ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.04]',
+      )}
+    >
+      <span className="text-muted-foreground">{icon}</span>
+      {label}
+    </button>
+  )
+}
+
+export function ThreadSidebar({
+  initialThreads,
+  member,
+  collapsed,
+  onToggle,
+  mobileTransform,
+  mobileTransition,
+  backdropOpacity,
+}: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const [threads, setThreads] = useState(initialThreads)
-  const [collapsed, setCollapsed] = useState(false)
-
-  // close sidebar on mobile when navigating
-  const prevPathRef = useRef(pathname)
-  useEffect(() => {
-    if (prevPathRef.current !== pathname) {
-      prevPathRef.current = pathname
-      onMobileClose?.()
-    }
-  }, [pathname, onMobileClose])
   const [, startTransition] = useTransition()
 
   const prevRef = useRef(initialThreads)
@@ -82,195 +122,210 @@ export function ThreadSidebar({ initialThreads, mobileOpen = false, onMobileClos
     router.push('/login')
   }
 
-  // group threads into date buckets
+  const closeOnMobile = () => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+      onToggle()
+    }
+  }
+
   const grouped = threads.reduce<Record<string, ThreadItem[]>>((acc, t) => {
     const key = dateBucket(t.lastMessageAt ?? t.createdAt)
     ;(acc[key] ??= []).push(t)
     return acc
   }, {})
 
-  return (
-    <aside
-      className={cn(
-        'flex flex-col border-r bg-sidebar shrink-0',
-        // mobile: fixed overlay, slides in/out
-        'fixed inset-y-0 left-0 z-40 w-72 transition-transform duration-300 shadow-xl',
-        mobileOpen ? 'translate-x-0' : '-translate-x-full',
-        // desktop: static, collapsible width
-        'md:static md:z-auto md:shadow-none md:translate-x-0 md:transition-[width] md:duration-200',
-        collapsed ? 'md:w-12' : 'md:w-60',
-      )}
-    >
-      {/* header */}
-      <div className={cn('flex items-center h-[60px] px-2 border-b gap-1', !collapsed && 'px-3')}>
-        {!collapsed && (
-          <Link
-            href="/chat"
-            className="flex-1 text-sm font-bold text-sidebar-foreground truncate px-1 tracking-tight"
-          >
-            Trenador
-          </Link>
-        )}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="shrink-0 text-muted-foreground hover:text-foreground"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <PanelLeft className="size-4" />
-        </Button>
-      </div>
+  const initial = (member.displayName[0] ?? '?').toUpperCase()
 
-      {/* new chat */}
-      <div className={cn('p-2', !collapsed && 'px-3 pt-3')}>
-        <Link href="/chat">
-          <Button
-            variant="outline"
-            size={collapsed ? 'icon-sm' : 'sm'}
-            className={cn(
-              'w-full border-border/80 bg-background/60 font-normal text-foreground hover:bg-foreground/[0.06]',
-              !collapsed && 'justify-start gap-2',
-            )}
-          >
-            <Plus className="size-4" />
-            {!collapsed && 'New chat'}
-          </Button>
-        </Link>
-      </div>
-
-      {/* thread list — expanded */}
-      {!collapsed && (
-        <nav className="flex-1 overflow-y-auto px-2 pb-4 mt-2">
-          {threads.length === 0 ? (
-            <p className="text-xs text-muted-foreground px-3 py-6 text-center">
-              No conversations yet
-            </p>
-          ) : (
-            BUCKET_ORDER.filter((b) => grouped[b]?.length).map((bucket) => (
-              <div key={bucket} className="mb-4">
-                <div className="label-mono px-3 pb-2 pt-1">{bucket}</div>
-                <div className="space-y-px">
-                  {grouped[bucket]!.map((thread) => {
-                    const isActive = pathname === `/chat/${thread.id}`
-                    const title = thread.title ?? 'New conversation'
-                    const truncated = title.length > 24 ? title.slice(0, 24) + '…' : title
-                    return (
-                      <Link
-                        key={thread.id}
-                        href={`/chat/${thread.id}`}
-                        className={cn(
-                          'group flex items-start gap-2 rounded-md px-3 py-2 cursor-pointer',
-                          isActive
-                            ? 'bg-foreground/[0.06]'
-                            : 'hover:bg-foreground/[0.04]',
-                        )}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-[13px] font-medium leading-tight text-sidebar-foreground">
-                            {truncated}
-                          </div>
-                          <div className="label-mono normal-case tracking-[0.08em] mt-1">
-                            {relativeTime(thread.lastMessageAt ?? thread.createdAt)}
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => handleDelete(e, thread.id)}
-                          className="mt-0.5 rounded p-1 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive transition-opacity"
-                          aria-label="Delete"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            ))
-          )}
-        </nav>
-      )}
-
-      {/* collapsed icon list */}
-      {collapsed && (
-        <nav className="flex-1 overflow-y-auto py-2 flex flex-col items-center gap-0.5">
-          {threads.map((thread) => {
-            const isActive = pathname === `/chat/${thread.id}`
-            return (
-              <Link
-                key={thread.id}
-                href={`/chat/${thread.id}`}
-                title={thread.title ?? 'New conversation'}
-                className={cn(
-                  'flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-sidebar-accent transition-colors text-xs font-medium',
-                  isActive && 'bg-sidebar-accent text-foreground',
-                )}
-              >
-                {(thread.title ?? 'N')[0]?.toUpperCase()}
-              </Link>
-            )
-          })}
-        </nav>
-      )}
-
-      {/* training nav */}
-      <div className={cn('border-t pt-2 pb-1', collapsed ? 'px-2' : 'px-3')}>
-        {!collapsed && <div className="label-mono px-1 pb-2">Training</div>}
-        {[
-          { href: '/workouts', icon: Dumbbell, label: 'Workout Library' },
-          { href: '/workouts/mine', icon: BookOpen, label: 'My Workouts' },
-          { href: '/log', icon: ClipboardList, label: 'Log Workout' },
-          { href: '/log/history', icon: History, label: 'History' },
-        ].map(({ href, icon: Icon, label }) => (
-          <Link key={href} href={href}>
-            <Button
-              variant="ghost"
-              size={collapsed ? 'icon-sm' : 'sm'}
-              className={cn(
-                'w-full text-muted-foreground hover:text-foreground',
-                !collapsed && 'justify-start gap-2',
-                pathname.startsWith(href) && 'bg-sidebar-accent text-foreground',
-              )}
-            >
-              <Icon className="size-4" />
-              {!collapsed && label}
-            </Button>
-          </Link>
-        ))}
-      </div>
-
-      {/* coach inbox */}
-      <div className={cn('px-2', !collapsed && 'px-3')}>
-        <Link href="/messages">
+  // Collapsed desktop icon rail
+  if (collapsed) {
+    return (
+      <div
+        role="button"
+        aria-label="Open sidebar"
+        onClick={onToggle}
+        className="hidden h-full w-12 shrink-0 cursor-pointer flex-col items-center border-r border-border/70 bg-sidebar lg:flex"
+      >
+        <div className="flex h-[60px] w-full items-center justify-center">
           <Button
             variant="ghost"
-            size={collapsed ? 'icon-sm' : 'sm'}
-            className={cn(
-              'w-full text-muted-foreground hover:text-foreground',
-              !collapsed && 'justify-start gap-2',
-              pathname === '/messages' && 'bg-sidebar-accent text-foreground',
-            )}
+            size="icon-sm"
+            onClick={(e) => { e.stopPropagation(); onToggle() }}
+            aria-label="Open sidebar"
+            className="text-muted-foreground hover:text-foreground"
           >
-            <Inbox className="size-4" />
-            {!collapsed && 'Coach Inbox'}
+            <PanelLeft className="h-4 w-4" />
           </Button>
-        </Link>
+        </div>
+        <div className="flex flex-1 flex-col items-center gap-2 pt-1">
+          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); router.push('/chat') }} aria-label="New chat">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="pb-3">
+          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleSignOut() }} aria-label="Sign out">
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
+    )
+  }
 
-      {/* user menu */}
-      <div className={cn('border-t mt-1', collapsed ? 'p-2' : 'px-3 py-3')}>
-        <button
-          onClick={handleSignOut}
-          className={cn(
-            'flex w-full items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground hover:text-foreground hover:bg-foreground/[0.04] transition-colors',
-            collapsed && 'justify-center px-0',
-          )}
-          aria-label="Sign out"
+  return (
+    <>
+      {/* Mobile backdrop tap-to-close */}
+      <button
+        type="button"
+        aria-label="Close sidebar"
+        onClick={onToggle}
+        style={{ pointerEvents: (backdropOpacity ?? 1) < 0.05 ? 'none' : undefined }}
+        className="fixed inset-0 z-20 lg:hidden"
+      />
+
+      <div
+        style={{ transform: mobileTransform, transition: mobileTransition }}
+        className="fixed inset-y-0 left-0 z-30 flex h-full w-full shrink-0 flex-col border-r border-border/70 bg-sidebar lg:static lg:z-auto lg:w-64 lg:translate-x-0 lg:transform-none"
+      >
+        {/* Header: logo + collapse */}
+        <div className="flex h-[60px] items-center justify-between pl-5 pr-3">
+          <div className="w-[42%] sm:w-[30%] lg:w-[60%]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/trenador-logo-mark.svg" alt="Trenador" className="h-auto w-full object-contain" />
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onToggle}
+            aria-label="Collapse sidebar"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* New chat button (desktop) */}
+        <div className="hidden px-3 pb-2 pt-2 lg:block">
+          <Button
+            onClick={() => { router.push('/chat'); closeOnMobile() }}
+            className="w-full justify-start border-border/80 bg-background/60 font-normal text-foreground hover:bg-foreground/[0.06] hover:text-foreground"
+            variant="outline"
+            size="sm"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Chat
+          </Button>
+        </div>
+
+        {/* Nav tabs */}
+        <nav className="space-y-px px-2 pb-3">
+          <SidebarTab
+            icon={<Dumbbell className="h-4 w-4" />}
+            label="Workout Library"
+            onClick={() => { router.push('/workouts'); closeOnMobile() }}
+            active={pathname === '/workouts' || pathname.startsWith('/workouts/')}
+          />
+          <SidebarTab
+            icon={<BookOpen className="h-4 w-4" />}
+            label="My Workouts"
+            onClick={() => { router.push('/workouts/mine'); closeOnMobile() }}
+            active={pathname === '/workouts/mine' || pathname.startsWith('/workouts/mine/')}
+          />
+          <SidebarTab
+            icon={<ClipboardList className="h-4 w-4" />}
+            label="Log Workout"
+            onClick={() => { router.push('/log'); closeOnMobile() }}
+            active={pathname === '/log'}
+          />
+          <SidebarTab
+            icon={<History className="h-4 w-4" />}
+            label="History"
+            onClick={() => { router.push('/log/history'); closeOnMobile() }}
+            active={pathname.startsWith('/log/history')}
+          />
+          <SidebarTab
+            icon={<MessageCircle className="h-4 w-4" />}
+            label="Coach Inbox"
+            onClick={() => { router.push('/messages'); closeOnMobile() }}
+            active={pathname === '/messages'}
+          />
+        </nav>
+
+        {/* Thread list */}
+        <ScrollArea className="flex-1 px-2">
+          <div className="pb-4">
+            {threads.length === 0 ? (
+              <p className="px-3 py-6 text-center text-xs text-muted-foreground">No conversations yet</p>
+            ) : (
+              BUCKET_ORDER.filter((b) => grouped[b]?.length).map((bucket) => (
+                <div key={bucket} className="mb-4">
+                  <div className="label-mono px-3 pb-2 pt-1">{bucket}</div>
+                  <div className="space-y-px">
+                    {grouped[bucket]!.map((thread) => {
+                      const isActive = pathname === `/chat/${thread.id}`
+                      const title = thread.title ?? 'New conversation'
+                      const truncated = title.length > 22 ? title.slice(0, 22) + '…' : title
+                      return (
+                        <div
+                          key={thread.id}
+                          onClick={() => { router.push(`/chat/${thread.id}`); closeOnMobile() }}
+                          className={cn(
+                            'group flex cursor-pointer items-start gap-2 rounded-md px-3 py-2',
+                            isActive ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.04]',
+                          )}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[13px] font-medium leading-tight">{truncated}</div>
+                            <div className="label-mono normal-case tracking-[0.12em] mt-1">
+                              {relativeTime(thread.lastMessageAt ?? thread.createdAt)}
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => handleDelete(e, thread.id)}
+                            className="mt-0.5 rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            aria-label="Delete conversation"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
+
+        {/* User menu */}
+        <div className="border-t border-border/70">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex h-auto w-full cursor-pointer items-center justify-start gap-2 rounded-none bg-transparent px-3 py-3 text-foreground outline-none hover:bg-foreground/[0.04] focus-visible:bg-foreground/[0.04]">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-[10px] font-semibold text-background">
+                {initial}
+              </div>
+              <div className="flex flex-col items-start leading-tight">
+                <span className="text-[13px]">{member.displayName}</span>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top" className="w-[220px]">
+              <DropdownMenuItem onClick={() => { router.push('/profile'); closeOnMobile() }}>
+                <User className="mr-2 h-4 w-4" /> Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" /> Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Mobile FAB */}
+        <Button
+          onClick={() => { router.push('/chat'); closeOnMobile() }}
+          aria-label="New chat"
+          size="icon"
+          className="absolute bottom-20 right-4 z-10 h-12 w-12 rounded-full shadow-lg lg:hidden"
         >
-          <LogOut className="size-4 shrink-0" />
-          {!collapsed && 'Sign out'}
-        </button>
+          <Plus className="h-5 w-5" />
+        </Button>
       </div>
-    </aside>
+    </>
   )
 }
