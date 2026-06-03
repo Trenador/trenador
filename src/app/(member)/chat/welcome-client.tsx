@@ -76,7 +76,8 @@ function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (s: string) => vo
 export function ChatWelcomeClient({ displayName }: { displayName: string }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const greeting = `${getGreeting()}, ${displayName}`
+  const firstName = displayName.split(' ')[0] ?? displayName
+  const greeting = `${getGreeting()}, ${firstName}`
 
   function handleSubmit(content: string) {
     startTransition(async () => {
