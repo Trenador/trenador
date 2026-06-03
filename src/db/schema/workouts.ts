@@ -25,8 +25,11 @@ export const workouts = pgTable('workouts', {
   level: text('level'), // beginner/intermediate/advanced
   muscleGroups: text('muscle_groups').array().notNull().default([]),
   durationMinutes: integer('duration_minutes'),
+  summary: text('summary'),
+  lengthLabel: text('length_label'),
+  savesCount: integer('saves_count').notNull().default(0),
   coachNotes: text('coach_notes'),
-  // weeks/days scaffold for multi-week programs; {} for single-session
+  // weeks/days scaffold: { weeks: [{ label, days: [{ label, blocks: [{name,detail}] }] }] }
   structure: jsonb('structure').notNull().default({}),
   publishedAt: timestamp('published_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
