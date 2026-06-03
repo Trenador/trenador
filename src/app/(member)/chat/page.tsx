@@ -20,12 +20,6 @@ function getGreeting() {
   return 'Good evening'
 }
 
-function getBeachImage() {
-  const h = new Date().getHours()
-  if (h < 12) return { src: '/assets/concierge-beach-morning.jpg', alt: 'Peaceful ocean beach at sunrise' }
-  if (h < 18) return { src: '/assets/concierge-beach-afternoon.jpg', alt: 'Peaceful ocean beach in the afternoon' }
-  return { src: '/assets/concierge-beach-evening.jpg', alt: 'Peaceful ocean beach at sunset' }
-}
 
 function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (s: string) => void; direction?: 'up' | 'down' }) {
   const [open, setOpen] = useState(false)
@@ -83,7 +77,6 @@ function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (s: string) => vo
 export default function ChatWelcomePage() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const beach = getBeachImage()
 
   function handleSubmit(content: string) {
     startTransition(async () => {
@@ -116,25 +109,18 @@ export default function ChatWelcomePage() {
       <div className="flex flex-1 min-h-0 flex-col justify-end md:justify-center">
         {/* Desktop hero */}
         <div className="hidden px-4 pb-10 md:block">
-          <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8 text-center">
-            {/* Beach image behind the icon area */}
-            <div className="relative w-full max-w-xs h-48 rounded-2xl overflow-hidden">
+          <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-4 text-center">
+            <div className="h-16 w-16 shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={beach.src} alt={beach.alt} className="h-full w-full object-cover" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/20">
-                <div className="h-16 w-16 shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/assets/greeting-icon.svg" alt="" width={64} height={64} className="h-full w-full drop-shadow-lg" />
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <h2 className="font-serif leading-tight tracking-[0.05em] text-5xl text-white drop-shadow-md">
-                    {getGreeting()}
-                  </h2>
-                  <p className="text-white/80 uppercase tracking-widest text-xs drop-shadow">
-                    How may I be of service?
-                  </p>
-                </div>
-              </div>
+              <img src="/assets/greeting-icon.svg" alt="" width={64} height={64} className="h-full w-full" />
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <h2 className="font-serif leading-tight tracking-[0.05em] text-5xl">
+                {getGreeting()}
+              </h2>
+              <p className="text-muted-foreground uppercase tracking-widest text-xs">
+                How may I be of service?
+              </p>
             </div>
           </div>
         </div>
