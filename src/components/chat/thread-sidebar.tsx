@@ -18,6 +18,8 @@ type ThreadItem = {
 
 type Props = {
   initialThreads: ThreadItem[]
+  mobileOpen?: boolean
+  onMobileClose?: () => void
 }
 
 function dateBucket(date: Date | null): string {
@@ -40,11 +42,20 @@ function relativeTime(date: Date | null): string {
 
 const BUCKET_ORDER = ['Today', 'Last 7 days', 'Last 30 days', 'Older']
 
-export function ThreadSidebar({ initialThreads }: Props) {
+export function ThreadSidebar({ initialThreads, mobileOpen = false, onMobileClose }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const [threads, setThreads] = useState(initialThreads)
   const [collapsed, setCollapsed] = useState(false)
+
+  // close sidebar on mobile when navigating
+  const prevPathRef = useRef(pathname)
+  useEffect(() => {
+    if (prevPathRef.current !== pathname) {
+      prevPathRef.current = pathname
+      onMobileClose?.()
+    }
+  }, [pathname, onMobileClose])
   const [, startTransition] = useTransition()
 
   const prevRef = useRef(initialThreads)
@@ -81,8 +92,13 @@ export function ThreadSidebar({ initialThreads }: Props) {
   return (
     <aside
       className={cn(
-        'flex flex-col border-r bg-sidebar shrink-0 transition-[width] duration-200',
-        collapsed ? 'w-12' : 'w-60',
+        'flex flex-col border-r bg-sidebar shrink-0',
+        // mobile: fixed overlay, slides in/out
+        'fixed inset-y-0 left-0 z-40 w-72 transition-transform duration-300 shadow-xl',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full',
+        // desktop: static, collapsible width
+        'md:static md:z-auto md:shadow-none md:translate-x-0 md:transition-[width] md:duration-200',
+        collapsed ? 'md:w-12' : 'md:w-60',
       )}
     >
       {/* header */}
