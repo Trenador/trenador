@@ -10,9 +10,8 @@ const WORKOUT_TYPES = ['Push', 'Pull', 'Legs', 'Full body', 'Cardio', 'Mobility'
 
 type SetRow = {
   setNumber: number
+  weightLbs: string
   reps: string
-  weightKg: string
-  rpe: string
   isWarmup: boolean
 }
 
@@ -26,7 +25,7 @@ type ExerciseRow = {
 }
 
 function emptySet(n: number): SetRow {
-  return { setNumber: n, reps: '', weightKg: '', rpe: '', isWarmup: false }
+  return { setNumber: n, weightLbs: '', reps: '', isWarmup: false }
 }
 
 export default function LogPage() {
@@ -127,9 +126,8 @@ export default function LogPage() {
           notes: undefined,
           sets: ex.sets.map(s => ({
             setNumber: s.setNumber,
+            weightLbs: s.weightLbs ? Number(s.weightLbs) : undefined,
             reps: s.reps ? Number(s.reps) : undefined,
-            weightKg: s.weightKg ? Number(s.weightKg) : undefined,
-            rpe: s.rpe ? Number(s.rpe) : undefined,
             isWarmup: s.isWarmup,
             durationSeconds: undefined,
             distanceMeters: undefined,
@@ -195,21 +193,21 @@ export default function LogPage() {
             {ex.targetSets && (
               <div className="px-4 py-1.5 border-b">
                 <span className="label-mono text-muted-foreground normal-case tracking-wide text-xs">
-                  Target: {ex.targetSets} sets{ex.targetReps ? ` × ${ex.targetReps} reps` : ''}{ex.targetWeightKg ? ` @ ${ex.targetWeightKg}kg` : ''}
+                  Target: {ex.targetSets} sets{ex.targetReps ? ` × ${ex.targetReps} reps` : ''}{ex.targetWeightKg ? ` @ ${Math.round(ex.targetWeightKg * 2.20462)} lbs` : ''}
                 </span>
               </div>
             )}
 
             <div className="px-4 pt-2 pb-3">
-              <div className="grid grid-cols-[2rem_1fr_1fr_1fr_2rem] gap-2 mb-1">
-                {['#', 'Reps', 'kg', 'RPE', ''].map((h, i) => (
+              <div className="grid grid-cols-[2rem_1fr_1fr_2rem] gap-2 mb-1">
+                {['#', 'lbs', 'Reps', ''].map((h, i) => (
                   <span key={i} className="label-mono text-[10px] normal-case tracking-wide text-center">{h}</span>
                 ))}
               </div>
               {ex.sets.map((set, setIdx) => (
-                <div key={setIdx} className="grid grid-cols-[2rem_1fr_1fr_1fr_2rem] gap-2 mb-1.5 items-center">
+                <div key={setIdx} className="grid grid-cols-[2rem_1fr_1fr_2rem] gap-2 mb-1.5 items-center">
                   <span className="text-xs text-muted-foreground text-center">{set.setNumber}</span>
-                  {(['reps', 'weightKg', 'rpe'] as const).map(field => (
+                  {(['weightLbs', 'reps'] as const).map(field => (
                     <input
                       key={field}
                       type="number"

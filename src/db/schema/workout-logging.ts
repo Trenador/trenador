@@ -47,11 +47,9 @@ export const workoutLogSets = pgTable('workout_log_sets', {
   workoutLogExerciseId: uuid('workout_log_exercise_id').notNull().references(() => workoutLogExercises.id, { onDelete: 'cascade' }),
   setNumber: smallint('set_number').notNull(),
   reps: smallint('reps'),
-  weightKg: numeric('weight_kg', { precision: 6, scale: 2 }),
+  weightLbs: numeric('weight_lbs', { precision: 6, scale: 2 }),
   durationSeconds: integer('duration_seconds'),
   distanceMeters: numeric('distance_meters', { precision: 8, scale: 2 }),
-  // 1–10; validated at app layer
-  rpe: smallint('rpe'),
   isWarmup: boolean('is_warmup').notNull().default(false),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

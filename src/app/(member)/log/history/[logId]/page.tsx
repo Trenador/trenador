@@ -49,19 +49,18 @@ export default async function LogDetailPage({
           <div key={exercise.id}>
             <div className="font-semibold text-[15px] mb-2">{exercise.exerciseName}</div>
             <div className="rounded-xl border overflow-hidden">
-              <div className="grid grid-cols-4 px-4 py-2 bg-secondary/60">
-                {['Set', 'Reps', 'Weight', 'RPE'].map(h => (
+              <div className="grid grid-cols-3 px-4 py-2 bg-secondary/60">
+                {['Set', 'lbs', 'Reps'].map(h => (
                   <span key={h} className="label-mono text-[10px] normal-case tracking-wide">{h}</span>
                 ))}
               </div>
               {exercise.sets.map(set => (
-                <div key={set.id} className="grid grid-cols-4 px-4 py-3 border-t bg-card text-sm">
+                <div key={set.id} className="grid grid-cols-3 px-4 py-3 border-t bg-card text-sm">
                   <span className={set.isWarmup ? 'text-muted-foreground' : ''}>
                     {set.setNumber}{set.isWarmup ? ' W' : ''}
                   </span>
+                  <span>{set.weightLbs ? `${Number(set.weightLbs)}` : '—'}</span>
                   <span>{set.reps ?? '—'}</span>
-                  <span>{set.weightKg ? `${set.weightKg}kg` : '—'}</span>
-                  <span>{set.rpe ?? '—'}</span>
                 </div>
               ))}
             </div>

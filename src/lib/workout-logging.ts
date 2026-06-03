@@ -35,10 +35,9 @@ export type LogExerciseInput = {
   sets: Array<{
     setNumber: number
     reps: number | undefined
-    weightKg: number | undefined
+    weightLbs: number | undefined
     durationSeconds: number | undefined
     distanceMeters: number | undefined
-    rpe: number | undefined
     isWarmup: boolean | undefined
     notes: string | undefined
   }>
@@ -209,10 +208,9 @@ export async function saveWorkoutLog(
           workoutLogExerciseId: logExercise.id,
           setNumber: s.setNumber,
           reps: s.reps ?? undefined,
-          weightKg: s.weightKg ? String(s.weightKg) : undefined,
+          weightLbs: s.weightLbs ? String(s.weightLbs) : undefined,
           durationSeconds: s.durationSeconds ?? undefined,
           distanceMeters: s.distanceMeters ? String(s.distanceMeters) : undefined,
-          rpe: s.rpe ?? undefined,
           isWarmup: s.isWarmup ?? false,
           notes: s.notes ?? undefined,
         }) satisfies NewWorkoutLogSet)

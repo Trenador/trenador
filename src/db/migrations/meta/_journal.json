@@ -43,6 +43,13 @@
       "when": 1780330212358,
       "tag": "0005_dear_reavers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780513233412,
+      "tag": "0006_mushy_rawhide_kid",
+      "breakpoints": true
     }
   ]
 }
