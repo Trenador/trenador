@@ -24,21 +24,6 @@ export async function verifyMemberCode(formData: FormData) {
 
   const code = parsed.data.code.trim().toUpperCase()
 
-  // find a matching unused code for this tenant
-  const [matchedCode] = await db
-    .select()
-    .from(memberCodes)
-    .where(
-      and(
-        eq(memberCodes.tenantId, APP_CONFIG.tenantId),
-        eq(memberCodes.code, code),
-        isNull(memberCodes.usedBy)
-      )
-    )
-    .limit(1)
-
-  if (!matchedCode) return { error: 'invalid or already used member code' }
-
   // get the member row for this auth user
   const [member] = await db
     .select()
@@ -48,11 +33,21 @@ export async function verifyMemberCode(formData: FormData) {
 
   if (!member) return { error: 'member record not found' }
 
-  // mark the code as used and verify the member in one go
-  await db
+  // Atomically claim the code: UPDATE...WHERE usedBy IS NULL prevents double-redemption
+  // if two requests race. RETURNING lets us confirm the claim succeeded.
+  const [claimed] = await db
     .update(memberCodes)
     .set({ usedBy: member.id, usedAt: new Date() })
-    .where(eq(memberCodes.id, matchedCode.id))
+    .where(
+      and(
+        eq(memberCodes.tenantId, APP_CONFIG.tenantId),
+        eq(memberCodes.code, code),
+        isNull(memberCodes.usedBy)
+      )
+    )
+    .returning({ id: memberCodes.id })
+
+  if (!claimed) return { error: 'invalid or already used member code' }
 
   await db
     .update(members)

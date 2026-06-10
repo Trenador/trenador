@@ -5,7 +5,14 @@ import { db } from '@/db'
 import { members } from '@/db/schema'
 import { getStripe } from '@/lib/stripe/client'
 
-export async function POST() {
+function getPriceId(plan: string | null): string {
+  if (plan === 'annual') {
+    return process.env.STRIPE_ANNUAL_PRICE_ID ?? process.env.STRIPE_PRICE_ID!
+  }
+  return process.env.STRIPE_MONTHLY_PRICE_ID ?? process.env.STRIPE_PRICE_ID!
+}
+
+export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -22,14 +29,18 @@ export async function POST() {
     redirect('/chat')
   }
 
+  const formData = await request.formData()
+  const plan = formData.get('plan') as string | null
+
   const stripe = getStripe()
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
+    line_items: [{ price: getPriceId(plan), quantity: 1 }],
     ...(user.email ? { customer_email: user.email } : {}),
     client_reference_id: member.id,
+    subscription_data: { trial_period_days: 14 },
     success_url: `${appUrl}/chat?subscribed=1`,
     cancel_url: `${appUrl}/subscribe`,
   })

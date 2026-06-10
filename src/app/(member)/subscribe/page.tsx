@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+
 const FEATURES = [
   'Unlimited AI coach conversations',
   'Personalized advice based on your intake profile',
@@ -5,7 +9,31 @@ const FEATURES = [
   'Coach replies within 24 hours',
 ]
 
+const PLANS = [
+  {
+    id: 'monthly',
+    label: 'Monthly',
+    price: '$4.99',
+    per: '/month',
+    sub: 'Cancel anytime',
+    badge: null,
+  },
+  {
+    id: 'annual',
+    label: 'Annual',
+    price: '$49',
+    per: '/year',
+    sub: 'That\'s just $4.08/month',
+    badge: 'Save 18%',
+  },
+] as const
+
+type PlanId = 'monthly' | 'annual'
+
 export default function SubscribePage() {
+  const [plan, setPlan] = useState<PlanId>('annual')
+  const selected = PLANS.find((p) => p.id === plan)!
+
   return (
     <div className="min-h-screen md:grid md:grid-cols-2">
       {/* Left — hero panel */}
@@ -32,13 +60,40 @@ export default function SubscribePage() {
             </p>
           </div>
 
+          {/* Plan toggle */}
+          <div className="grid grid-cols-2 gap-2">
+            {PLANS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setPlan(p.id)}
+                className={`relative rounded-xl border px-4 py-3 text-left transition-colors ${
+                  plan === p.id
+                    ? 'border-foreground bg-foreground/[0.04]'
+                    : 'border-border hover:bg-foreground/[0.02]'
+                }`}
+              >
+                {p.badge && (
+                  <span className="absolute -top-2.5 right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                    {p.badge}
+                  </span>
+                )}
+                <div className="text-[13px] font-medium">{p.label}</div>
+                <div className="mt-0.5 text-xl font-bold">
+                  {p.price}
+                  <span className="text-sm font-normal text-muted-foreground">{p.per}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+
           <div className="rounded-2xl border bg-secondary/40 p-6 space-y-5">
             <div>
               <p className="text-4xl font-bold tracking-tight">
-                $49
-                <span className="text-base font-normal text-muted-foreground ml-1">/month</span>
+                {selected.price}
+                <span className="text-base font-normal text-muted-foreground ml-1">{selected.per}</span>
               </p>
-              <p className="label-mono mt-1 normal-case tracking-wide">Cancel anytime</p>
+              <p className="label-mono mt-1 normal-case tracking-wide">{selected.sub}</p>
             </div>
 
             <ul className="space-y-2.5">
@@ -54,6 +109,7 @@ export default function SubscribePage() {
           </div>
 
           <form action="/api/stripe/checkout" method="POST" className="space-y-4">
+            <input type="hidden" name="plan" value={plan} />
             <button
               type="submit"
               className="w-full h-11 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
@@ -61,7 +117,7 @@ export default function SubscribePage() {
               Start membership
             </button>
             <p className="text-center text-xs text-muted-foreground">
-              Secure payment via Stripe
+              Secure payment via Stripe · 14-day free trial
             </p>
           </form>
         </div>

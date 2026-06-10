@@ -7,7 +7,7 @@ export default async function MessagesPage() {
   const messages = await getCoachConversation()
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-w-0 flex-1 flex-col min-h-0">
       {/* header */}
       <div className="border-b px-4 md:px-6 py-4 shrink-0">
         <h1 className="font-semibold text-sm">Message Center</h1>

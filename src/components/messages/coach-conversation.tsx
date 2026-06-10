@@ -100,6 +100,7 @@ export function CoachConversation({ initialMessages }: Props) {
           <Composer
             onSubmit={handleSubmit}
             disabled={isPending}
+            placeholder="Message your coaching team…"
           />
         </div>
       </div>

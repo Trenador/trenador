@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, ne, and } from 'drizzle-orm'
 import { db } from '@/db'
 import { members } from '@/db/schema'
 import { getStripe } from '@/lib/stripe/client'
@@ -35,6 +35,7 @@ export async function POST(request: Request) {
 
         if (!memberId) break
 
+        // Idempotent: skip if already active so Stripe retries are harmless
         await db
           .update(members)
           .set({
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
             subscriptionStatus: 'active',
             updatedAt: new Date(),
           })
-          .where(eq(members.id, memberId))
+          .where(and(eq(members.id, memberId), ne(members.subscriptionStatus, 'active')))
         break
       }
 
