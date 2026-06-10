@@ -53,6 +53,106 @@ function levelShort(level: string | null) {
   return level.slice(0, 3) + '.'
 }
 
+function FeaturedCard({ workout, onBrowseAll, totalInCategory }: {
+  workout: Workout
+  onBrowseAll: () => void
+  totalInCategory: number
+}) {
+  const img = workout.category ? CATEGORY_IMAGE[workout.category] : undefined
+  const banner = workout.category ? (CATEGORY_BANNER[workout.category] ?? 'bg-muted') : 'bg-muted'
+
+  return (
+    <div className="group overflow-hidden rounded-2xl border border-border/60 bg-card transition-all hover:border-border hover:shadow-md">
+      <div className="flex flex-col sm:flex-row">
+        {/* Image */}
+        <Link href={`/workouts/${workout.id}`} className="relative shrink-0 sm:w-[200px]">
+          <div className={cn('relative h-[160px] overflow-hidden sm:h-full sm:min-h-[160px]', banner)}>
+            {img && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={img}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover brightness-110 transition-transform duration-500 group-hover:scale-105"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20 sm:bg-gradient-to-b sm:from-black/40 sm:via-transparent sm:to-transparent" />
+            {workout.category && (
+              <span className="absolute left-3 top-3 label-mono text-[10px] normal-case tracking-widest text-white/90 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+                {workout.category}
+              </span>
+            )}
+          </div>
+        </Link>
+
+        {/* Info */}
+        <div className="flex flex-1 flex-col gap-2 p-5">
+          <Link href={`/workouts/${workout.id}`} className="flex-1">
+            <h3 className="font-serif text-[22px] italic leading-snug tracking-[0.02em]">
+              {workout.title}
+            </h3>
+            {workout.summary && (
+              <p className="mt-1.5 line-clamp-2 text-[13px] text-muted-foreground leading-relaxed">
+                {workout.summary}
+              </p>
+            )}
+            <div className="mt-3 flex items-center gap-3 text-[12px] text-muted-foreground">
+              {workout.durationMinutes && (
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {workout.durationMinutes} min
+                </span>
+              )}
+              {workout.level && (
+                <span className="flex items-center gap-1">
+                  <Gauge className="h-3 w-3" />
+                  {workout.level}
+                </span>
+              )}
+              {workout.savesCount > 0 && (
+                <span className="flex items-center gap-1">
+                  <Bookmark className="h-3 w-3" />
+                  {workout.savesCount}
+                </span>
+              )}
+            </div>
+            {workout.coachName && (
+              <div className="mt-2 flex items-center gap-2">
+                {workout.coachPhotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={workout.coachPhotoUrl} alt={workout.coachName} className="h-5 w-5 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-[8px] font-semibold text-background">
+                    {coachInitials(workout.coachName)}
+                  </div>
+                )}
+                <span className="text-[12px] text-muted-foreground">{workout.coachName}</span>
+              </div>
+            )}
+          </Link>
+
+          <div className="mt-3 flex items-center gap-3">
+            <Link
+              href={`/workouts/${workout.id}`}
+              className="rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-opacity hover:opacity-90"
+            >
+              View workout
+            </Link>
+            {totalInCategory > 1 && (
+              <button
+                type="button"
+                onClick={onBrowseAll}
+                className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Browse all {workout.category} ({totalInCategory})
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function WorkoutCard({ workout }: { workout: Workout }) {
   const img = workout.category ? CATEGORY_IMAGE[workout.category] : undefined
   const banner = workout.category ? (CATEGORY_BANNER[workout.category] ?? 'bg-muted') : 'bg-muted'
@@ -442,27 +542,24 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
             ))}
           </div>
         ) : (
-          /* Default: category sections */
+          /* Default: one featured workout per category */
           <div className="space-y-10">
-            {CATEGORIES.filter(cat => grouped[cat]?.length).map(cat => (
-              <div key={cat}>
-                <div className="mb-4 flex items-baseline justify-between">
-                  <h2 className="font-serif text-2xl italic tracking-[0.02em]">{cat}</h2>
-                  <span className="label-mono text-[10px] normal-case tracking-widest text-muted-foreground">
-                    {grouped[cat]!.length} workout{grouped[cat]!.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <div className="relative">
-                  <div className="flex gap-4 overflow-x-auto pb-3 [&::-webkit-scrollbar]:hidden">
-                    {grouped[cat]!.map(w => (
-                      <WorkoutCard key={w.id} workout={w} />
-                    ))}
+            {CATEGORIES.filter(cat => grouped[cat]?.length).map(cat => {
+              const items = grouped[cat]!
+              const featured = [...items].sort((a, b) => b.savesCount - a.savesCount)[0]!
+              return (
+                <div key={cat}>
+                  <div className="mb-4 flex items-baseline justify-between">
+                    <h2 className="font-serif text-2xl italic tracking-[0.02em]">{cat}</h2>
                   </div>
-                  {/* Right fade */}
-                  <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent" />
+                  <FeaturedCard
+                    workout={featured}
+                    totalInCategory={items.length}
+                    onBrowseAll={() => setActiveCategory(cat)}
+                  />
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
