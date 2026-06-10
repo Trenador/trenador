@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Paperclip, Camera } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -46,11 +46,20 @@ export function Composer({ onSubmit, disabled, placeholder = 'Message Trenador A
   return (
     <div
       className={cn(
-        'flex items-end gap-2 border bg-muted/50 px-1 py-1 transition-all',
+        'flex items-end gap-1 border bg-muted/50 px-1 py-1 transition-all',
         multiline ? 'rounded-2xl flex-wrap' : 'rounded-full',
         'focus-within:ring-2 focus-within:ring-ring/40',
       )}
     >
+      {/* Left icon — attachment */}
+      <button
+        type="button"
+        aria-label="Attach file"
+        className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+      >
+        <Paperclip className="h-4 w-4" />
+      </button>
+
       {multiline && (
         <textarea
           ref={textareaRef}
@@ -77,6 +86,17 @@ export function Composer({ onSubmit, disabled, placeholder = 'Message Trenador A
           style={{ maxHeight: '192px', height: '28px' }}
         />
       )}
+      {/* Camera icon */}
+      {!multiline && (
+        <button
+          type="button"
+          aria-label="Attach image"
+          className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+        >
+          <Camera className="h-4 w-4" />
+        </button>
+      )}
+
       <button
         onClick={submit}
         disabled={disabled || !value.trim()}

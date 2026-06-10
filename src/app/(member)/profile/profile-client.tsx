@@ -37,7 +37,9 @@ export function ProfileClient({
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const [displayName, setDisplayName] = useState(initName)
+  const nameParts = initName.trim().split(/\s+/)
+  const [firstName, setFirstName] = useState(nameParts[0] ?? '')
+  const [lastName, setLastName] = useState(nameParts.slice(1).join(' '))
   const [year, setYear] = useState(initYear !== null ? String(initYear) : '')
   const [gender, setGender] = useState<Gender | ''>(
     (initGender as Gender | null) ?? '',
@@ -49,7 +51,8 @@ export function ProfileClient({
   const [saving, setSaving] = useState(false)
   const [, startTransition] = useTransition()
 
-  const initial = (displayName.trim()[0] ?? '?').toUpperCase()
+  const displayName = `${firstName.trim()} ${lastName.trim()}`.trim()
+  const initial = (firstName.trim()[0] ?? '?').toUpperCase()
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -102,7 +105,7 @@ export function ProfileClient({
   }
 
   const save = () => {
-    const name = displayName.trim()
+    const name = `${firstName.trim()} ${lastName.trim()}`.trim()
     if (!name) { alert('Name is required'); return }
     const y = year ? parseInt(year, 10) : null
     const currentYear = new Date().getFullYear()
@@ -145,7 +148,7 @@ export function ProfileClient({
         Back
       </button>
 
-      <h1 className="mb-6 font-serif text-[28px] italic leading-tight tracking-tight">
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight">
         Profile
       </h1>
 
@@ -193,13 +196,24 @@ export function ProfileClient({
           </div>
         </div>
 
-        {/* Display name */}
+        {/* First name */}
         <div className="space-y-1.5">
-          <label className="text-[13px] font-medium">Display name</label>
+          <label className="text-[13px] font-medium">First name</label>
           <input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            autoComplete="name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            autoComplete="given-name"
+            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-foreground"
+          />
+        </div>
+
+        {/* Last name */}
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-medium">Last name</label>
+          <input
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            autoComplete="family-name"
             className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:border-foreground"
           />
         </div>

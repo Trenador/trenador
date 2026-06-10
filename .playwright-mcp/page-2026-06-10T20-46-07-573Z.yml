@@ -1,0 +1,29 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - button "Back" [ref=e3]:
+      - img [ref=e4]
+      - text: Back
+    - heading "Profile" [level=1] [ref=e6]
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e10]: S
+        - button "Add photo" [ref=e12]:
+          - img [ref=e13]
+          - text: Add photo
+      - generic [ref=e16]:
+        - text: Display name
+        - textbox [ref=e17]: Samuel Meads
+      - generic [ref=e18]:
+        - text: Year of birth
+        - spinbutton [ref=e19]
+      - generic [ref=e20]:
+        - text: Gender
+        - generic [ref=e21]:
+          - button "female" [ref=e22]
+          - button "male" [ref=e23]
+          - button "non-binary" [ref=e24]
+      - generic [ref=e25]:
+        - text: Weight (lbs)
+        - spinbutton [ref=e26]
+      - button "Save changes" [ref=e28]
+  - alert [ref=e29]

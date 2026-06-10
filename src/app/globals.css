@@ -45,14 +45,14 @@
 
 :root {
   --radius: 0.75rem;
-  --background: oklch(1 0 0);
+  --background: #F7F6F2;
   --foreground: oklch(0.18 0.012 60);
-  --card: #F7F6F2;
+  --card: oklch(1 0 0);
   --card-foreground: oklch(0.18 0.012 60);
-  --popover: #F7F6F2;
+  --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.012 60);
   --primary: oklch(0.18 0.012 60);
-  --primary-foreground: #F7F6F2;
+  --primary-foreground: oklch(1 0 0);
   --secondary: #EFEDE7;
   --secondary-foreground: oklch(0.18 0.012 60);
   --muted: #EFEDE7;

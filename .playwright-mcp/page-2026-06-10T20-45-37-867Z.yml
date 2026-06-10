@@ -1,0 +1,39 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - img "Trenador" [ref=e6]
+        - button "Collapse sidebar" [ref=e7]:
+          - img
+      - button "Chat" [ref=e9]:
+        - img
+        - text: Chat
+      - navigation [ref=e10]:
+        - button "Workout Library" [ref=e11]:
+          - img [ref=e13]
+          - text: Workout Library
+        - button "My Workouts" [ref=e19]:
+          - img [ref=e21]
+          - text: My Workouts
+        - button "Message Center" [ref=e23]:
+          - img [ref=e25]
+          - text: Message Center
+      - paragraph [ref=e29]: No conversations yet
+      - button "S Samuel Meads Pro" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: S
+        - generic [ref=e33]:
+          - generic [ref=e34]: Samuel Meads
+          - generic [ref=e35]: Pro
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - heading "Message Center" [level=1] [ref=e40]
+        - paragraph [ref=e41]: Your coaching team replies within 24 hours
+      - generic [ref=e42]:
+        - generic [ref=e45]:
+          - paragraph [ref=e46]: No messages yet
+          - paragraph [ref=e47]: Send a message below and your coaching team will respond within 24 hours.
+        - generic [ref=e50]:
+          - textbox "Message your coaching team…" [ref=e51]
+          - button "Send message" [disabled] [ref=e52]:
+            - img [ref=e53]
+  - alert [ref=e55]

@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - img "Trenador" [ref=e6]
+        - button "Collapse sidebar" [ref=e7]:
+          - img
+      - button "Chat" [ref=e9]:
+        - img
+        - text: Chat
+      - navigation [ref=e10]:
+        - button "Workout Library" [ref=e11]:
+          - img [ref=e13]
+          - text: Workout Library
+        - button "My Workouts" [ref=e19]:
+          - img [ref=e21]
+          - text: My Workouts
+        - button "Message Center" [ref=e23]:
+          - img [ref=e25]
+          - text: Message Center
+      - paragraph [ref=e29]: No conversations yet
+      - button "S Samuel Meads Pro" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: S
+        - generic [ref=e33]:
+          - generic [ref=e34]: Samuel Meads
+          - generic [ref=e35]: Pro
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - heading "My workouts" [level=1] [ref=e41]
+        - button "Workout" [ref=e42]:
+          - img [ref=e43]
+          - text: Workout
+      - generic [ref=e45]:
+        - text: You haven't added any workouts yet.
+        - button "Browse the library" [ref=e46]
+        - text: to save one.
+  - alert [ref=e47]

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  Plus, Trash2, PanelLeft, LogOut, Dumbbell, BookOpen,
+  Plus, Trash2, Menu, LogOut, Dumbbell, BookOpen,
   MessageCircle, User, Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -178,7 +178,7 @@ export function ThreadSidebar({
             aria-label="Open sidebar"
             className="text-muted-foreground hover:text-foreground"
           >
-            <PanelLeft className="h-4 w-4" />
+            <Menu className="h-4 w-4" />
           </Button>
         </div>
         <div className="flex flex-1 flex-col items-center gap-2 pt-1">
@@ -223,7 +223,7 @@ export function ThreadSidebar({
             aria-label="Collapse sidebar"
             className="text-muted-foreground hover:text-foreground"
           >
-            <PanelLeft className="h-4 w-4" />
+            <Menu className="h-4 w-4" />
           </Button>
         </div>
 
@@ -243,20 +243,20 @@ export function ThreadSidebar({
         <nav className="space-y-px px-2 pb-3">
           <SidebarTab
             icon={<Dumbbell className="h-4 w-4" />}
-            label="Workout Library"
+            label="Workout library"
             onClick={() => { router.push('/workouts'); closeOnMobile() }}
             active={pathname === '/workouts' || pathname.startsWith('/workouts/')}
           />
           <SidebarTab
             icon={<BookOpen className="h-4 w-4" />}
-            label="My Workouts"
+            label="My workouts"
             onClick={() => { router.push('/workouts/mine'); closeOnMobile() }}
             active={pathname === '/workouts/mine' || pathname.startsWith('/workouts/mine/')}
           />
           {/* Log Workout and History are hidden until enabled by product
           <SidebarTab
             icon={<ClipboardList className="h-4 w-4" />}
-            label="Log Workout"
+            label="Log workout"
             onClick={() => { router.push('/log'); closeOnMobile() }}
             active={pathname === '/log'}
           />
@@ -269,7 +269,7 @@ export function ThreadSidebar({
           */}
           <SidebarTab
             icon={<MessageCircle className="h-4 w-4" />}
-            label="Message Center"
+            label="Message center"
             onClick={() => { router.push('/messages'); closeOnMobile() }}
             active={pathname === '/messages'}
           />

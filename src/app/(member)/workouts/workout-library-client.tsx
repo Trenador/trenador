@@ -542,7 +542,7 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
             ))}
           </div>
         ) : (
-          /* Default: one featured workout per category */
+          /* Default: one featured workout card per category */
           <div className="space-y-10">
             {CATEGORIES.filter(cat => grouped[cat]?.length).map(cat => {
               const items = grouped[cat]!
@@ -551,12 +551,17 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
                 <div key={cat}>
                   <div className="mb-4 flex items-baseline justify-between">
                     <h2 className="font-serif text-2xl italic tracking-[0.02em]">{cat}</h2>
+                    {items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveCategory(cat)}
+                        className="text-[12px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                      >
+                        View all ({items.length})
+                      </button>
+                    )}
                   </div>
-                  <FeaturedCard
-                    workout={featured}
-                    totalInCategory={items.length}
-                    onBrowseAll={() => setActiveCategory(cat)}
-                  />
+                  <WorkoutCard workout={featured} />
                 </div>
               )
             })}
