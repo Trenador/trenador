@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Plus, Trash2, PanelLeft, LogOut, Dumbbell, BookOpen,
-  MessageCircle, User,
+  MessageCircle, User, Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -28,6 +28,7 @@ type ThreadItem = {
 
 type Member = {
   displayName: string
+  photoUrl?: string | null
 }
 
 type Props = {
@@ -38,6 +39,7 @@ type Props = {
   mobileTransform: string
   mobileTransition: string
   backdropOpacity: number
+  initialAvatarUrl?: string
 }
 
 function dateBucket(date: Date | null): string {
@@ -92,10 +94,12 @@ export function ThreadSidebar({
   mobileTransform,
   mobileTransition,
   backdropOpacity,
+  initialAvatarUrl = '',
 }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const [threads, setThreads] = useState(initialThreads)
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl)
   const [, startTransition] = useTransition()
 
   const prevRef = useRef(initialThreads)
@@ -105,6 +109,27 @@ export function ThreadSidebar({
       setThreads(initialThreads)
     }
   }, [initialThreads])
+
+  useEffect(() => {
+    const onRefresh = async () => {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('members')
+        .select('photo_url')
+        .eq('auth_user_id', user.id)
+        .single()
+      const path = (data as { photo_url: string | null } | null)?.photo_url ?? null
+      if (!path) { setAvatarUrl(''); return }
+      if (path.startsWith('http')) { setAvatarUrl(path); return }
+      const { data: signed } = await supabase.storage.from('avatars').createSignedUrl(path, 60 * 60 * 24 * 7)
+      setAvatarUrl(signed?.signedUrl ?? '')
+    }
+    window.addEventListener('profile:refresh', onRefresh)
+    return () => window.removeEventListener('profile:refresh', onRefresh)
+  }, [])
 
   function handleDelete(e: React.MouseEvent, threadId: string) {
     e.preventDefault()
@@ -297,19 +322,28 @@ export function ThreadSidebar({
         </ScrollArea>
 
         {/* User menu */}
-        <div className="border-t border-border/70">
+        <div>
           <DropdownMenu>
             <DropdownMenuTrigger className="flex h-auto w-full cursor-pointer items-center justify-start gap-2 rounded-none bg-transparent px-3 py-3 text-foreground outline-none hover:bg-foreground/[0.04] focus-visible:bg-foreground/[0.04]">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-[10px] font-semibold text-background">
-                {initial}
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-foreground text-[10px] font-semibold text-background">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  initial
+                )}
               </div>
               <div className="flex flex-col items-start leading-tight">
                 <span className="text-[13px]">{member.displayName}</span>
+                <span className="text-[11px] font-medium text-primary">Pro</span>
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="top" className="w-[220px]">
               <DropdownMenuItem onClick={() => { router.push('/profile'); closeOnMobile() }}>
                 <User className="mr-2 h-4 w-4" /> Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled>
+                <Settings className="mr-2 h-4 w-4" /> Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" /> Sign out

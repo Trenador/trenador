@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, integer, numeric, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core'
 import { tenants } from './tenants'
 
 export const members = pgTable('members', {
@@ -17,6 +17,9 @@ export const members = pgTable('members', {
   stripeCustomerId: text('stripe_customer_id').unique(),
   // 'inactive' | 'active' | 'canceled' | 'past_due'
   subscriptionStatus: text('subscription_status').notNull().default('inactive'),
+  yearOfBirth: integer('year_of_birth'),
+  gender: text('gender'),
+  weightLbs: numeric('weight_lbs', { precision: 5, scale: 1 }),
   // reserved for future ABC Fitness integration
   externalMemberId: text('external_member_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

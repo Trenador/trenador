@@ -13,16 +13,19 @@ type ThreadItem = {
 
 type Member = {
   displayName: string
+  photoUrl?: string | null
 }
 
 export function ChatShell({
   initialThreads,
   member,
+  initialAvatarUrl = '',
   children,
   scrollableMain = false,
 }: {
   initialThreads: ThreadItem[]
   member: Member
+  initialAvatarUrl?: string
   children: React.ReactNode
   scrollableMain?: boolean
 }) {
@@ -189,6 +192,7 @@ export function ChatShell({
       <ThreadSidebar
         initialThreads={initialThreads}
         member={member}
+        initialAvatarUrl={initialAvatarUrl}
         collapsed={isMobileView ? false : leftCollapsed}
         onToggle={toggleSidebar}
         mobileTransform={isMobileView ? `translateX(${sideTx})` : ''}

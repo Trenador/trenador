@@ -6,11 +6,27 @@ import { Sparkles, Pencil } from 'lucide-react'
 import { createThread } from '@/actions/chat'
 import { Composer } from '@/components/chat/composer'
 
-const SHORTCUTS = [
-  'How should I structure my training week?',
-  'What should I eat around my workouts?',
-  "I'm a beginner — where do I start?",
-  'How do I recover faster between sessions?',
+type SeedPrompt = {
+  label: string
+  userText?: string
+  assistantOpener?: string
+  navigateTo?: string
+  action?: 'message-center'
+}
+
+const SHORTCUTS: SeedPrompt[] = [
+  { label: 'Browse the workout library.', navigateTo: '/workouts' },
+  { label: 'Talk with an advisor.', action: 'message-center' },
+  {
+    label: 'Modify my workout.',
+    assistantOpener:
+      "Of course — describe what you'd like to modify. For example: swap an exercise, change the duration, adjust the difficulty, or focus on a different muscle group. The more detail you share, the better I can tailor it.",
+  },
+  {
+    label: 'Tell me fun facts about the human body.',
+    userText:
+      'Tell me one fun, surprising fact about the human body and fitness. Just one fact, kept short.',
+  },
 ]
 
 function getGreeting() {
@@ -20,7 +36,7 @@ function getGreeting() {
   return 'Good evening'
 }
 
-function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (s: string) => void; direction?: 'up' | 'down' }) {
+function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (p: SeedPrompt) => void; direction?: 'up' | 'down' }) {
   const [open, setOpen] = useState(false)
 
   const panel = (
@@ -36,18 +52,18 @@ function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (s: string) => vo
           <span className="text-[13px] text-muted-foreground">Shortcuts</span>
         </div>
         <div className="max-h-[min(50vh,calc(100vh-12rem))] overflow-y-auto overscroll-contain">
-          {SHORTCUTS.map((s, i) => (
+          {SHORTCUTS.map((p, i) => (
             <button
-              key={s}
+              key={p.label}
               type="button"
-              onClick={() => { setOpen(false); onPick(s) }}
+              onClick={() => { setOpen(false); onPick(p) }}
               style={{ transitionDelay: open ? `${i * 40}ms` : '0ms' }}
               className={`flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left text-[15px] leading-snug text-foreground transition-all duration-300 hover:bg-foreground/[0.04] ${
                 open ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
               }`}
             >
               <Pencil className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span>{s}</span>
+              <span>{p.label}</span>
             </button>
           ))}
         </div>
@@ -84,6 +100,13 @@ export function ChatWelcomeClient({ displayName }: { displayName: string }) {
       const { id } = await createThread()
       router.push(`/chat/${id}?message=${encodeURIComponent(content)}`)
     })
+  }
+
+  function handlePick(p: SeedPrompt) {
+    if (p.navigateTo) { router.push(p.navigateTo); return }
+    if (p.action === 'message-center') { router.push('/messages'); return }
+    const text = p.userText ?? p.assistantOpener ?? p.label
+    handleSubmit(text)
   }
 
   return (
@@ -133,11 +156,11 @@ export function ChatWelcomeClient({ displayName }: { displayName: string }) {
         >
           <div className="mx-auto w-full max-w-2xl">
             <div className="mb-2 flex md:hidden">
-              <ShortcutsMenu onPick={handleSubmit} direction="up" />
+              <ShortcutsMenu onPick={handlePick} direction="up" />
             </div>
             <Composer onSubmit={handleSubmit} disabled={isPending} />
             <div className="mt-3 hidden md:flex md:justify-center">
-              <ShortcutsMenu onPick={handleSubmit} direction="down" />
+              <ShortcutsMenu onPick={handlePick} direction="down" />
             </div>
           </div>
         </div>

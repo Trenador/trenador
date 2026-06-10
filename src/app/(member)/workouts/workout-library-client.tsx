@@ -2,11 +2,14 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Clock, Gauge, Bookmark, Search, X } from 'lucide-react'
+import { Clock, Gauge, Bookmark, Search, X, SlidersHorizontal, ChevronDown, ChevronUp, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet'
 
 type Workout = {
   id: string
@@ -144,6 +147,16 @@ function WorkoutCard({ workout }: { workout: Workout }) {
             )}
           </div>
         )}
+
+        {/* Inline Remix */}
+        <Link
+          href={`/workouts/${workout.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="label-mono mt-2 flex w-full items-center justify-center gap-1 rounded-full border border-border bg-background px-2.5 py-1.5 normal-case tracking-[0.15em] text-foreground transition-colors hover:bg-foreground/[0.04]"
+        >
+          <Plus className="h-3 w-3" />
+          Remix
+        </Link>
       </div>
     </Link>
   )
@@ -190,12 +203,137 @@ function formatDuration(min: number | null) {
   return `${min} min`
 }
 
+function MobileFilterSheet({
+  open,
+  onOpenChange,
+  functionOptions,
+  levelOptions,
+  muscleOptions,
+  durationOptions,
+  activeFunction,
+  activeLevel,
+  activeMuscle,
+  activeDuration,
+  setActiveFunction,
+  setActiveLevel,
+  setActiveMuscle,
+  setActiveDuration,
+  clearAll,
+  resultCount,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  functionOptions: string[]
+  levelOptions: string[]
+  muscleOptions: string[]
+  durationOptions: string[]
+  activeFunction: string[]
+  activeLevel: string[]
+  activeMuscle: string[]
+  activeDuration: string[]
+  setActiveFunction: React.Dispatch<React.SetStateAction<string[]>>
+  setActiveLevel: React.Dispatch<React.SetStateAction<string[]>>
+  setActiveMuscle: React.Dispatch<React.SetStateAction<string[]>>
+  setActiveDuration: React.Dispatch<React.SetStateAction<string[]>>
+  clearAll: () => void
+  resultCount: number
+}) {
+  const [openSection, setOpenSection] = useState<string | null>('Function')
+  const toggle = (setter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
+    setter((prev) => prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value])
+  }
+  const sections = [
+    { label: 'Function', active: activeFunction, options: functionOptions, setter: setActiveFunction },
+    { label: 'Level', active: activeLevel, options: levelOptions, setter: setActiveLevel },
+    { label: 'Muscle', active: activeMuscle, options: muscleOptions, setter: setActiveMuscle },
+    { label: 'Duration', active: activeDuration, options: durationOptions, setter: setActiveDuration },
+  ]
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="flex h-[88vh] w-full flex-col rounded-t-2xl p-0">
+        <SheetHeader className="flex-row items-center justify-between border-b border-border/60 px-5 py-4">
+          <SheetTitle className="font-serif text-[22px] font-normal tracking-tight">Filter</SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto px-5">
+          {sections.map((s) => {
+            const isOpen = openSection === s.label
+            return (
+              <div key={s.label} className="border-b border-border/60">
+                <button
+                  type="button"
+                  onClick={() => setOpenSection(isOpen ? null : s.label)}
+                  className="flex w-full items-center justify-between py-4 text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="label-mono normal-case tracking-[0.18em]">{s.label.toUpperCase()}</span>
+                    {s.active.length > 0 && (
+                      <span className="rounded-md border border-border bg-background px-2 py-0.5 text-[12px]">
+                        {s.active.length === 1 ? s.active[0] : `${s.active.length} selected`}
+                      </span>
+                    )}
+                  </div>
+                  {isOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                </button>
+                {isOpen && (
+                  <div className="flex flex-wrap gap-2 pb-5">
+                    {s.options.map((opt) => {
+                      const selected = s.active.includes(opt)
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => toggle(s.setter, opt)}
+                          className={cn(
+                            'rounded-md border px-3 py-1.5 text-[13px] transition-colors',
+                            selected
+                              ? 'border-foreground bg-foreground text-background'
+                              : 'border-border bg-background text-foreground hover:bg-foreground/[0.04]',
+                          )}
+                        >
+                          {opt}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t border-border/60 bg-background px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            onClick={clearAll}
+            className="flex items-center gap-1.5 text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            <X className="h-3.5 w-3.5" />
+            Clear all
+          </button>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="flex-1 rounded-full bg-foreground px-5 py-3 text-[14px] font-medium text-background transition-opacity hover:opacity-90"
+          >
+            Show results ({resultCount})
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [activeLevel, setActiveLevel] = useState<string | null>(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [activeDuration, setActiveDuration] = useState<string | null>(null)
+  const [mobileCategories, setMobileCategories] = useState<string[]>([])
+  const [mobileLevels, setMobileLevels] = useState<string[]>([])
+  const [mobileTags, setMobileTags] = useState<string[]>([])
+  const [mobileDurations, setMobileDurations] = useState<string[]>([])
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
 
   const tags = useMemo(() => {
     const set = new Set<string>()
@@ -209,17 +347,31 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
     return Array.from(set)
   }, [workouts])
 
+  const clearAllFilters = () => {
+    setActiveCategory(null); setActiveLevel(null); setActiveTag(null); setActiveDuration(null)
+    setMobileCategories([]); setMobileLevels([]); setMobileTags([]); setMobileDurations([])
+  }
+
   const filtered = useMemo(() => workouts.filter(w => {
     if (activeCategory && w.category !== activeCategory) return false
     if (activeLevel && w.level !== activeLevel) return false
     if (activeTag && !w.muscleGroups.includes(activeTag)) return false
     if (activeDuration && formatDuration(w.durationMinutes) !== activeDuration) return false
+    if (mobileCategories.length && !mobileCategories.includes(w.category ?? '')) return false
+    if (mobileLevels.length && !mobileLevels.includes(w.level ?? '')) return false
+    if (mobileTags.length && !mobileTags.some(t => w.muscleGroups.includes(t))) return false
+    if (mobileDurations.length && !mobileDurations.includes(formatDuration(w.durationMinutes) ?? '')) return false
     const q = query.toLowerCase()
     if (q && !w.title.toLowerCase().includes(q) && !(w.summary ?? '').toLowerCase().includes(q) && !w.muscleGroups.some(t => t.toLowerCase().includes(q))) return false
     return true
-  }), [workouts, activeCategory, activeLevel, activeTag, activeDuration, query])
+  }), [workouts, activeCategory, activeLevel, activeTag, activeDuration, mobileCategories, mobileLevels, mobileTags, mobileDurations, query])
 
-  const isFiltered = !!(activeCategory || activeLevel || activeTag || activeDuration || query.trim())
+  const activeFilterCount =
+    (activeCategory ? 1 : 0) + (activeLevel ? 1 : 0) + (activeTag ? 1 : 0) + (activeDuration ? 1 : 0) +
+    mobileCategories.length + mobileLevels.length + mobileTags.length + mobileDurations.length
+
+  const isFiltered = !!(activeCategory || activeLevel || activeTag || activeDuration || query.trim() ||
+    mobileCategories.length || mobileLevels.length || mobileTags.length || mobileDurations.length)
 
   const grouped = CATEGORIES.reduce<Record<string, Workout[]>>((acc, cat) => {
     const items = filtered.filter(w => w.category === cat)
@@ -252,13 +404,27 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
             )}
           </div>
 
-          {/* Filter pills */}
-          <div className="flex flex-wrap gap-1.5">
+          {/* Desktop filter pills */}
+          <div className="hidden flex-wrap gap-1.5 sm:flex">
             <FilterSelect label="Function" options={[...CATEGORIES]} active={activeCategory} onChange={setActiveCategory} />
             <FilterSelect label="Level" options={[...LEVELS]} active={activeLevel} onChange={setActiveLevel} />
             <FilterSelect label="Muscle" options={tags} active={activeTag} onChange={setActiveTag} />
             <FilterSelect label="Duration" options={durationLabels} active={activeDuration} onChange={setActiveDuration} />
           </div>
+          {/* Mobile filter button */}
+          <button
+            type="button"
+            onClick={() => setMobileFilterOpen(true)}
+            className="flex items-center justify-center gap-2 self-start rounded-full border border-border bg-background px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-foreground/[0.04] sm:hidden"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filter
+            {activeFilterCount > 0 && (
+              <span className="ml-0.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-[11px] font-medium text-background">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -300,6 +466,25 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
           </div>
         )}
       </div>
+
+      <MobileFilterSheet
+        open={mobileFilterOpen}
+        onOpenChange={setMobileFilterOpen}
+        functionOptions={[...CATEGORIES]}
+        levelOptions={[...LEVELS]}
+        muscleOptions={tags}
+        durationOptions={durationLabels}
+        activeFunction={mobileCategories}
+        activeLevel={mobileLevels}
+        activeMuscle={mobileTags}
+        activeDuration={mobileDurations}
+        setActiveFunction={setMobileCategories}
+        setActiveLevel={setMobileLevels}
+        setActiveMuscle={setMobileTags}
+        setActiveDuration={setMobileDurations}
+        clearAll={clearAllFilters}
+        resultCount={filtered.length}
+      />
     </div>
   )
 }
