@@ -182,7 +182,7 @@ export function ThreadSidebar({
           </Button>
         </div>
         <div className="flex flex-1 flex-col items-center gap-2 pt-1">
-          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); router.push('/chat') }} aria-label="New chat">
+          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('chat:new')); router.push('/chat') }} aria-label="New chat">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -230,7 +230,7 @@ export function ThreadSidebar({
         {/* New chat button (desktop) */}
         <div className="hidden px-3 pb-2 pt-2 lg:block">
           <Button
-            onClick={() => { router.push('/chat'); closeOnMobile() }}
+            onClick={() => { window.dispatchEvent(new CustomEvent('chat:new')); router.push('/chat'); closeOnMobile() }}
             className="w-full justify-start border-border/80 bg-background/60 font-normal text-foreground hover:bg-foreground/[0.06] hover:text-foreground"
             variant="outline"
             size="sm"
@@ -354,7 +354,7 @@ export function ThreadSidebar({
 
         {/* Mobile FAB */}
         <Button
-          onClick={() => { router.push('/chat'); closeOnMobile() }}
+          onClick={() => { window.dispatchEvent(new CustomEvent('chat:new')); router.push('/chat'); closeOnMobile() }}
           aria-label="New chat"
           size="icon"
           className="absolute bottom-20 right-4 z-10 h-12 w-12 rounded-full shadow-lg lg:hidden"

@@ -52,12 +52,21 @@ export function CoachConversation({ initialMessages }: Props) {
       {/* message list */}
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl px-4 py-6 space-y-6 md:px-6">
-          {messages.length === 0 ? (
-            <div className="py-16 text-center text-sm text-muted-foreground">
-              No messages yet — send one below.
+          {/* Pinned opener — always visible */}
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-foreground/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/coach-sam.jpg" alt="Sam" className="h-full w-full object-cover" />
             </div>
-          ) : (
-            messages.map(msg => {
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-[12px] font-medium text-foreground/60">Sam · Coach</span>
+              <p className="text-[15px] leading-relaxed text-foreground">
+                Hi — Sam here, your advisor. How can I help you today?
+              </p>
+            </div>
+          </div>
+
+          {messages.map(msg => {
               const isCoach = msg.senderRole === 'coach'
               const ts = formatTimestamp(msg.createdAt)
 
@@ -91,8 +100,7 @@ export function CoachConversation({ initialMessages }: Props) {
                   <span className="label-mono normal-case tracking-[0.1em]">{ts}</span>
                 </div>
               )
-            })
-          )}
+          })}
           <div ref={bottomRef} />
         </div>
       </div>

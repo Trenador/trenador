@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition, useState } from 'react'
+import { useTransition, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sparkles, Pencil } from 'lucide-react'
 import { createThread } from '@/actions/chat'
@@ -38,6 +38,12 @@ function getGreeting() {
 
 function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (p: SeedPrompt) => void; direction?: 'up' | 'down' }) {
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const close = () => setOpen(false)
+    window.addEventListener('chat:new', close)
+    return () => window.removeEventListener('chat:new', close)
+  }, [])
 
   const panel = (
     <div

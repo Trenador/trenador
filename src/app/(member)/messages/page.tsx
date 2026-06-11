@@ -11,7 +11,7 @@ export default async function MessagesPage() {
       {/* header — matches phchat chat-window style */}
       <div className="flex h-[60px] shrink-0 items-center gap-2 border-b border-border/70 pl-4 pr-3 lg:pl-5">
         <span className="block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        <span className="label-mono">Sam Okafor</span>
+        <span className="label-mono">Coach</span>
       </div>
 
       <CoachConversation initialMessages={messages} />
