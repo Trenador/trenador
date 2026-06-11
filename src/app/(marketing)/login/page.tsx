@@ -54,14 +54,6 @@ export default function LoginPage() {
 
   const formContent = (
     <>
-      <OAuthButtons />
-
-      <div className="flex items-center gap-3">
-        <div className="h-px flex-1 bg-border" />
-        <span className="label-mono normal-case tracking-wide text-[11px]">or</span>
-        <div className="h-px flex-1 bg-border" />
-      </div>
-
       <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-1.5">
           <label htmlFor="email" className="text-sm font-medium">Email address</label>
@@ -72,8 +64,7 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="h-12 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -86,8 +77,7 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            className="h-12 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -96,26 +86,26 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="h-12 w-full rounded-full bg-primary text-primary-foreground text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="h-11 w-full rounded-xl bg-primary text-primary-foreground text-base font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {loading ? 'Signing in…' : 'Log in'}
         </button>
       </form>
 
-      <button
-        onClick={handleMagicLink}
-        disabled={loading}
-        className="h-12 w-full rounded-full border text-sm font-medium transition-colors hover:bg-muted disabled:opacity-50"
-      >
-        Send magic link
-      </button>
-
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/signup" className="font-medium text-foreground underline underline-offset-4">
+        <Link href="/signup" className="font-medium text-primary hover:underline">
           Sign up
         </Link>
       </p>
+
+      <div className="flex items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs uppercase tracking-wider text-muted-foreground">Or</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
+      <OAuthButtons />
     </>
   )
 
@@ -142,7 +132,7 @@ export default function LoginPage() {
 
         <div className="relative z-10 rounded-t-[2.5rem] bg-card px-6 pb-10 pt-6 text-card-foreground shadow-[0_-20px_60px_-20px_rgba(0,0,0,0.6)]">
           <div className="mx-auto w-full max-w-sm space-y-5">
-            <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Welcome</h1>
             {formContent}
           </div>
         </div>
@@ -178,8 +168,8 @@ export default function LoginPage() {
         <div className="flex items-center justify-center p-8 md:p-10 lg:p-14">
           <div className="w-full max-w-sm space-y-6">
             <div className="space-y-1">
-              <h1 className="text-4xl font-bold tracking-tight">Welcome back</h1>
-              <p className="text-sm text-muted-foreground">Log in to your Trenador account</p>
+              <h1 className="text-4xl font-bold tracking-tight">Welcome</h1>
+              <p className="mt-2 text-sm text-muted-foreground">Please log in to your account to continue.</p>
             </div>
             {formContent}
           </div>

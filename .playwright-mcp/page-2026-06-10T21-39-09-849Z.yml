@@ -1,0 +1,60 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - img "Trenador" [ref=e6]
+        - button "Collapse sidebar" [ref=e7]:
+          - img
+      - button "Chat" [ref=e9]:
+        - img
+        - text: Chat
+      - navigation [ref=e10]:
+        - button "Workout library" [ref=e11]:
+          - img [ref=e13]
+          - text: Workout library
+        - button "My workouts" [ref=e19]:
+          - img [ref=e21]
+          - text: My workouts
+        - button "Message center" [ref=e23]:
+          - img [ref=e25]
+          - text: Message center
+      - paragraph [ref=e29]: No conversations yet
+      - button "S Samuel Meads Pro" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: S
+        - generic [ref=e33]:
+          - generic [ref=e34]: Samuel Meads
+          - generic [ref=e35]: Pro
+    - generic [ref=e39]:
+      - generic [ref=e43]:
+        - heading "Good evening, Samuel" [level=2] [ref=e44]
+        - paragraph [ref=e45]: How may I be of service?
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - button "Attach file" [ref=e49]:
+            - img [ref=e50]
+          - textbox "Message Trenador AI…" [ref=e52]
+          - button "Attach image" [ref=e53]:
+            - img [ref=e54]
+          - button "Send message" [disabled] [ref=e57]:
+            - img [ref=e58]
+        - generic [ref=e61]:
+          - button "Shortcuts" [ref=e62]:
+            - img [ref=e63]
+            - text: Shortcuts
+          - generic:
+            - generic:
+              - generic [ref=e66]: Shortcuts
+              - generic [ref=e67]:
+                - button "Browse the workout library." [ref=e68]:
+                  - img [ref=e69]
+                  - generic [ref=e72]: Browse the workout library.
+                - button "Talk with an advisor." [ref=e73]:
+                  - img [ref=e74]
+                  - generic [ref=e77]: Talk with an advisor.
+                - button "Modify my workout." [ref=e78]:
+                  - img [ref=e79]
+                  - generic [ref=e82]: Modify my workout.
+                - button "Tell me fun facts about the human body." [ref=e83]:
+                  - img [ref=e84]
+                  - generic [ref=e87]: Tell me fun facts about the human body.
+  - alert [ref=e88]

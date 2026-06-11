@@ -103,7 +103,7 @@ export function Composer({ onSubmit, disabled, placeholder = 'Message Trenador A
         aria-label="Send message"
         className={cn(
           'shrink-0 flex h-8 w-8 items-center justify-center rounded-full transition-opacity',
-          'bg-[oklch(0.58_0.17_40)] text-white hover:opacity-90 disabled:opacity-40',
+          'bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-40',
           multiline && 'self-end mb-0.5 mr-0.5',
         )}
       >

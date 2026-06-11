@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Clock, Gauge, Bookmark, Search, X, SlidersHorizontal, ChevronDown, ChevronUp, Plus } from 'lucide-react'
+import { Bookmark, CalendarDays, Clock, Gauge, MoveHorizontal, Plus, Search, SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -53,104 +53,10 @@ function levelShort(level: string | null) {
   return level.slice(0, 3) + '.'
 }
 
-function FeaturedCard({ workout, onBrowseAll, totalInCategory }: {
-  workout: Workout
-  onBrowseAll: () => void
-  totalInCategory: number
-}) {
-  const img = workout.category ? CATEGORY_IMAGE[workout.category] : undefined
-  const banner = workout.category ? (CATEGORY_BANNER[workout.category] ?? 'bg-muted') : 'bg-muted'
-
-  return (
-    <div className="group overflow-hidden rounded-2xl border border-border/60 bg-card transition-all hover:border-border hover:shadow-md">
-      <div className="flex flex-col sm:flex-row">
-        {/* Image */}
-        <Link href={`/workouts/${workout.id}`} className="relative shrink-0 sm:w-[200px]">
-          <div className={cn('relative h-[160px] overflow-hidden sm:h-full sm:min-h-[160px]', banner)}>
-            {img && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={img}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover brightness-110 transition-transform duration-500 group-hover:scale-105"
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20 sm:bg-gradient-to-b sm:from-black/40 sm:via-transparent sm:to-transparent" />
-            {workout.category && (
-              <span className="absolute left-3 top-3 label-mono text-[10px] normal-case tracking-widest text-white/90 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
-                {workout.category}
-              </span>
-            )}
-          </div>
-        </Link>
-
-        {/* Info */}
-        <div className="flex flex-1 flex-col gap-2 p-5">
-          <Link href={`/workouts/${workout.id}`} className="flex-1">
-            <h3 className="font-serif text-[22px] italic leading-snug tracking-[0.02em]">
-              {workout.title}
-            </h3>
-            {workout.summary && (
-              <p className="mt-1.5 line-clamp-2 text-[13px] text-muted-foreground leading-relaxed">
-                {workout.summary}
-              </p>
-            )}
-            <div className="mt-3 flex items-center gap-3 text-[12px] text-muted-foreground">
-              {workout.durationMinutes && (
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {workout.durationMinutes} min
-                </span>
-              )}
-              {workout.level && (
-                <span className="flex items-center gap-1">
-                  <Gauge className="h-3 w-3" />
-                  {workout.level}
-                </span>
-              )}
-              {workout.savesCount > 0 && (
-                <span className="flex items-center gap-1">
-                  <Bookmark className="h-3 w-3" />
-                  {workout.savesCount}
-                </span>
-              )}
-            </div>
-            {workout.coachName && (
-              <div className="mt-2 flex items-center gap-2">
-                {workout.coachPhotoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={workout.coachPhotoUrl} alt={workout.coachName} className="h-5 w-5 rounded-full object-cover" />
-                ) : (
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-[8px] font-semibold text-background">
-                    {coachInitials(workout.coachName)}
-                  </div>
-                )}
-                <span className="text-[12px] text-muted-foreground">{workout.coachName}</span>
-              </div>
-            )}
-          </Link>
-
-          <div className="mt-3 flex items-center gap-3">
-            <Link
-              href={`/workouts/${workout.id}`}
-              className="rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-opacity hover:opacity-90"
-            >
-              View workout
-            </Link>
-            {totalInCategory > 1 && (
-              <button
-                type="button"
-                onClick={onBrowseAll}
-                className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                Browse all {workout.category} ({totalInCategory})
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+function formatDuration(min: number | null) {
+  if (!min) return null
+  if (min >= 60) return '1 hr'
+  return `${min} min`
 }
 
 function WorkoutCard({ workout }: { workout: Workout }) {
@@ -160,60 +66,55 @@ function WorkoutCard({ workout }: { workout: Workout }) {
   return (
     <Link
       href={`/workouts/${workout.id}`}
-      className="group flex w-[272px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card transition-all hover:border-border hover:shadow-md sm:w-[240px] lg:w-[272px]"
+      className="group flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border/60 bg-background text-left transition-colors hover:border-foreground/30"
     >
       {/* Banner */}
-      <div className={cn('relative h-[170px] overflow-hidden', banner)}>
+      <div className={cn('relative h-[170px] items-start justify-between overflow-hidden p-4 flex', banner)}>
         {img && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={img}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover brightness-110 transition-transform duration-500 group-hover:scale-105"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover brightness-110 transition-transform duration-500 group-hover:scale-105"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
-        <div className="absolute inset-x-3 top-3 flex items-start justify-between">
-          {workout.category && (
-            <span className="label-mono text-[10px] normal-case tracking-widest text-white/90 [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
-              {workout.category}
-            </span>
-          )}
-          {workout.lengthLabel && (
-            <span className="rounded bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
-              {workout.lengthLabel}
-            </span>
-          )}
-        </div>
+        <div className="pointer-events-none absolute inset-0 bg-black/30" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
+        <span className="label-mono relative normal-case tracking-[0.18em] !text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+          {workout.category}
+        </span>
+        {workout.lengthLabel && (
+          <span className="label-mono relative flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 normal-case tracking-[0.15em] !text-white backdrop-blur-sm [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+            <CalendarDays className="h-3 w-3" /> {workout.lengthLabel}
+          </span>
+        )}
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="font-serif text-[17px] italic leading-snug tracking-[0.02em]">
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <h3 className="font-serif text-[20px] leading-tight italic">
           {workout.title}
         </h3>
 
-        <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
+        <div className="label-mono flex flex-nowrap items-center gap-3 whitespace-nowrap normal-case tracking-[0.12em] text-muted-foreground">
           {workout.durationMinutes && (
             <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {workout.durationMinutes} min
+              <Clock className="h-3 w-3" /> {workout.durationMinutes} min
             </span>
           )}
           {workout.level && (
             <span className="flex items-center gap-1">
-              <Gauge className="h-3 w-3" />
-              {levelShort(workout.level)}
+              <Gauge className="h-3 w-3" /> {levelShort(workout.level)}
             </span>
           )}
         </div>
 
         {workout.muscleGroups.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="mt-1 flex flex-wrap gap-1.5">
             {workout.muscleGroups.slice(0, 4).map(tag => (
               <span
                 key={tag}
-                className="rounded-full border border-border/60 px-2 py-0.5 text-[10px] text-muted-foreground"
+                className="rounded-full border border-border/70 bg-background px-2.5 py-0.5 text-[11px] text-muted-foreground"
               >
                 {tag}
               </span>
@@ -230,7 +131,7 @@ function WorkoutCard({ workout }: { workout: Workout }) {
                 <img
                   src={workout.coachPhotoUrl}
                   alt={workout.coachName}
-                  className="h-6 w-6 rounded-full object-cover"
+                  className="h-6 w-6 rounded-full object-cover ring-1 ring-border/60"
                 />
               ) : (
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-[9px] font-semibold text-background">
@@ -240,25 +141,92 @@ function WorkoutCard({ workout }: { workout: Workout }) {
               <span className="text-[12px] text-muted-foreground">{workout.coachName}</span>
             </div>
             {workout.savesCount > 0 && (
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <Bookmark className="h-3 w-3" />
-                {workout.savesCount}
+              <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
+                <Bookmark className="h-3 w-3" /> {workout.savesCount.toLocaleString()} {workout.savesCount === 1 ? 'remix' : 'remixes'}
               </span>
             )}
           </div>
         )}
 
-        {/* Inline Remix */}
+        {/* Remix button */}
         <Link
           href={`/workouts/${workout.id}`}
-          onClick={(e) => e.stopPropagation()}
-          className="label-mono mt-2 flex w-full items-center justify-center gap-1 rounded-full border border-border bg-background px-2.5 py-1.5 normal-case tracking-[0.15em] text-foreground transition-colors hover:bg-foreground/[0.04]"
+          onClick={e => e.stopPropagation()}
+          className="label-mono flex w-full items-center justify-center gap-1 rounded-full border border-border bg-background px-2.5 py-1.5 normal-case tracking-[0.15em] text-foreground transition-colors hover:bg-foreground/[0.04]"
         >
           <Plus className="h-3 w-3" />
           Remix
         </Link>
       </div>
     </Link>
+  )
+}
+
+function WorkoutSection({ category, list }: { category: string; list: Workout[] }) {
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const [canLeft, setCanLeft] = useState(false)
+  const [canRight, setCanRight] = useState(false)
+
+  const updateArrows = () => {
+    const el = scrollerRef.current
+    if (!el) return
+    setCanLeft(el.scrollLeft > 2)
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
+  }
+
+  useEffect(() => {
+    updateArrows()
+    const el = scrollerRef.current
+    if (!el) return
+    el.addEventListener('scroll', updateArrows, { passive: true })
+    const ro = new ResizeObserver(updateArrows)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', updateArrows)
+      ro.disconnect()
+    }
+  }, [list.length])
+
+  return (
+    <section>
+      <div className="mb-4 flex items-baseline justify-between">
+        <h2 className="font-serif text-[24px] italic leading-tight">{category}</h2>
+        <span className="label-mono normal-case tracking-[0.15em] text-muted-foreground">{list.length}</span>
+      </div>
+      <div className="relative">
+        <div
+          ref={scrollerRef}
+          className="sm:overflow-x-auto sm:scroll-smooth sm:snap-x sm:snap-mandatory sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden"
+        >
+          <div className="flex flex-col gap-4 pb-1 sm:flex-row sm:items-stretch sm:gap-5 sm:pr-12">
+            {list.map(w => (
+              <div key={w.id} data-card className="flex w-full shrink-0 sm:w-[210px] sm:snap-start md:w-[220px] lg:w-[300px]">
+                <WorkoutCard workout={w} />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div
+          aria-hidden
+          className={cn(
+            'pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background/70 to-transparent transition-opacity duration-200',
+            canLeft ? 'opacity-100' : 'opacity-0',
+          )}
+        />
+        <div
+          aria-hidden
+          className={cn(
+            'pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background/70 to-transparent transition-opacity duration-200',
+            canRight ? 'opacity-100' : 'opacity-0',
+          )}
+        />
+      </div>
+      {(canLeft || canRight) && (
+        <div className="mt-3 flex justify-center text-muted-foreground">
+          <MoveHorizontal className="h-4 w-4" />
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -279,9 +247,9 @@ function FilterSelect({
     <Select value={active ?? ALL} onValueChange={v => onChange(v === ALL ? null : v)}>
       <SelectTrigger
         className={cn(
-          'h-8 w-auto gap-1 rounded-full border-0 bg-foreground/[0.04] px-3 text-[12px] shadow-none focus:ring-0',
+          'h-8 w-auto gap-1 rounded-full border-0 bg-foreground/[0.04] px-3 text-[12px] shadow-none focus:ring-0 [&>svg]:mt-1.5 [&>svg]:opacity-60',
           'text-muted-foreground hover:bg-foreground/[0.07]',
-          active && 'bg-foreground text-background hover:bg-foreground/90',
+          active && 'bg-foreground text-background hover:bg-foreground/90 [&>svg]:opacity-80',
         )}
       >
         <span>{active ? `${label}:` : label}</span>
@@ -295,12 +263,6 @@ function FilterSelect({
       </SelectContent>
     </Select>
   )
-}
-
-function formatDuration(min: number | null) {
-  if (!min) return null
-  if (min >= 60) return '1 hr'
-  return `${min} min`
 }
 
 function MobileFilterSheet({
@@ -340,7 +302,7 @@ function MobileFilterSheet({
 }) {
   const [openSection, setOpenSection] = useState<string | null>('Function')
   const toggle = (setter: React.Dispatch<React.SetStateAction<string[]>>, value: string) => {
-    setter((prev) => prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value])
+    setter(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value])
   }
   const sections = [
     { label: 'Function', active: activeFunction, options: functionOptions, setter: setActiveFunction },
@@ -356,7 +318,7 @@ function MobileFilterSheet({
           <SheetTitle className="font-serif text-[22px] font-normal tracking-tight">Filter</SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto px-5">
-          {sections.map((s) => {
+          {sections.map(s => {
             const isOpen = openSection === s.label
             return (
               <div key={s.label} className="border-b border-border/60">
@@ -368,7 +330,7 @@ function MobileFilterSheet({
                   <div className="flex items-center gap-2">
                     <span className="label-mono normal-case tracking-[0.18em]">{s.label.toUpperCase()}</span>
                     {s.active.length > 0 && (
-                      <span className="rounded-md border border-border bg-background px-2 py-0.5 text-[12px]">
+                      <span className="rounded-md border border-border bg-background px-2 py-0.5 text-[12px] text-foreground">
                         {s.active.length === 1 ? s.active[0] : `${s.active.length} selected`}
                       </span>
                     )}
@@ -377,7 +339,7 @@ function MobileFilterSheet({
                 </button>
                 {isOpen && (
                   <div className="flex flex-wrap gap-2 pb-5">
-                    {s.options.map((opt) => {
+                    {s.options.map(opt => {
                       const selected = s.active.includes(opt)
                       return (
                         <button
@@ -473,100 +435,85 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
   const isFiltered = !!(activeCategory || activeLevel || activeTag || activeDuration || query.trim() ||
     mobileCategories.length || mobileLevels.length || mobileTags.length || mobileDurations.length)
 
-  const grouped = CATEGORIES.reduce<Record<string, Workout[]>>((acc, cat) => {
-    const items = filtered.filter(w => w.category === cat)
-    if (items.length) acc[cat] = items
-    return acc
-  }, {})
+  const grouped = useMemo(() => {
+    const map = new Map<string, Workout[]>()
+    CATEGORIES.forEach(c => map.set(c, []))
+    filtered.forEach(w => { if (w.category) map.get(w.category)?.push(w) })
+    return Array.from(map.entries()).filter(([, list]) => list.length > 0)
+  }, [filtered])
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      {/* Header + filters */}
-      <div className="sticky top-0 z-10 bg-background pb-3 pt-10 md:pt-14 px-4 md:px-6 lg:px-10">
-        <h1 className="font-serif text-[44px] leading-[1.05] tracking-tight">
-          Workout library
-        </h1>
+    <main className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden bg-background">
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-6xl px-6 pb-16 pt-10 lg:px-10 lg:pt-14">
 
-        <div className="mt-6 flex flex-col gap-3">
-          {/* Search */}
-          <div className="relative w-full">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Search workout"
-              className="h-9 w-full rounded-none border-0 border-b border-border bg-transparent pl-8 pr-7 text-[13px] outline-none placeholder:text-muted-foreground focus:border-b-foreground"
-            />
-            {query && (
-              <button onClick={() => setQuery('')} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="font-serif text-[44px] leading-[1.05] tracking-tight">
+              Workout library
+            </h1>
           </div>
 
-          {/* Desktop filter pills */}
-          <div className="hidden flex-wrap gap-1.5 sm:flex">
-            <FilterSelect label="Function" options={[...CATEGORIES]} active={activeCategory} onChange={setActiveCategory} />
-            <FilterSelect label="Level" options={[...LEVELS]} active={activeLevel} onChange={setActiveLevel} />
-            <FilterSelect label="Muscle" options={tags} active={activeTag} onChange={setActiveTag} />
-            <FilterSelect label="Duration" options={durationLabels} active={activeDuration} onChange={setActiveDuration} />
+          <div className="sticky top-0 z-20 mt-8 flex flex-col gap-4 bg-background pb-3 pt-2 lg:static lg:pb-0 lg:pt-0">
+            {/* Search */}
+            <div className="relative w-full">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search workout"
+                className="h-9 w-full rounded-none border-0 border-b border-border bg-transparent pl-8 pr-7 text-[13px] outline-none placeholder:text-muted-foreground focus:border-b-foreground"
+              />
+              {query && (
+                <button onClick={() => setQuery('')} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Desktop filter pills */}
+            <div className="hidden flex-wrap gap-1.5 sm:flex">
+              <FilterSelect label="Function" options={[...CATEGORIES]} active={activeCategory} onChange={setActiveCategory} />
+              <FilterSelect label="Level" options={[...LEVELS]} active={activeLevel} onChange={setActiveLevel} />
+              <FilterSelect label="Muscle" options={tags} active={activeTag} onChange={setActiveTag} />
+              <FilterSelect label="Duration" options={durationLabels} active={activeDuration} onChange={setActiveDuration} />
+            </div>
+
+            {/* Mobile filter button */}
+            <button
+              type="button"
+              onClick={() => setMobileFilterOpen(true)}
+              className="flex items-center justify-center gap-2 self-start rounded-full border border-border bg-background px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-foreground/[0.04] sm:hidden"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filter
+              {activeFilterCount > 0 && (
+                <span className="ml-0.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-[11px] font-medium text-background">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
-          {/* Mobile filter button */}
-          <button
-            type="button"
-            onClick={() => setMobileFilterOpen(true)}
-            className="flex items-center justify-center gap-2 self-start rounded-full border border-border bg-background px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-foreground/[0.04] sm:hidden"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Filter
-            {activeFilterCount > 0 && (
-              <span className="ml-0.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1.5 text-[11px] font-medium text-background">
-                {activeFilterCount}
-              </span>
+
+          <div className="mt-8">
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center text-sm text-muted-foreground">
+                No workouts match your filters.
+              </div>
+            ) : isFiltered ? (
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {filtered.map(w => (
+                  <WorkoutCard key={w.id} workout={w} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-10">
+                {grouped.map(([category, list]) => (
+                  <WorkoutSection key={category} category={category} list={list} />
+                ))}
+              </div>
             )}
-          </button>
+          </div>
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 px-4 py-6 md:px-6">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-sm text-muted-foreground">No workouts match those filters yet.</p>
-          </div>
-        ) : isFiltered ? (
-          /* Filtered grid */
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map(w => (
-              <WorkoutCard key={w.id} workout={w} />
-            ))}
-          </div>
-        ) : (
-          /* Default: one featured workout card per category */
-          <div className="space-y-10">
-            {CATEGORIES.filter(cat => grouped[cat]?.length).map(cat => {
-              const items = grouped[cat]!
-              const featured = [...items].sort((a, b) => b.savesCount - a.savesCount)[0]!
-              return (
-                <div key={cat}>
-                  <div className="mb-4 flex items-baseline justify-between">
-                    <h2 className="font-serif text-2xl italic tracking-[0.02em]">{cat}</h2>
-                    {items.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveCategory(cat)}
-                        className="text-[12px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                      >
-                        View all ({items.length})
-                      </button>
-                    )}
-                  </div>
-                  <WorkoutCard workout={featured} />
-                </div>
-              )
-            })}
-          </div>
-        )}
       </div>
 
       <MobileFilterSheet
@@ -587,6 +534,6 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
         clearAll={clearAllFilters}
         resultCount={filtered.length}
       />
-    </div>
+    </main>
   )
 }

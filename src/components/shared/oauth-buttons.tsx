@@ -16,10 +16,10 @@ export function OAuthButtons() {
   return (
     <button
       onClick={signInWithGoogle}
-      className="w-full h-11 rounded-full border bg-background text-sm font-medium hover:bg-muted transition-colors flex items-center justify-center gap-2.5"
+      className="w-full h-11 rounded-xl border bg-background text-base font-medium hover:bg-muted transition-colors flex items-center justify-center gap-2.5"
     >
       <GoogleIcon />
-      Continue with Google
+      Login with Google
     </button>
   )
 }

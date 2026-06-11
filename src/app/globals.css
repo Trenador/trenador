@@ -44,20 +44,21 @@
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: #F7F6F2;
+  --radius: 0.375rem;
+  --paper: #F7F6F2;
+  --background: oklch(0.99 0.0015 80); /* slightly off-white */
   --foreground: oklch(0.18 0.012 60);
-  --card: oklch(1 0 0);
+  --card: #F7F6F2; /* warm cream — card/panel surfaces */
   --card-foreground: oklch(0.18 0.012 60);
-  --popover: oklch(1 0 0);
+  --popover: #F7F6F2;
   --popover-foreground: oklch(0.18 0.012 60);
   --primary: oklch(0.18 0.012 60);
-  --primary-foreground: oklch(1 0 0);
+  --primary-foreground: #F7F6F2;
   --secondary: #EFEDE7;
   --secondary-foreground: oklch(0.18 0.012 60);
   --muted: #EFEDE7;
   --muted-foreground: oklch(0.48 0.018 60);
-  --accent: oklch(0.7 0.14 45);
+  --accent: #D17A3A; /* brand orange — matches logo dot */
   --accent-foreground: #F7F6F2;
   --destructive: oklch(0.577 0.245 27.325);
   --border: #E2DFD7;

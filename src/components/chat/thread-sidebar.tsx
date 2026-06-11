@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  Plus, Trash2, Menu, LogOut, Dumbbell, BookOpen,
+  Plus, Trash2, Menu, LogOut, Dumbbell, Bookmark,
   MessageCircle, User, Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -248,7 +248,7 @@ export function ThreadSidebar({
             active={pathname === '/workouts' || pathname.startsWith('/workouts/')}
           />
           <SidebarTab
-            icon={<BookOpen className="h-4 w-4" />}
+            icon={<Bookmark className="h-4 w-4" />}
             label="My workouts"
             onClick={() => { router.push('/workouts/mine'); closeOnMobile() }}
             active={pathname === '/workouts/mine' || pathname.startsWith('/workouts/mine/')}

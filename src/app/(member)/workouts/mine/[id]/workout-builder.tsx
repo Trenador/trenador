@@ -105,34 +105,36 @@ export function WorkoutBuilder({ workout }: { workout: WorkoutWithExercises }) {
       )}
 
       {exercises.map((ex, i) => (
-        <div key={i} className="rounded-xl border bg-card p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <GripVertical className="size-4 text-muted-foreground shrink-0" />
-            <span className="font-medium text-sm flex-1">{ex.exerciseName}</span>
-            <button
-              onClick={() => removeExercise(i)}
-              className="text-muted-foreground hover:text-destructive transition-colors"
-            >
-              <Trash2 className="size-4" />
-            </button>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: 'Sets', field: 'targetSets' as const, value: ex.targetSets },
-              { label: 'Reps', field: 'targetReps' as const, value: ex.targetReps },
-              { label: 'Weight (kg)', field: 'targetWeightKg' as const, value: ex.targetWeightKg },
-            ].map(({ label, field, value }) => (
-              <div key={field}>
-                <label className="label-mono text-[10px] normal-case tracking-wide mb-1 block">{label}</label>
-                <input
-                  type="number"
-                  value={value ?? ''}
-                  onChange={e => updateExercise(i, field, e.target.value ? Number(e.target.value) : null)}
-                  placeholder="—"
-                  className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-            ))}
+        <div key={i} className="flex gap-3 border-b border-border/40 py-3 last:border-0">
+          <GripVertical className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/40" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[13px] font-medium leading-snug">{ex.exerciseName}</p>
+              <button
+                onClick={() => removeExercise(i)}
+                className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {[
+                { label: 'Sets', field: 'targetSets' as const, value: ex.targetSets },
+                { label: 'Reps', field: 'targetReps' as const, value: ex.targetReps },
+                { label: 'Weight kg', field: 'targetWeightKg' as const, value: ex.targetWeightKg },
+              ].map(({ label, field, value }) => (
+                <div key={field}>
+                  <label className="label-mono mb-1 block text-[10px] normal-case tracking-wide">{label}</label>
+                  <input
+                    type="number"
+                    value={value ?? ''}
+                    onChange={e => updateExercise(i, field, e.target.value ? Number(e.target.value) : null)}
+                    placeholder="—"
+                    className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       ))}
@@ -186,13 +188,13 @@ export function WorkoutBuilder({ workout }: { workout: WorkoutWithExercises }) {
         </button>
       )}
 
-      <div className="pt-2">
+      <div className="pt-4">
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="h-11 w-full rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60"
+          className="h-10 rounded-full bg-foreground px-6 text-[13px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {saved ? 'Saved!' : isSaving ? 'Saving…' : 'Save workout'}
+          {saved ? 'Saved!' : isSaving ? 'Saving…' : 'Save changes'}
         </button>
       </div>
     </div>

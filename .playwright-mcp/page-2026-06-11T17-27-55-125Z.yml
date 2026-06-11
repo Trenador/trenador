@@ -1,0 +1,30 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - paragraph [ref=e8]: Start today
+        - heading "Your fitness concierge on tap" [level=2] [ref=e9]:
+          - text: Your fitness
+          - text: concierge on tap
+      - generic [ref=e10]:
+        - paragraph [ref=e11]: Powered by
+        - img "Trenador" [ref=e12]
+    - generic [ref=e14]:
+      - heading "Welcome" [level=1] [ref=e15]
+      - paragraph [ref=e16]: Please log in to your account to continue.
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - text: Email address
+          - textbox "Email address" [ref=e19]
+        - generic [ref=e20]:
+          - text: Password
+          - textbox "Password" [ref=e21]
+        - button "Log in" [ref=e22] [cursor=pointer]
+      - paragraph [ref=e23]:
+        - text: Don't have an account?
+        - button "Sign up" [ref=e24] [cursor=pointer]
+      - generic [ref=e27]: Or
+      - button "Login with Google" [ref=e29] [cursor=pointer]:
+        - img
+        - text: Login with Google
+  - region "Notifications alt+T"
