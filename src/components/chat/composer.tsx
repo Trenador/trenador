@@ -10,7 +10,7 @@ type Props = {
   placeholder?: string
 }
 
-export function Composer({ onSubmit, disabled, placeholder = 'Message Trenador AI…' }: Props) {
+export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
   const [value, setValue] = useState('')
   const [multiline, setMultiline] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -46,8 +46,8 @@ export function Composer({ onSubmit, disabled, placeholder = 'Message Trenador A
   return (
     <div
       className={cn(
-        'flex items-end gap-1 border bg-muted/50 px-1 py-1 transition-all',
-        multiline ? 'rounded-2xl flex-wrap' : 'rounded-full',
+        'flex items-center gap-1 border bg-muted/50 px-1 py-1 transition-all',
+        multiline ? 'rounded-2xl flex-wrap items-end' : 'rounded-full',
         'focus-within:ring-2 focus-within:ring-ring/40',
       )}
     >
@@ -82,8 +82,8 @@ export function Composer({ onSubmit, disabled, placeholder = 'Message Trenador A
           placeholder={placeholder}
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none bg-transparent px-3 py-1.5 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 leading-5 min-h-0 overflow-hidden"
-          style={{ maxHeight: '192px', height: '28px' }}
+          className="flex-1 resize-none bg-transparent px-3 py-0 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 leading-5 min-h-0 overflow-hidden"
+          style={{ maxHeight: '192px', height: '20px' }}
         />
       )}
       {/* Camera icon */}
