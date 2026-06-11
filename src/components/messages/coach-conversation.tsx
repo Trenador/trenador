@@ -10,13 +10,13 @@ type Props = {
   initialMessages: CoachMessage[]
 }
 
-function formatTime(date: Date) {
-  return new Date(date).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+function formatTimestamp(date: Date): string {
+  const d = new Date(date)
+  const now = new Date()
+  const sameDay = d.toDateString() === now.toDateString()
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  if (sameDay) return time
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + time
 }
 
 export function CoachConversation({ initialMessages }: Props) {
@@ -24,11 +24,8 @@ export function CoachConversation({ initialMessages }: Props) {
   const [messages, setMessages] = useState(initialMessages)
   const [isPending, startTransition] = useTransition()
 
-  // mark coach messages as read when the page mounts
   useEffect(() => {
-    const hasUnread = initialMessages.some(
-      (m) => m.senderRole === 'coach' && !m.readAt,
-    )
+    const hasUnread = initialMessages.some(m => m.senderRole === 'coach' && !m.readAt)
     if (hasUnread) markCoachMessagesRead()
   }, [initialMessages])
 
@@ -46,46 +43,52 @@ export function CoachConversation({ initialMessages }: Props) {
       readAt: null,
       createdAt: new Date(),
     }
-    setMessages((prev) => [...prev, optimistic])
-
-    startTransition(async () => {
-      await sendCoachMessage(content)
-    })
+    setMessages(prev => [...prev, optimistic])
+    startTransition(async () => { await sendCoachMessage(content) })
   }
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* message list */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        <div className="mx-auto w-full max-w-3xl px-4 py-6 space-y-6 md:px-6">
           {messages.length === 0 ? (
-            <div className="text-center py-16 space-y-2">
-              <p className="text-sm font-medium">No messages yet</p>
-              <p className="text-xs text-muted-foreground">
-                Send a message below and your coaching team will respond within 24 hours.
-              </p>
+            <div className="py-16 text-center text-sm text-muted-foreground">
+              No messages yet — send one below.
             </div>
           ) : (
-            messages.map((msg) => {
-              const isMember = msg.senderRole === 'member'
+            messages.map(msg => {
+              const isCoach = msg.senderRole === 'coach'
+              const ts = formatTimestamp(msg.createdAt)
+
+              if (isCoach) {
+                return (
+                  <div key={msg.id} className="flex items-start gap-3">
+                    {/* Coach avatar */}
+                    <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-foreground/10">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/assets/coach-sam.jpg"
+                        alt="Sam"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <p className="text-[15px] leading-relaxed text-foreground">
+                        {msg.content}
+                      </p>
+                      <span className="label-mono normal-case tracking-[0.1em]">{ts}</span>
+                    </div>
+                  </div>
+                )
+              }
+
               return (
-                <div
-                  key={msg.id}
-                  className={cn('flex flex-col gap-1', isMember ? 'items-end' : 'items-start')}
-                >
-                  <div
-                    className={cn(
-                      'max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
-                      isMember
-                        ? 'bg-primary text-primary-foreground rounded-br-sm'
-                        : 'bg-muted text-foreground rounded-bl-sm',
-                    )}
-                  >
+                <div key={msg.id} className={cn('flex w-full max-w-[95%] flex-col gap-1 ml-auto items-end')}>
+                  <div className="rounded-2xl bg-foreground px-4 py-2.5 text-sm leading-relaxed text-background">
                     <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground px-1">
-                    {isMember ? 'You' : 'Coach'} · {formatTime(msg.createdAt)}
-                  </span>
+                  <span className="label-mono normal-case tracking-[0.1em]">{ts}</span>
                 </div>
               )
             })
@@ -95,8 +98,8 @@ export function CoachConversation({ initialMessages }: Props) {
       </div>
 
       {/* composer */}
-      <div className="border-t bg-background shrink-0">
-        <div className="max-w-2xl mx-auto px-4 py-4">
+      <div className="shrink-0 border-t border-border/70 bg-background">
+        <div className="mx-auto w-full max-w-3xl px-4 py-4 md:px-6">
           <Composer
             onSubmit={handleSubmit}
             disabled={isPending}

@@ -12,10 +12,16 @@ export async function getMemberWorkouts(memberId: string) {
       title: memberWorkouts.title,
       category: memberWorkouts.category,
       sourceWorkoutId: memberWorkouts.sourceWorkoutId,
+      structure: memberWorkouts.structure,
       updatedAt: memberWorkouts.updatedAt,
       createdAt: memberWorkouts.createdAt,
+      // from source workout (null for scratch workouts)
+      level: workouts.level,
+      muscleGroups: workouts.muscleGroups,
+      durationMinutes: workouts.durationMinutes,
     })
     .from(memberWorkouts)
+    .leftJoin(workouts, eq(memberWorkouts.sourceWorkoutId, workouts.id))
     .where(
       and(
         eq(memberWorkouts.memberId, memberId),

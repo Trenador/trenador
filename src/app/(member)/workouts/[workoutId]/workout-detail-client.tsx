@@ -97,7 +97,7 @@ function WorkoutContent({ workout }: { workout: WorkoutData }) {
               onClick={() => toggleWeek(wi)}
               className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-foreground/[0.02] lg:px-8"
             >
-              <span className="label-mono normal-case tracking-[0.18em] text-foreground">{week.label}</span>
+              <span className="label-mono tracking-[0.18em] text-foreground">{week.label}</span>
               <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', openWeeks.has(wi) && 'rotate-180')} />
             </button>
             {openWeeks.has(wi) && week.days.map((day, di) => {

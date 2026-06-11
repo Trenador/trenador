@@ -274,7 +274,7 @@ export function ProfileClient({
             type="button"
             onClick={save}
             disabled={saving}
-            className="h-10 rounded-full bg-foreground px-6 text-[13px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+            className="h-10 rounded-lg bg-foreground px-6 text-[13px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>

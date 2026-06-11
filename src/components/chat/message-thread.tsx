@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, PanelLeft, Sparkles, Pencil } from 'lucide-react'
+import { Plus, Menu, Sparkles, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom'
@@ -222,7 +222,7 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
             aria-label="Open sidebar"
             className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground lg:hidden"
           >
-            <PanelLeft className="h-4 w-4" />
+            <Menu className="h-4 w-4" />
           </button>
           <span className="block h-1.5 w-1.5 rounded-full bg-emerald-500" />
           <span className="label-mono">AI</span>
