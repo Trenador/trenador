@@ -20,7 +20,9 @@ type Coach = {
   specialties: string[]
   certifications: string[]
   systemPrompt: string | null
+  isAuthor: boolean
   active: boolean
+  memberCount: number
   createdAt: string
 }
 
@@ -35,6 +37,7 @@ type DraftCoach = {
   specialties: string[]
   certifications: string[]
   systemPrompt: string
+  isAuthor: boolean
   active: boolean
 }
 
@@ -49,7 +52,7 @@ function initials(name: string): string {
 }
 
 function emptyDraft(): DraftCoach {
-  return { displayName: '', slug: '', bio: '', headline: '', location: '', gender: '', gym: 'Powerhouse SoFlo', specialties: [], certifications: [], systemPrompt: '', active: true }
+  return { displayName: '', slug: '', bio: '', headline: '', location: '', gender: '', gym: 'Powerhouse SoFlo', specialties: [], certifications: [], systemPrompt: '', isAuthor: false, active: true }
 }
 
 export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: Coach[]) => void }) {
@@ -72,7 +75,7 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
 
   const openCreate = () => { setDraft(emptyDraft()); setEditing(null); setCreating(true) }
   const openEdit = (c: Coach) => {
-    setDraft({ displayName: c.displayName, slug: c.slug, bio: c.bio ?? '', headline: c.headline ?? '', location: c.location ?? '', gender: c.gender ?? '', gym: c.gym ?? '', specialties: c.specialties ?? [], certifications: c.certifications ?? [], systemPrompt: c.systemPrompt ?? '', active: c.active })
+    setDraft({ displayName: c.displayName, slug: c.slug, bio: c.bio ?? '', headline: c.headline ?? '', location: c.location ?? '', gender: c.gender ?? '', gym: c.gym ?? '', specialties: c.specialties ?? [], certifications: c.certifications ?? [], systemPrompt: c.systemPrompt ?? '', isAuthor: c.isAuthor, active: c.active })
     setEditing(c)
     setCreating(true)
   }
@@ -172,6 +175,10 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-600"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />Not available</span>
                 )}
+                {c.isAuthor && (
+                  <span className="inline-flex items-center rounded-full border border-border/60 px-2 py-0.5 text-[10px] font-medium text-foreground">AUTHOR</span>
+                )}
+                <span className="text-[11px] text-muted-foreground">{c.memberCount} user{c.memberCount === 1 ? '' : 's'}</span>
                 <div className="ml-auto flex items-center gap-1">
                   <button onClick={() => openEdit(c)} className="rounded-md p-1.5 hover:bg-muted"><Pencil className="h-4 w-4" /></button>
                   <button onClick={() => remove(c)} className="rounded-md p-1.5 hover:bg-muted"><Trash2 className="h-4 w-4 text-destructive" /></button>
@@ -187,13 +194,14 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
             <tr className="border-b border-border/60">
               <th className="px-5 py-2.5 text-left">Coach</th>
               <th className="px-5 py-2.5 text-left">Availability</th>
-              <th className="px-5 py-2.5 text-left">Specialties</th>
+              <th className="px-5 py-2.5 text-left">Role</th>
+              <th className="px-5 py-2.5 text-right">Users</th>
               <th className="px-5 py-2.5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={4} className="px-5 py-8 text-center text-sm text-muted-foreground">No coaches found.</td></tr>
+              <tr><td colSpan={5} className="px-5 py-8 text-center text-sm text-muted-foreground">No coaches found.</td></tr>
             ) : filtered.map((c) => (
               <tr key={c.id} className="border-b border-border/40 text-sm">
                 <td className="px-5 py-3">
@@ -202,7 +210,12 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
                       {c.photoUrl ? <img src={c.photoUrl} alt="" className="h-full w-full object-cover" /> : initials(c.displayName)}
                     </div>
                     <div className="min-w-0">
-                      <div className="truncate font-medium">{c.displayName}</div>
+                      <div className="truncate font-medium">
+                        {c.displayName}
+                        {c.specialties?.length > 0 && (
+                          <span className="ml-1 font-normal text-muted-foreground">· {c.specialties[0]}</span>
+                        )}
+                      </div>
                       <div className="truncate text-[11px] text-muted-foreground">{c.gym}{c.location ? ` · ${c.location}` : ''}</div>
                     </div>
                   </div>
@@ -214,7 +227,17 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
                     <span className="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-[10px] font-medium text-red-600"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />Not available</span>
                   )}
                 </td>
-                <td className="px-5 py-3 text-muted-foreground">{(c.specialties ?? []).slice(0, 3).join(', ') || '—'}</td>
+                <td className="px-5 py-3">
+                  {c.isAuthor ? (
+                    <span className="inline-flex items-center rounded-full border border-border/60 px-2 py-0.5 text-[10px] font-medium text-foreground">AUTHOR</span>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="px-5 py-3 text-right tabular-nums">
+                  <div className="font-medium text-foreground">{c.memberCount}</div>
+                  <div className="text-[11px] text-muted-foreground">user{c.memberCount === 1 ? '' : 's'}</div>
+                </td>
                 <td className="px-5 py-3">
                   <div className="flex shrink-0 items-center justify-end gap-1">
                     <button onClick={() => openEdit(c)} className="rounded-md p-1.5 hover:bg-muted"><Pencil className="h-4 w-4" /></button>
@@ -269,6 +292,19 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
                   )
                 })}
               </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
+              <div>
+                <div className="text-sm font-medium">Also an author</div>
+                <div className="text-[11px] text-muted-foreground">Available as a workout author in the admin workout editor.</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDraft({ ...draft, isAuthor: !draft.isAuthor })}
+                className={cn('relative h-5 w-9 rounded-full transition-colors', draft.isAuthor ? 'bg-foreground' : 'bg-border')}
+              >
+                <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-background shadow transition-transform', draft.isAuthor ? 'left-4' : 'left-0.5')} />
+              </button>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
               <div>

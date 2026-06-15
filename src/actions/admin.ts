@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { db } from '@/db'
 import { members, coaches, workouts, coachMessages } from '@/db/schema'
-import { eq, desc, and, isNull, inArray, asc } from 'drizzle-orm'
+import { eq, desc, and, isNull, inArray, asc, count, isNotNull } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { getAuthenticatedMember } from './_auth'
 import { APP_CONFIG } from '@/lib/config'
@@ -159,7 +159,22 @@ export async function adminGetCoaches() {
     .from(coaches)
     .where(eq(coaches.tenantId, APP_CONFIG.tenantId))
     .orderBy(asc(coaches.displayName))
-  return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() }))
+
+  // Count members assigned to each coach
+  const memberCounts = await db
+    .select({ coachId: members.assignedCoachId, total: count() })
+    .from(members)
+    .where(isNotNull(members.assignedCoachId))
+    .groupBy(members.assignedCoachId)
+
+  const countMap = new Map(memberCounts.map((r) => [r.coachId, r.total]))
+
+  return rows.map((r) => ({
+    ...r,
+    memberCount: countMap.get(r.id) ?? 0,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
+  }))
 }
 
 export async function adminCreateCoach(data: {
@@ -175,6 +190,7 @@ export async function adminCreateCoach(data: {
   systemPrompt?: string
   photoUrl?: string
   active: boolean
+  isAuthor?: boolean
 }) {
   await requireAdmin()
   const rows = await db.insert(coaches).values({ tenantId: APP_CONFIG.tenantId, ...data }).returning()
@@ -195,6 +211,7 @@ export async function adminUpdateCoach(coachId: string, data: {
   systemPrompt?: string
   photoUrl?: string
   active?: boolean
+  isAuthor?: boolean
 }) {
   await requireAdmin()
   await db.update(coaches).set({ ...data, updatedAt: new Date() }).where(eq(coaches.id, coachId))

@@ -12,7 +12,7 @@ import { AdminCoaches } from './admin-coaches'
 import { adminGetCoaches } from '@/actions/admin'
 
 type View = 'inbox' | 'users' | 'workouts' | 'coaches'
-type Coach = { id: string; displayName: string }
+type Coach = { id: string; displayName: string; isAuthor?: boolean }
 
 const TABS: { key: View; label: string; icon: React.ElementType }[] = [
   { key: 'inbox', label: 'Inbox', icon: Inbox },
@@ -35,7 +35,7 @@ export function AdminDashboard() {
 
   const loadCoaches = useCallback(async () => {
     const data = await adminGetCoaches()
-    setCoaches(data.map((c) => ({ id: c.id, displayName: c.displayName })))
+    setCoaches(data.map((c) => ({ id: c.id, displayName: c.displayName, isAuthor: c.isAuthor })))
   }, [])
 
   useEffect(() => { loadCoaches() }, [loadCoaches])

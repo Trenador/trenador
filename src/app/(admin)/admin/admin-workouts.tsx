@@ -31,7 +31,7 @@ type Workout = {
   createdAt: string
 }
 
-type Coach = { id: string; displayName: string }
+type Coach = { id: string; displayName: string; isAuthor?: boolean }
 
 const CATEGORIES = ['Strength', 'Cardio', 'Mobility', 'HIIT', 'Endurance', 'Recovery', 'Sport', 'Other']
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced']
@@ -278,7 +278,7 @@ export function AdminWorkouts({ coaches }: { coaches: Coach[] }) {
                 <label className="text-sm font-medium">Coach</label>
                 <select value={draft.coachId || '__none__'} onChange={(e) => setDraft({ ...draft, coachId: e.target.value === '__none__' ? '' : e.target.value })} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
                   <option value="__none__">No coach</option>
-                  {coaches.map((c) => <option key={c.id} value={c.id}>{c.displayName}</option>)}
+                  {coaches.filter((c) => c.isAuthor).map((c) => <option key={c.id} value={c.id}>{c.displayName}</option>)}
                 </select>
               </div>
             </div>

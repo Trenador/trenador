@@ -17,6 +17,7 @@ export const coaches = pgTable('coaches', {
   certifications: text('certifications').array().notNull().default([]),
   gym: text('gym'),
   systemPrompt: text('system_prompt'),
+  isAuthor: boolean('is_author').notNull().default(false),
   introVideoUrl: text('intro_video_url'),
   active: boolean('active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
