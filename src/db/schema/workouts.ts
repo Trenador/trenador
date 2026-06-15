@@ -29,6 +29,7 @@ export const workouts = pgTable('workouts', {
   lengthLabel: text('length_label'),
   savesCount: integer('saves_count').notNull().default(0),
   coachNotes: text('coach_notes'),
+  bannerUrl: text('banner_url'),
   // weeks/days scaffold: { weeks: [{ label, days: [{ label, blocks: [{name,detail}] }] }] }
   structure: jsonb('structure').notNull().default({}),
   publishedAt: timestamp('published_at', { withTimezone: true }),

@@ -38,13 +38,26 @@ export default function LoginPage() {
     setLoading(false)
   }
 
+  async function handleForgotPassword() {
+    if (!email) { setError('Enter your email address first'); return }
+    setLoading(true)
+    setError(null)
+    const supabase = createClient()
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/api/auth/callback?type=recovery`,
+    })
+    setLoading(false)
+    if (error) { setError(error.message); return }
+    setMagicSent(true) // reuse the "check your email" screen
+  }
+
   if (magicSent) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-background">
         <div className="max-w-sm space-y-3 px-6 text-center">
           <h1 className="text-xl font-semibold">Check your email</h1>
           <p className="text-sm text-muted-foreground">
-            We sent a sign-in link to{' '}
+            We sent a link to{' '}
             <span className="font-medium text-foreground">{email}</span>
           </p>
         </div>
@@ -69,7 +82,16 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="password" className="text-sm font-medium">Password</label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="text-sm font-medium">Password</label>
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Forgot password?
+            </button>
+          </div>
           <input
             id="password"
             type="password"

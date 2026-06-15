@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
+import { AdminDashboard } from './admin-dashboard'
 
 export default function AdminPage() {
-  redirect('/admin/members')
+  return <AdminDashboard />
 }

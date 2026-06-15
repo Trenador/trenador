@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, integer, numeric, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core'
 import { tenants } from './tenants'
+import { coaches } from './coaches'
 
 export const members = pgTable('members', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -20,6 +21,7 @@ export const members = pgTable('members', {
   yearOfBirth: integer('year_of_birth'),
   gender: text('gender'),
   weightLbs: numeric('weight_lbs', { precision: 5, scale: 1 }),
+  assignedCoachId: uuid('assigned_coach_id').references(() => coaches.id),
   // reserved for future ABC Fitness integration
   externalMemberId: text('external_member_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

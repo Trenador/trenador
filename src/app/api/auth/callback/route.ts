@@ -13,11 +13,13 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient()
 
   if (code) {
-    // magic link and oauth flow
     await supabase.auth.exchangeCodeForSession(code)
   } else if (tokenHash && type) {
-    // email confirmation flow
     await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
+  }
+
+  if (type === 'recovery') {
+    return NextResponse.redirect(`${origin}/reset-password`)
   }
 
   return NextResponse.redirect(`${origin}/chat`)
