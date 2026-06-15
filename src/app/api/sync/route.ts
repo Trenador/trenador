@@ -10,11 +10,11 @@ async function verifySignature(req: NextRequest, body: string): Promise<boolean>
   const secret = process.env.TRENADOR_SYNC_SECRET
   if (!secret) return false
 
-  // Replay protection: reject requests older than 5 minutes
+  // Replay protection: reject if timestamp is more than 5 min in either direction
   const timestamp = req.headers.get('x-webhook-timestamp')
   if (timestamp) {
-    const age = Date.now() - Number(timestamp)
-    if (age > 5 * 60 * 1000) return false
+    const age = Math.abs(Date.now() - Number(timestamp))
+    if (age > 300_000) return false
   }
 
   const sig = req.headers.get('x-webhook-signature')
