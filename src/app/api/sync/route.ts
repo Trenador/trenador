@@ -9,8 +9,17 @@ const SYNC_URL_BASE = 'https://trenadorstaging.lovable.app/api/public'
 async function verifySignature(req: NextRequest, body: string): Promise<boolean> {
   const secret = process.env.TRENADOR_SYNC_SECRET
   if (!secret) return false
+
+  // Replay protection: reject requests older than 5 minutes
+  const timestamp = req.headers.get('x-webhook-timestamp')
+  if (timestamp) {
+    const age = Date.now() - Number(timestamp)
+    if (age > 5 * 60 * 1000) return false
+  }
+
   const sig = req.headers.get('x-webhook-signature')
   if (!sig) return false
+
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
@@ -19,7 +28,9 @@ async function verifySignature(req: NextRequest, body: string): Promise<boolean>
     ['verify'],
   )
   const sigBytes = Buffer.from(sig.replace('sha256=', ''), 'hex')
-  const bodyBytes = new TextEncoder().encode(body)
+  // Sign over timestamp + body so the signature covers the replay-protection value
+  const payload = timestamp ? `${timestamp}.${body}` : body
+  const bodyBytes = new TextEncoder().encode(payload)
   return crypto.subtle.verify('HMAC', key, sigBytes, bodyBytes)
 }
 
