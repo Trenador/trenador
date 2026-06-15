@@ -55,12 +55,12 @@ function BlockItem({ name, detail, index }: { name: string; detail: string; inde
   const cleanName = name.replace(/^[A-Z]\d?\.\s+/, '')
   return (
     <div className="flex gap-3 py-3">
-      <span className="label-mono mt-0.5 w-5 shrink-0 text-right text-[10px] normal-case text-muted-foreground">
+      <span className="label-mono mt-0.5 w-6 shrink-0 normal-case tracking-[0.12em] text-muted-foreground">
         {index + 1}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium leading-snug">{cleanName}</p>
-        {detail && <p className="mt-0.5 text-[12px] leading-relaxed text-muted-foreground">{detail}</p>}
+        <p className="text-[15px] font-medium leading-snug sm:text-[14px]">{cleanName}</p>
+        {detail && <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground sm:mt-1.5">{detail}</p>}
       </div>
     </div>
   )
@@ -97,7 +97,7 @@ function WorkoutContent({ workout }: { workout: WorkoutData }) {
               onClick={() => toggleWeek(wi)}
               className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-foreground/[0.02] lg:px-8"
             >
-              <span className="label-mono tracking-[0.18em] text-foreground">{week.label}</span>
+              <span className="label-mono normal-case tracking-[0.12em] text-muted-foreground">{week.label}</span>
               <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', openWeeks.has(wi) && 'rotate-180')} />
             </button>
             {openWeeks.has(wi) && week.days.map((day, di) => {
@@ -109,7 +109,7 @@ function WorkoutContent({ workout }: { workout: WorkoutData }) {
                     onClick={() => toggleDay(key)}
                     className="flex w-full items-center justify-between px-6 py-3 pl-10 text-left transition-colors hover:bg-foreground/[0.02] lg:pl-12 lg:pr-8"
                   >
-                    <span className="text-[13px] text-muted-foreground">{day.label}</span>
+                    <span className="text-[15px] font-medium sm:text-[14px]">{`Day ${di + 1}`}</span>
                     <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground/60 transition-transform', openDays.has(key) && 'rotate-180')} />
                   </button>
                   {openDays.has(key) && (
@@ -211,7 +211,7 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-6 pt-5 lg:px-8">
           {workout.durationMinutes && (
             <span className="label-mono flex items-center gap-1.5 normal-case tracking-[0.12em] text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" /> {workout.durationMinutes} min
+              <Clock className="h-3.5 w-3.5" /> {workout.durationMinutes >= 60 ? '1 hr' : `${workout.durationMinutes} min`}
             </span>
           )}
           {workout.level && (
