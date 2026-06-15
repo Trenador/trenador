@@ -138,6 +138,29 @@ async function syncWorkouts() {
   }
 }
 
+// Like syncWorkouts but also soft-deletes anything no longer in phchat's published list
+async function syncWorkoutsWithDelete() {
+  await syncWorkouts()
+
+  const res = await fetch(`${SYNC_URL_BASE}/workouts`)
+  if (!res.ok) return
+  const { workouts: phchatRows } = await res.json() as { workouts: Array<{ title: string }> }
+  const liveTitles = new Set(phchatRows.map(w => w.title))
+
+  const ourRows = await db
+    .select({ id: workouts.id, title: workouts.title })
+    .from(workouts)
+    .where(eq(workouts.tenantId, APP_CONFIG.tenantId))
+
+  for (const row of ourRows) {
+    if (!liveTitles.has(row.title)) {
+      await db.update(workouts)
+        .set({ deletedAt: new Date(), updatedAt: new Date() })
+        .where(eq(workouts.id, row.id))
+    }
+  }
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text()
 
@@ -146,7 +169,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  let payload: { type: 'coach' | 'workout'; id: string }
+  let payload: { type: 'coach' | 'workout'; id: string; deleted?: boolean }
   try {
     payload = JSON.parse(body)
   } catch {
@@ -155,13 +178,26 @@ export async function POST(req: NextRequest) {
 
   try {
     if (payload.type === 'coach') {
-      await syncCoaches()
+      if (payload.deleted) {
+        // Tombstone: mark coach inactive rather than hard-delete (preserves FK refs)
+        await db.update(coaches)
+          .set({ active: false, updatedAt: new Date() })
+          .where(eq(coaches.slug, payload.id))
+      } else {
+        await syncCoaches()
+      }
     } else if (payload.type === 'workout') {
-      await syncWorkouts()
+      if (payload.deleted) {
+        // Re-sync the full published list — anything removed from phchat
+        // will be absent from /api/public/workouts and we soft-delete the diff
+        await syncWorkoutsWithDelete()
+      } else {
+        await syncWorkouts()
+      }
     } else {
       return NextResponse.json({ error: 'Unknown type' }, { status: 400 })
     }
-    return NextResponse.json({ ok: true, synced: payload.type })
+    return NextResponse.json({ ok: true, synced: payload.type, deleted: payload.deleted ?? false })
   } catch (err) {
     console.error('[sync]', err)
     return NextResponse.json({ error: 'Sync failed' }, { status: 500 })
