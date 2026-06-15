@@ -10,11 +10,11 @@ async function verifySignature(req: NextRequest, body: string): Promise<boolean>
   const secret = process.env.TRENADOR_SYNC_SECRET
   if (!secret) return false
 
-  // Replay protection: reject if timestamp is more than 5 min in either direction
+  // Replay protection: Lovable sends Unix seconds; reject if > 5 min old
   const timestamp = req.headers.get('x-webhook-timestamp')
   if (timestamp) {
-    const age = Math.abs(Date.now() - Number(timestamp))
-    if (age > 300_000) return false
+    const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp))
+    if (ageSeconds > 300) return false
   }
 
   const sig = req.headers.get('x-webhook-signature')
