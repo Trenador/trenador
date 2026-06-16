@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { db } from '@/db'
 import { coaches, workouts } from '@/db/schema'
 import { eq } from 'drizzle-orm'
@@ -197,6 +198,8 @@ export async function POST(req: NextRequest) {
     } else {
       return NextResponse.json({ error: 'Unknown type' }, { status: 400 })
     }
+    if (payload.type === 'coach') revalidateTag('coaches', 'max')
+    if (payload.type === 'workout') revalidateTag('workouts', 'max')
     return NextResponse.json({ ok: true, synced: payload.type, deleted: payload.deleted ?? false })
   } catch (err) {
     console.error('[sync]', err)

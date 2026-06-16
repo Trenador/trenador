@@ -1,5 +1,6 @@
 import 'server-only'
 import { eq, and, isNull, isNotNull } from 'drizzle-orm'
+import { cacheLife, cacheTag } from 'next/cache'
 import { db } from '@/db'
 import { workouts, workoutBlocks, exerciseCatalog, coaches } from '@/db/schema'
 import { APP_CONFIG } from '@/lib/config'
@@ -13,6 +14,10 @@ export async function getPublishedWorkouts(filters?: {
   category?: string
   level?: string
 }) {
+  'use cache'
+  cacheTag('workouts')
+  cacheLife('hours')
+
   const conditions = [
     eq(workouts.tenantId, APP_CONFIG.tenantId),
     isNotNull(workouts.publishedAt),
@@ -48,6 +53,10 @@ export async function getPublishedWorkouts(filters?: {
 }
 
 export async function getPublishedWorkout(workoutId: string) {
+  'use cache'
+  cacheTag('workouts')
+  cacheLife('hours')
+
   const [row] = await db
     .select({
       id: workouts.id,

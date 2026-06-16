@@ -1,11 +1,16 @@
 import { db } from '@/db'
 import { coaches } from '@/db/schema'
 import { eq, asc } from 'drizzle-orm'
+import { cacheLife, cacheTag } from 'next/cache'
 import { APP_CONFIG } from '@/lib/config'
 import { CoachesBrowser } from './coaches-browser'
 
-export default async function CoachesPage() {
-  const rows = await db
+async function getActiveCoaches() {
+  'use cache'
+  cacheTag('coaches')
+  cacheLife('hours')
+
+  return db
     .select({
       id: coaches.id,
       displayName: coaches.displayName,
@@ -21,8 +26,10 @@ export default async function CoachesPage() {
     .from(coaches)
     .where(eq(coaches.tenantId, APP_CONFIG.tenantId))
     .orderBy(asc(coaches.displayName))
+}
 
+export default async function CoachesPage() {
+  const rows = await getActiveCoaches()
   const available = rows.filter(c => c.active)
-
   return <CoachesBrowser coaches={available} />
 }
