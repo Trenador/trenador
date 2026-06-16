@@ -1,7 +1,17 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { getWorkoutLogHistoryAction } from '@/actions/workout-logging'
+import LogHistoryLoading from './loading'
 
-export default async function LogHistoryPage() {
+export default function LogHistoryPage() {
+  return (
+    <Suspense fallback={<LogHistoryLoading />}>
+      <LogHistoryContent />
+    </Suspense>
+  )
+}
+
+async function LogHistoryContent() {
   const logs = await getWorkoutLogHistoryAction()
 
   return (

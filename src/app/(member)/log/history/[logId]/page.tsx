@@ -1,12 +1,18 @@
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getWorkoutLogDetailAction } from '@/actions/workout-logging'
+import LogHistoryLoading from '../loading'
 
-export default async function LogDetailPage({
-  params,
-}: {
-  params: Promise<{ logId: string }>
-}) {
+export default function LogDetailPage({ params }: { params: Promise<{ logId: string }> }) {
+  return (
+    <Suspense fallback={<LogHistoryLoading />}>
+      <LogDetailContent params={params} />
+    </Suspense>
+  )
+}
+
+async function LogDetailContent({ params }: { params: Promise<{ logId: string }> }) {
   const { logId } = await params
   const log = await getWorkoutLogDetailAction(logId)
   if (!log) notFound()

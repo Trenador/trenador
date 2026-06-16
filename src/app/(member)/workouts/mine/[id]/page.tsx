@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -5,6 +6,7 @@ import { getMyWorkoutAction } from '@/actions/workouts'
 import { WorkoutBuilder } from './workout-builder'
 import type { WorkoutStructure } from '@/lib/workouts'
 import { cn } from '@/lib/utils'
+import MyWorkoutsLoading from '../loading'
 
 const CATEGORY_IMAGE: Record<string, string> = {
   Strength: '/assets/workout-strength.jpg',
@@ -20,11 +22,15 @@ const CATEGORY_BANNER: Record<string, string> = {
   Mobility: 'bg-[linear-gradient(135deg,#2e2a4a_0%,#171528_100%)]',
 }
 
-export default async function MyWorkoutPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function MyWorkoutPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<MyWorkoutsLoading />}>
+      <MyWorkoutContent params={params} />
+    </Suspense>
+  )
+}
+
+async function MyWorkoutContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const workout = await getMyWorkoutAction(id)
   if (!workout) notFound()
@@ -84,7 +90,6 @@ export default async function MyWorkoutPage({
           </p>
         )}
 
-        {/* Week / block structure from source */}
         {weeks.length > 0 && (
           <div className="mb-8">
             <h2 className="mb-4 text-[13px] font-medium text-foreground/70">Workout structure</h2>
@@ -118,7 +123,6 @@ export default async function MyWorkoutPage({
           </div>
         )}
 
-        {/* Exercise editor */}
         <div>
           <h2 className="mb-4 text-[13px] font-medium text-foreground/70">Your exercises</h2>
           <WorkoutBuilder workout={workout} />

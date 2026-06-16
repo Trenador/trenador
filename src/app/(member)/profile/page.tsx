@@ -1,8 +1,18 @@
+import { Suspense } from 'react'
 import { getAuthenticatedMember } from '@/actions/_auth'
 import { createClient } from '@/lib/supabase/server'
 import { ProfileClient } from './profile-client'
+import ProfileLoading from './loading'
 
-export default async function ProfilePage() {
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<ProfileLoading />}>
+      <ProfileContent />
+    </Suspense>
+  )
+}
+
+async function ProfileContent() {
   const member = await getAuthenticatedMember()
 
   let avatarUrl = ''
