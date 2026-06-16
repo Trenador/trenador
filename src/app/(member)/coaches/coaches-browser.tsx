@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 
 type Coach = {
   id: string
@@ -15,10 +15,6 @@ type Coach = {
   certifications: string[]
   photoUrl: string | null
   active: boolean
-}
-
-function initials(name: string) {
-  return name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
 }
 
 function CoachCard({ coach }: { coach: Coach }) {
@@ -53,7 +49,7 @@ function CoachCard({ coach }: { coach: Coach }) {
             <img src={coach.photoUrl} alt={coach.displayName} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-[11px] font-semibold text-muted-foreground">
-              {initials(coach.displayName)}
+              {getInitials(coach.displayName)}
             </div>
           )}
         </div>

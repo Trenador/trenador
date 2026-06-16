@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Clock, Gauge, ChevronDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { RemixButton } from './remix-button'
 import type { WorkoutStructure } from '@/lib/workouts'
 
@@ -46,10 +46,6 @@ const CATEGORY_BANNER: Record<string, string> = {
   Mobility: 'bg-[linear-gradient(135deg,#2e2a4a_0%,#171528_100%)]',
 }
 
-function coachInitials(name: string | null) {
-  if (!name) return '?'
-  return name.split(' ').map(p => p[0] ?? '').join('').toUpperCase().slice(0, 2)
-}
 
 function BlockItem({ name, detail, index }: { name: string; detail: string; index: number }) {
   const cleanName = name.replace(/^[A-Z]\d?\.\s+/, '')
@@ -255,7 +251,7 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
                 <img src={workout.coachPhotoUrl} alt={workout.coachName} className="h-16 w-16 rounded-full object-cover" />
               ) : (
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-[18px] font-semibold text-background">
-                  {coachInitials(workout.coachName)}
+                  {getInitials(workout.coachName)}
                 </div>
               )}
               <div>

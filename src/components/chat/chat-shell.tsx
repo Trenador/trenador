@@ -1,5 +1,9 @@
 'use client'
 
+declare global {
+  interface Window { __shellSidebarCollapsed: boolean }
+}
+
 import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react'
 import { usePathname } from 'next/navigation'
 import { ThreadSidebar } from './thread-sidebar'
@@ -164,7 +168,7 @@ export function ChatShell({
 
   // Expose sidebar collapsed state globally for children to read
   useEffect(() => {
-    ;(window as any).__shellSidebarCollapsed = leftCollapsed
+    window.__shellSidebarCollapsed = leftCollapsed
     window.dispatchEvent(new CustomEvent('shell:sidebar-state', { detail: { collapsed: leftCollapsed } }))
   }, [leftCollapsed])
 

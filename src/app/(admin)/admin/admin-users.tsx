@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { adminGetMembers, adminAssignCoach } from '@/actions/admin'
 
@@ -33,10 +33,6 @@ function relative(iso: string) {
   if (diff < 2) return 'yesterday'
   if (diff < 30) return `${Math.floor(diff)}d ago`
   return fmt(iso)
-}
-
-function initials(name: string): string {
-  return name.split(/\s+/).map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
 }
 
 export function AdminUsers({ coaches }: { coaches: Coach[] }) {
@@ -121,7 +117,7 @@ export function AdminUsers({ coaches }: { coaches: Coach[] }) {
                 <div key={`card-${r.id}`} className="rounded-lg border border-border/60 bg-card p-4">
                   <div className="flex items-start gap-3">
                     <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border/60 bg-muted flex items-center justify-center text-[10px] font-medium text-muted-foreground">
-                      {r.photoUrl ? <img src={r.photoUrl} alt="" className="h-full w-full object-cover" /> : initials(r.displayName)}
+                      {r.photoUrl ? <img src={r.photoUrl} alt="" className="h-full w-full object-cover" /> : getInitials(r.displayName)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <button type="button" className="block w-full text-left text-sm font-medium hover:underline" onClick={() => setSelectedId(r.id)}>
@@ -161,7 +157,7 @@ export function AdminUsers({ coaches }: { coaches: Coach[] }) {
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full border border-border/60 bg-muted flex items-center justify-center text-[9px] font-medium text-muted-foreground">
-                          {r.photoUrl ? <img src={r.photoUrl} alt="" className="h-full w-full object-cover" /> : initials(r.displayName)}
+                          {r.photoUrl ? <img src={r.photoUrl} alt="" className="h-full w-full object-cover" /> : getInitials(r.displayName)}
                         </div>
                         <button type="button" className="cursor-pointer text-left font-medium hover:underline" onClick={() => setSelectedId(r.id)}>
                           {r.displayName}
@@ -210,7 +206,7 @@ export function AdminUsers({ coaches }: { coaches: Coach[] }) {
             <div className="mt-6 flex flex-col gap-5">
               <div className="flex items-center gap-4">
                 <div className="h-16 w-16 overflow-hidden rounded-full bg-muted border border-border/60 flex items-center justify-center text-xl font-medium text-muted-foreground">
-                  {selectedMember.photoUrl ? <img src={selectedMember.photoUrl} alt="" className="h-full w-full object-cover" /> : initials(selectedMember.displayName)}
+                  {selectedMember.photoUrl ? <img src={selectedMember.photoUrl} alt="" className="h-full w-full object-cover" /> : getInitials(selectedMember.displayName)}
                 </div>
                 <div className="min-w-0">
                   <div className="font-serif text-xl leading-tight">{selectedMember.displayName}</div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { submitIntake, getCoachesForPicker, assignCoach } from '@/actions/onboarding'
 
 type Gender = 'male' | 'female' | 'non_binary' | 'prefer_not_to_say'
@@ -22,10 +22,6 @@ type CoachOption = {
 
 const TOTAL_STEPS = 3
 const CURRENT_STEP = 2
-
-function initials(name: string) {
-  return name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
-}
 
 function CoachPickerCard({
   coach,
@@ -65,7 +61,7 @@ function CoachPickerCard({
             <img src={coach.photoUrl} alt={coach.displayName} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-[11px] font-semibold text-muted-foreground">
-              {initials(coach.displayName)}
+              {getInitials(coach.displayName)}
             </div>
           )}
         </div>

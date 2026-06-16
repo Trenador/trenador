@@ -61,6 +61,7 @@ export async function getCoachInbox() {
   const allMessages = await db
     .select()
     .from(coachMessages)
+    .where(eq(coachMessages.tenantId, APP_CONFIG.tenantId))
     .orderBy(desc(coachMessages.createdAt))
     .limit(500)
 

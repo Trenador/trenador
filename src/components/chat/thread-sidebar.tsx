@@ -253,20 +253,6 @@ export function ThreadSidebar({
             onClick={() => { router.push('/workouts/mine'); closeOnMobile() }}
             active={pathname === '/workouts/mine' || pathname.startsWith('/workouts/mine/')}
           />
-          {/* Log Workout and History are hidden until enabled by product
-          <SidebarTab
-            icon={<ClipboardList className="h-4 w-4" />}
-            label="Log workout"
-            onClick={() => { router.push('/log'); closeOnMobile() }}
-            active={pathname === '/log'}
-          />
-          <SidebarTab
-            icon={<History className="h-4 w-4" />}
-            label="History"
-            onClick={() => { router.push('/log/history'); closeOnMobile() }}
-            active={pathname.startsWith('/log/history')}
-          />
-          */}
           <SidebarTab
             icon={<MessageCircle className="h-4 w-4" />}
             label="Message center"

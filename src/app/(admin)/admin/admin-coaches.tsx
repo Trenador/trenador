@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { MobileFilterButton, MobileFilterSheet, type FilterSection } from './admin-filter-sheet'
@@ -45,10 +45,6 @@ const SPECIALTIES = ['Strength', 'Hypertrophy', 'Conditioning', 'Mobility', 'Nut
 
 function slugify(s: string): string {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || `coach-${Date.now()}`
-}
-
-function initials(name: string): string {
-  return name.split(/\s+/).map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
 }
 
 function emptyDraft(): DraftCoach {
@@ -161,7 +157,7 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
             <div key={`card-${c.id}`} className="rounded-lg border border-border/60 bg-card p-4">
               <div className="flex items-start gap-3">
                 <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-border/60 bg-muted flex items-center justify-center text-[11px] font-medium text-muted-foreground">
-                  {c.photoUrl ? <img src={c.photoUrl} alt="" className="h-full w-full object-cover" /> : initials(c.displayName)}
+                  {c.photoUrl ? <img src={c.photoUrl} alt="" className="h-full w-full object-cover" /> : getInitials(c.displayName)}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{c.displayName}</div>
@@ -207,7 +203,7 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full border border-border/60 bg-muted flex items-center justify-center text-[11px] font-medium text-muted-foreground">
-                      {c.photoUrl ? <img src={c.photoUrl} alt="" className="h-full w-full object-cover" /> : initials(c.displayName)}
+                      {c.photoUrl ? <img src={c.photoUrl} alt="" className="h-full w-full object-cover" /> : getInitials(c.displayName)}
                     </div>
                     <div className="min-w-0">
                       <div className="truncate font-medium">

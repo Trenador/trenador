@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Mail, MailOpen, Pencil, Trash2, Check, X, Send } from 'lucide-react'
 import { MobileFilterButton, MobileFilterSheet, type FilterSection } from './admin-filter-sheet'
@@ -52,10 +52,6 @@ function relativeLabel(iso: string): string {
   if (diff < 2) return 'yesterday'
   if (diff < 7) return (['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][d.getDay()] ?? '')
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
-
-function initials(name: string): string {
-  return name.split(/\s+/).map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
 }
 
 export function AdminInbox({ coaches }: { coaches: Coach[] }) {
@@ -241,7 +237,7 @@ export function AdminInbox({ coaches }: { coaches: Coach[] }) {
                 {grouped[b].map((c) => {
                   const unread = isUnread(c)
                   const isActive = activeThreadId === c.memberId
-                  const ini = initials(c.displayName)
+                  const ini = getInitials(c.displayName)
                   const assignedCoach = coaches.find((co) => co.id === c.assignedCoachId)
                   return (
                     <div
@@ -354,7 +350,7 @@ export function AdminInbox({ coaches }: { coaches: Coach[] }) {
                           <div className={cn('flex max-w-[85%] items-end gap-2', fromMember ? 'flex-row' : 'flex-row-reverse')}>
                             {fromMember && (
                               <div className="mb-0.5 h-7 w-7 shrink-0 overflow-hidden rounded-full bg-muted border border-border/60 flex items-center justify-center text-[9px] font-medium text-muted-foreground">
-                                {initials(activeConversation.displayName)}
+                                {getInitials(activeConversation.displayName)}
                               </div>
                             )}
                             <div className={cn('rounded-2xl px-4 py-2.5 text-sm leading-relaxed', fromMember ? 'rounded-bl-sm bg-muted text-foreground' : 'rounded-br-sm bg-foreground text-background')}>

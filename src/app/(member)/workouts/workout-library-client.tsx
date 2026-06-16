@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Bookmark, CalendarDays, Clock, Gauge, MoveHorizontal, Plus, Search, SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -42,10 +42,6 @@ const CATEGORY_BANNER: Record<string, string> = {
   Mobility: 'bg-[linear-gradient(135deg,#2e2a4a_0%,#171528_100%)]',
 }
 
-function coachInitials(name: string | null) {
-  if (!name) return '?'
-  return name.split(' ').map(p => p[0] ?? '').join('').toUpperCase().slice(0, 2)
-}
 
 function levelShort(level: string | null) {
   if (!level) return ''
@@ -135,7 +131,7 @@ function WorkoutCard({ workout }: { workout: Workout }) {
                 />
               ) : (
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-[9px] font-semibold text-background">
-                  {coachInitials(workout.coachName)}
+                  {getInitials(workout.coachName)}
                 </div>
               )}
               <span className="text-[12px] text-muted-foreground">{workout.coachName}</span>
