@@ -3,8 +3,6 @@ import { db } from '@/db'
 import { members } from '@/db/schema'
 import { getStripe } from '@/lib/stripe/client'
 
-export const dynamic = 'force-dynamic'
-
 export async function POST(request: Request) {
   const stripe = getStripe()
   const body = await request.text()
