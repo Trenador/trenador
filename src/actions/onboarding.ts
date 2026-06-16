@@ -2,9 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/db'
-import { memberCodes, members, intakeSubmissions } from '@/db/schema'
+import { memberCodes, members, intakeSubmissions, coaches } from '@/db/schema'
 import { APP_CONFIG } from '@/lib/config'
-import { eq, and, isNull } from 'drizzle-orm'
+import { eq, and, isNull, asc } from 'drizzle-orm'
 import { z } from 'zod'
 
 const verifyCodeSchema = z.object({
@@ -102,6 +102,44 @@ export async function submitIntake(formData: FormData) {
     goalPrimary: data.goal_primary?.toString() ?? '',
     locationPref: data.location_pref?.toString() ?? '',
   })
+
+  return { success: true }
+}
+
+export async function getCoachesForPicker() {
+  return db
+    .select({
+      id: coaches.id,
+      displayName: coaches.displayName,
+      specialty: coaches.specialties,
+      headline: coaches.headline,
+      bio: coaches.bio,
+      gym: coaches.gym,
+      location: coaches.location,
+      certifications: coaches.certifications,
+      photoUrl: coaches.photoUrl,
+    })
+    .from(coaches)
+    .where(and(eq(coaches.tenantId, APP_CONFIG.tenantId), eq(coaches.active, true)))
+    .orderBy(asc(coaches.displayName))
+}
+
+export async function assignCoach(coachId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'not authenticated' }
+
+  const [member] = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(eq(members.authUserId, user.id))
+    .limit(1)
+
+  if (!member) return { error: 'member not found' }
+
+  await db.update(members)
+    .set({ assignedCoachId: coachId })
+    .where(eq(members.id, member.id))
 
   return { success: true }
 }

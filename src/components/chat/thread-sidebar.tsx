@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Plus, Trash2, Menu, LogOut, Dumbbell, Bookmark,
-  MessageCircle, User, Settings, Users,
+  MessageCircle, User, Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -267,12 +267,6 @@ export function ThreadSidebar({
             active={pathname.startsWith('/log/history')}
           />
           */}
-          <SidebarTab
-            icon={<Users className="h-4 w-4" />}
-            label="Coaches"
-            onClick={() => { router.push('/coaches'); closeOnMobile() }}
-            active={pathname === '/coaches' || pathname.startsWith('/coaches/')}
-          />
           <SidebarTab
             icon={<MessageCircle className="h-4 w-4" />}
             label="Message center"

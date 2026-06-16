@@ -1,20 +1,122 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { submitIntake } from '@/actions/onboarding'
+import { ChevronDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { submitIntake, getCoachesForPicker, assignCoach } from '@/actions/onboarding'
 
 type Gender = 'male' | 'female' | 'non_binary' | 'prefer_not_to_say'
 
-const TOTAL_STEPS = 3 // verify → intake → subscribe
+type CoachOption = {
+  id: string
+  displayName: string
+  specialty: string[]
+  headline: string | null
+  bio: string | null
+  gym: string | null
+  location: string | null
+  certifications: string[]
+  photoUrl: string | null
+}
+
+const TOTAL_STEPS = 3
 const CURRENT_STEP = 2
+
+function initials(name: string) {
+  return name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
+}
+
+function CoachPickerCard({
+  coach,
+  selected,
+  onSelect,
+}: {
+  coach: CoachOption
+  selected: boolean
+  onSelect: () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+
+  const toggle = () => {
+    onSelect()
+    setExpanded(prev => !prev)
+  }
+
+  const subtitle = [coach.specialty[0], coach.location].filter(Boolean).join(' · ')
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={toggle}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle() } }}
+      className={cn(
+        'cursor-pointer rounded-xl border transition-colors',
+        selected
+          ? 'border-foreground/30 bg-foreground/[0.03]'
+          : 'border-input hover:border-foreground/20 hover:bg-foreground/[0.02]',
+      )}
+    >
+      <div className="flex items-center gap-3 p-4">
+        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-border/60 bg-muted">
+          {coach.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={coach.photoUrl} alt={coach.displayName} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[11px] font-semibold text-muted-foreground">
+              {initials(coach.displayName)}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-medium">{coach.displayName}</div>
+          {subtitle && (
+            <div className="truncate text-[12px] text-muted-foreground">{subtitle}</div>
+          )}
+        </div>
+        <ChevronDown
+          className={cn(
+            'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
+            expanded && 'rotate-180',
+          )}
+        />
+      </div>
+
+      {expanded && (
+        <div className="border-t border-border/60 px-4 pb-4 pt-3">
+          {coach.headline && (
+            <p className="mb-3 text-[13px] font-medium leading-snug text-foreground">
+              {coach.headline}
+            </p>
+          )}
+          {coach.bio && (
+            <p className="text-[13px] leading-relaxed text-muted-foreground">{coach.bio}</p>
+          )}
+          {coach.gym && (
+            <p className="mt-2 text-[12px] text-muted-foreground">{coach.gym}</p>
+          )}
+          {coach.certifications.length > 0 && (
+            <ul className="mt-3 space-y-1">
+              {coach.certifications.map(cert => (
+                <li key={cert} className="flex items-start gap-2 text-[12px] text-muted-foreground">
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-muted-foreground/60" />
+                  {cert}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function IntakePage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(0)
-  const INTAKE_STEPS = 5
 
   // Form state
   const [age, setAge] = useState('')
@@ -29,6 +131,14 @@ export default function IntakePage() {
   const [injuries, setInjuries] = useState('')
   const [medicalConditions, setMedicalConditions] = useState('')
   const [dietaryRestrictions, setDietaryRestrictions] = useState('')
+
+  // Coach picker state
+  const [coachOptions, setCoachOptions] = useState<CoachOption[]>([])
+  const [selectedCoachId, setSelectedCoachId] = useState<string | null>(null)
+
+  useEffect(() => {
+    getCoachesForPicker().then(setCoachOptions).catch(() => {})
+  }, [])
 
   async function handleFinish() {
     setLoading(true)
@@ -51,6 +161,9 @@ export default function IntakePage() {
       setError(result.error)
       setLoading(false)
       return
+    }
+    if (selectedCoachId) {
+      await assignCoach(selectedCoachId)
     }
     router.push('/subscribe')
   }
@@ -135,7 +248,7 @@ export default function IntakePage() {
           {step === 1 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h1 className="text-2xl font-semibold tracking-tight">What's your gender?</h1>
+                <h1 className="text-2xl font-semibold tracking-tight">What&apos;s your gender?</h1>
                 <p className="text-sm text-muted-foreground">Used to personalize recommendations.</p>
               </div>
               <div className="grid gap-2">
@@ -167,7 +280,7 @@ export default function IntakePage() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">Your training background</h1>
-                <p className="text-sm text-muted-foreground">We'll tailor the program to your level.</p>
+                <p className="text-sm text-muted-foreground">We&apos;ll tailor the program to your level.</p>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -230,7 +343,7 @@ export default function IntakePage() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">Any health notes?</h1>
-                <p className="text-sm text-muted-foreground">All optional — skip any that don't apply.</p>
+                <p className="text-sm text-muted-foreground">All optional — skip any that don&apos;t apply.</p>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -271,8 +384,8 @@ export default function IntakePage() {
           {step === 4 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h1 className="text-2xl font-semibold tracking-tight">You're all set!</h1>
-                <p className="text-sm text-muted-foreground">Review your details and continue to choose a plan.</p>
+                <h1 className="text-2xl font-semibold tracking-tight">You&apos;re almost there!</h1>
+                <p className="text-sm text-muted-foreground">Review your details before picking a coach.</p>
               </div>
               <div className="space-y-2 rounded-md border border-border p-4 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Age</span><span>{age}</span></div>
@@ -281,15 +394,56 @@ export default function IntakePage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Weight</span><span>{weight} lbs</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Goal</span><span className="capitalize">{goal.replace(/_/g, ' ')}</span></div>
               </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(5)}
+                  className="h-10 rounded-md bg-foreground px-6 text-sm font-medium text-background hover:opacity-90 transition-opacity"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 5 — Pick your coach */}
+          {step === 5 && (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <h1 className="text-2xl font-semibold tracking-tight">Pick your coach</h1>
+                <p className="text-sm text-muted-foreground">Your coach is your primary advisor throughout your training.</p>
+              </div>
+              {coachOptions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Loading coaches…</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {coachOptions.map(coach => (
+                    <CoachPickerCard
+                      key={coach.id}
+                      coach={coach}
+                      selected={selectedCoachId === coach.id}
+                      onSelect={() => setSelectedCoachId(coach.id)}
+                    />
+                  ))}
+                </div>
+              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <div className="flex items-center justify-between pt-2">
                 <button
                   type="button"
                   onClick={handleFinish}
                   disabled={loading}
+                  className="text-sm text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
+                >
+                  Skip for now
+                </button>
+                <button
+                  type="button"
+                  onClick={handleFinish}
+                  disabled={loading || !selectedCoachId}
                   className="h-10 rounded-md bg-foreground px-6 text-sm font-medium text-background hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  {loading ? 'Saving…' : 'Continue'}
+                  {loading ? 'Saving…' : 'Finish'}
                 </button>
               </div>
             </div>
