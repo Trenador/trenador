@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 
-export function OAuthButtons() {
+export function OAuthButtons({ label = 'Login with Google' }: { label?: string }) {
   async function signInWithGoogle() {
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
@@ -19,7 +19,7 @@ export function OAuthButtons() {
       className="w-full h-11 rounded-xl border bg-background text-base font-medium hover:bg-muted transition-colors flex items-center justify-center gap-2.5"
     >
       <GoogleIcon />
-      Login with Google
+      {label}
     </button>
   )
 }

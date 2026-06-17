@@ -9,12 +9,14 @@ export default function SignupPage() {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [confirmationSent, setConfirmationSent] = useState(false)
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
+    if (password !== confirmPassword) { setError('Passwords do not match'); return }
     setLoading(true)
     setError(null)
     const supabase = createClient()
@@ -47,14 +49,6 @@ export default function SignupPage() {
 
   const formContent = (
     <>
-      <OAuthButtons />
-
-      <div className="flex items-center gap-3">
-        <div className="h-px flex-1 bg-border" />
-        <span className="label-mono normal-case tracking-wide text-[11px]">or</span>
-        <div className="h-px flex-1 bg-border" />
-      </div>
-
       <form onSubmit={handleSignup} className="space-y-4">
         <div className="space-y-1.5">
           <label htmlFor="displayName" className="text-sm font-medium">Full name</label>
@@ -66,7 +60,7 @@ export default function SignupPage() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="John Smith"
-            className="h-12 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
           />
         </div>
 
@@ -80,7 +74,7 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="h-12 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
           />
         </div>
 
@@ -95,7 +89,22 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
-            className="h-12 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repeat your password"
+            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
           />
         </div>
 
@@ -104,18 +113,26 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className="h-12 w-full rounded-full bg-primary text-primary-foreground text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="h-11 w-full rounded-xl bg-primary text-primary-foreground text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? 'Creating account…' : 'Create account'}
+          {loading ? 'Creating account…' : 'Sign up'}
         </button>
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
+        Have an account?{' '}
         <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
           Log in
         </Link>
       </p>
+
+      <div className="flex items-center gap-3">
+        <div className="h-px flex-1 bg-border" />
+        <span className="label-mono normal-case tracking-wide text-[11px]">or</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
+      <OAuthButtons label="Sign up with Google" />
     </>
   )
 
@@ -142,7 +159,7 @@ export default function SignupPage() {
 
         <div className="relative z-10 rounded-t-[2.5rem] bg-card px-6 pb-10 pt-6 text-card-foreground shadow-[0_-20px_60px_-20px_rgba(0,0,0,0.6)]">
           <div className="mx-auto w-full max-w-sm space-y-5">
-            <h1 className="text-2xl font-bold tracking-tight">Get started</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Get Started Now</h1>
             {formContent}
           </div>
         </div>
@@ -178,8 +195,8 @@ export default function SignupPage() {
         <div className="flex items-center justify-center p-8 md:p-10 lg:p-14">
           <div className="w-full max-w-sm space-y-6">
             <div className="space-y-1">
-              <h1 className="text-4xl font-bold tracking-tight">Get started</h1>
-              <p className="text-sm text-muted-foreground">Create your Trenador account</p>
+              <h1 className="text-4xl font-bold tracking-tight">Get Started Now</h1>
+              <p className="text-sm text-muted-foreground">Create your account to get started.</p>
             </div>
             {formContent}
           </div>
