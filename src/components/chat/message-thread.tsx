@@ -244,12 +244,16 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
           role="log"
         >
           <StickToBottom.Content className="mx-auto w-full max-w-3xl flex flex-col gap-8 p-4">
-            {messages.map((msg, i) => (
-              <MessageBubble key={msg.id ?? i} message={msg} />
-            ))}
-            {isStreaming && messages[messages.length - 1]?.isStreaming === false && (
-              <ThinkingBubble />
-            )}
+            {messages
+              .filter(m => !(m.role === 'assistant' && m.isStreaming && !m.content))
+              .map((m, i) => (
+                <MessageBubble key={m.id ?? i} message={m} />
+              ))}
+            {messages[messages.length - 1]?.role === 'assistant' &&
+              messages[messages.length - 1]?.isStreaming &&
+              !messages[messages.length - 1]?.content && (
+                <ThinkingBubble />
+              )}
           </StickToBottom.Content>
           <ScrollToBottomButton />
         </StickToBottom>
