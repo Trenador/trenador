@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { OAuthButtons } from '@/components/shared/oauth-buttons'
 
 export default function SignupPage() {
-  const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -24,7 +23,6 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { display_name: displayName },
         emailRedirectTo: `${window.location.origin}/api/auth/callback`,
       },
     })
@@ -51,20 +49,6 @@ export default function SignupPage() {
     <>
       <form onSubmit={handleSignup} className="space-y-4">
         <div className="space-y-1.5">
-          <label htmlFor="displayName" className="text-sm font-medium">Full name</label>
-          <input
-            id="displayName"
-            type="text"
-            autoComplete="name"
-            required
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="John Smith"
-            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-          />
-        </div>
-
-        <div className="space-y-1.5">
           <label htmlFor="email" className="text-sm font-medium">Email address</label>
           <input
             id="email"
@@ -73,8 +57,7 @@ export default function SignupPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -88,8 +71,7 @@ export default function SignupPage() {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -103,8 +85,7 @@ export default function SignupPage() {
             minLength={8}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Repeat your password"
-            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
 
@@ -121,7 +102,7 @@ export default function SignupPage() {
 
       <p className="text-center text-sm text-muted-foreground">
         Have an account?{' '}
-        <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
+        <Link href="/login" className="font-bold text-foreground underline underline-offset-4">
           Log in
         </Link>
       </p>

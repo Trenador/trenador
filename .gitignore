@@ -45,6 +45,12 @@ next-env.d.ts
 CLAUDE.md
 AGENTS.md
 
+# playwright screenshots / snapshots (root-level only)
+.playwright-mcp/
+/*.png
+/*.jpeg
+/*.jpg
+
 # docs
 *.docx
 *.txt
