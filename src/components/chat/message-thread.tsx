@@ -42,9 +42,7 @@ function formatTimestamp(iso: string | undefined): string {
   return `${date} · ${time}`
 }
 
-function ShortcutsMenu({ onPick }: { onPick: (s: string) => void }) {
-  const [open, setOpen] = useState(false)
-
+function ShortcutsMenu({ onPick, open, onOpenChange }: { onPick: (s: string) => void; open: boolean; onOpenChange: (v: boolean) => void }) {
   const panel = (
     <div
       className={`grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-300 ease-out ${
@@ -60,7 +58,7 @@ function ShortcutsMenu({ onPick }: { onPick: (s: string) => void }) {
             <button
               key={s}
               type="button"
-              onClick={() => { setOpen(false); onPick(s) }}
+              onClick={() => { onOpenChange(false); onPick(s) }}
               style={{ transitionDelay: open ? `${i * 40}ms` : '0ms' }}
               className={`flex w-full items-center gap-3 rounded-lg py-3 text-left text-[15px] leading-snug text-foreground transition-all duration-300 hover:bg-foreground/[0.04] ${
                 open ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
@@ -81,7 +79,7 @@ function ShortcutsMenu({ onPick }: { onPick: (s: string) => void }) {
       {!open && (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => onOpenChange(true)}
           className="flex items-center gap-1.5 px-1 py-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
         >
           <Sparkles className="h-3.5 w-3.5" />
@@ -109,6 +107,7 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
   const router = useRouter()
   const hasSentInitial = useRef(false)
 
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [messages, setMessages] = useState<DisplayMessage[]>(
     initialMessages.map((m): DisplayMessage => ({
       id: m.id,
@@ -258,14 +257,16 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
 
       {/* Composer */}
       <div
-        className="shrink-0 border-t border-border/70 bg-background px-4 pt-3"
+        className="shrink-0 border-t border-border/30 bg-background px-4 pt-3"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
       >
         <div className="mx-auto w-full max-w-3xl">
           <div className="mb-2 flex w-full">
-            <ShortcutsMenu onPick={sendMessage} />
+            <ShortcutsMenu onPick={sendMessage} open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
           </div>
-          <Composer onSubmit={sendMessage} disabled={isStreaming} />
+          <div onFocusCapture={() => setShortcutsOpen(false)}>
+            <Composer onSubmit={sendMessage} disabled={isStreaming} />
+          </div>
         </div>
       </div>
     </div>
@@ -275,9 +276,12 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
 function ThinkingBubble() {
   return (
     <div className="flex w-full max-w-[95%] flex-col gap-2">
-      <div className="flex w-fit min-w-0 max-w-full flex-col gap-2 text-sm leading-relaxed text-foreground">
-        <span className="label-mono animate-pulse">Thinking…</span>
-      </div>
+      <span
+        className="text-sm text-muted-foreground animate-pulse"
+        style={{ textShadow: '0 0 8px hsl(var(--foreground) / 0.3)' }}
+      >
+        Thinking…
+      </span>
     </div>
   )
 }
