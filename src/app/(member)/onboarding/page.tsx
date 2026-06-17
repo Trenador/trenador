@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getCoachesForPicker, completeOnboarding } from '@/actions/onboarding'
-import { getInitials } from '@/lib/utils'
-import { ChevronDown } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { getInitials, cn } from '@/lib/utils'
 
 type Gender = 'female' | 'male' | 'non-binary'
 
@@ -29,19 +27,15 @@ const btn = 'h-10 rounded-md bg-foreground px-6 text-sm font-medium text-backgro
 function CoachCard({
   coach,
   selected,
+  expanded,
   onSelect,
 }: {
   coach: CoachOption
   selected: boolean
+  expanded: boolean
   onSelect: () => void
 }) {
-  const [expanded, setExpanded] = useState(false)
   const subtitle = [coach.specialty?.[0], coach.location].filter(Boolean).join(' · ')
-
-  const toggle = () => {
-    onSelect()
-    setExpanded(prev => !prev)
-  }
 
   return (
     <div
@@ -52,7 +46,7 @@ function CoachCard({
     >
       <button
         type="button"
-        onClick={toggle}
+        onClick={onSelect}
         className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-foreground/[0.03]"
       >
         <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-border/60 bg-muted">
@@ -71,12 +65,6 @@ function CoachCard({
             <div className="truncate text-[12px] text-muted-foreground">{subtitle}</div>
           )}
         </div>
-        <ChevronDown
-          className={cn(
-            'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200',
-            expanded && 'rotate-180',
-          )}
-        />
       </button>
       {expanded && (
         <div className="space-y-3 border-t border-input/60 px-4 py-3 text-xs text-muted-foreground">
@@ -113,6 +101,7 @@ export default function OnboardingPage() {
   const [gender, setGender] = useState<Gender | ''>('')
   const [weight, setWeight] = useState('')
   const [coachId, setCoachId] = useState('')
+  const [expandedCoachId, setExpandedCoachId] = useState('')
   const [coaches, setCoaches] = useState<CoachOption[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -328,7 +317,12 @@ export default function OnboardingPage() {
                       key={coach.id}
                       coach={coach}
                       selected={coachId === coach.id}
-                      onSelect={() => { setCoachId(coach.id); setError(null) }}
+                      expanded={expandedCoachId === coach.id}
+                      onSelect={() => {
+                        setCoachId(coach.id)
+                        setExpandedCoachId(prev => prev === coach.id ? '' : coach.id)
+                        setError(null)
+                      }}
                     />
                   ))
                 )}

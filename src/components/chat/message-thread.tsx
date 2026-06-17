@@ -212,7 +212,7 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background">
+    <div className="flex h-full min-h-0 w-full flex-col bg-background">
       {/* 60px header */}
       <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-border/70 pl-2 pr-3 lg:pl-5">
         <div className="flex items-center gap-2">
