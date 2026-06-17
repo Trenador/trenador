@@ -56,7 +56,8 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm space-y-8">
-        <div className="space-y-2">
+        <div className="space-y-2 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Trenador</p>
           <h1 className="text-2xl font-semibold tracking-tight">Set a new password</h1>
           <p className="text-sm text-muted-foreground">
             {ready ? 'Choose a new password for your account.' : 'Verifying your reset link…'}

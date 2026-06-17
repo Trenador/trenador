@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { db } from '@/db'
 import { members } from '@/db/schema'
 
-const TRIAL_DAYS = 14
+const TRIAL_DAYS = 7
 
 // React.cache() deduplicates calls within a single server request —
 // layouts and actions that both call this only hit the DB once per render.

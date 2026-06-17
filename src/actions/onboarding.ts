@@ -2,109 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { db } from '@/db'
-import { memberCodes, members, intakeSubmissions, coaches } from '@/db/schema'
+import { members, coaches, intakeSubmissions } from '@/db/schema'
 import { APP_CONFIG } from '@/lib/config'
-import { eq, and, isNull, asc } from 'drizzle-orm'
-import { z } from 'zod'
-
-const verifyCodeSchema = z.object({
-  code: z.string().min(1, 'please enter your member code'),
-})
-
-export async function verifyMemberCode(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: 'not authenticated' }
-
-  const parsed = verifyCodeSchema.safeParse({ code: formData.get('code') })
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'invalid input' }
-  }
-
-  const code = parsed.data.code.trim().toUpperCase()
-
-  // get the member row for this auth user
-  const [member] = await db
-    .select()
-    .from(members)
-    .where(eq(members.authUserId, user.id))
-    .limit(1)
-
-  if (!member) return { error: 'member record not found' }
-
-  // Atomically claim the code: UPDATE...WHERE usedBy IS NULL prevents double-redemption
-  // if two requests race. RETURNING lets us confirm the claim succeeded.
-  const [claimed] = await db
-    .update(memberCodes)
-    .set({ usedBy: member.id, usedAt: new Date() })
-    .where(
-      and(
-        eq(memberCodes.tenantId, APP_CONFIG.tenantId),
-        eq(memberCodes.code, code),
-        isNull(memberCodes.usedBy)
-      )
-    )
-    .returning({ id: memberCodes.id })
-
-  if (!claimed) return { error: 'invalid or already used member code' }
-
-  await db
-    .update(members)
-    .set({ memberVerifiedAt: new Date() })
-    .where(eq(members.id, member.id))
-
-  return { success: true }
-}
-
-export async function submitIntake(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return { error: 'not authenticated' }
-
-  const [member] = await db
-    .select()
-    .from(members)
-    .where(eq(members.authUserId, user.id))
-    .limit(1)
-
-  if (!member) return { error: 'member record not found' }
-
-  const heightFt = Number(formData.get('height_ft'))
-  const heightIn = Number(formData.get('height_in'))
-  const weightLbs = Number(formData.get('weight'))
-
-  // store metric for calculations, keep imperial display for the ui
-  const heightCm = Math.round((heightFt * 12 + heightIn) * 2.54)
-  const weightKg = Math.round(weightLbs * 0.453592 * 10) / 10
-
-  const data = {
-    age: formData.get('age'),
-    gender: formData.get('gender'),
-    height_cm: heightCm,
-    weight_kg: weightKg,
-    height_display: `${heightFt}'${heightIn}"`,
-    weight_display: `${weightLbs} lbs`,
-    goal_primary: formData.get('goal_primary'),
-    activity_level: formData.get('activity_level'),
-    experience: formData.get('experience'),
-    location_pref: formData.get('location_pref'),
-    injuries: formData.get('injuries'),
-    medical_conditions: formData.get('medical_conditions'),
-    dietary_restrictions: formData.get('dietary_restrictions'),
-  }
-
-  await db.insert(intakeSubmissions).values({
-    tenantId: APP_CONFIG.tenantId,
-    memberId: member.id,
-    data,
-    goalPrimary: data.goal_primary?.toString() ?? '',
-    locationPref: data.location_pref?.toString() ?? '',
-  })
-
-  return { success: true }
-}
+import { eq, and, asc } from 'drizzle-orm'
 
 export async function getCoachesForPicker() {
   return db
@@ -124,7 +24,14 @@ export async function getCoachesForPicker() {
     .orderBy(asc(coaches.displayName))
 }
 
-export async function assignCoach(coachId: string) {
+export async function completeOnboarding(data: {
+  firstName: string
+  lastName: string
+  yearOfBirth: number
+  gender: string
+  weightLbs: number
+  coachId: string
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'not authenticated' }
@@ -135,11 +42,30 @@ export async function assignCoach(coachId: string) {
     .where(eq(members.authUserId, user.id))
     .limit(1)
 
-  if (!member) return { error: 'member not found' }
+  if (!member) return { error: 'member record not found' }
 
-  await db.update(members)
-    .set({ assignedCoachId: coachId })
-    .where(eq(members.id, member.id))
+  const displayName = `${data.firstName.trim()} ${data.lastName.trim()}`.trim()
+
+  await db.update(members).set({
+    displayName,
+    yearOfBirth: data.yearOfBirth,
+    gender: data.gender,
+    weightLbs: String(data.weightLbs),
+    assignedCoachId: data.coachId,
+    updatedAt: new Date(),
+  }).where(eq(members.id, member.id))
+
+  await db.insert(intakeSubmissions).values({
+    tenantId: APP_CONFIG.tenantId,
+    memberId: member.id,
+    data: {
+      weight_display: `${data.weightLbs} lbs`,
+      year_of_birth: data.yearOfBirth,
+      gender: data.gender,
+    },
+    goalPrimary: '',
+    locationPref: '',
+  })
 
   return { success: true }
 }
