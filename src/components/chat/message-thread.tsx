@@ -277,8 +277,15 @@ function ThinkingBubble() {
   return (
     <div className="flex w-full max-w-[95%] flex-col gap-2">
       <span
-        className="text-sm text-muted-foreground animate-pulse"
-        style={{ textShadow: '0 0 8px hsl(var(--foreground) / 0.3)' }}
+        className="text-sm"
+        style={{
+          backgroundImage: 'linear-gradient(90deg, var(--color-muted-foreground) calc(50% - 40px), var(--color-foreground), var(--color-muted-foreground) calc(50% + 40px))',
+          backgroundSize: '250% 100%',
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          color: 'transparent',
+          animation: 'shimmer-sweep 2s linear infinite',
+        }}
       >
         Thinking…
       </span>
