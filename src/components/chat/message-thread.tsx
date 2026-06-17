@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Menu, Sparkles, Pencil } from 'lucide-react'
+import { Menu, Sparkles, Pencil, SquarePen } from 'lucide-react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom'
@@ -229,10 +229,10 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
         </div>
         <Link
           href="/chat"
-          className="label-mono inline-flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-secondary-foreground transition-colors hover:bg-secondary/80"
+          aria-label="New chat"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
         >
-          <Plus className="h-3 w-3" />
-          Chat
+          <SquarePen className="h-4 w-4" />
         </Link>
       </div>
 

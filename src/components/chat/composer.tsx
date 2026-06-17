@@ -21,7 +21,7 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
     setValue('')
     setMultiline(false)
     if (textareaRef.current) {
-      textareaRef.current.style.height = '0px'
+      textareaRef.current.style.height = '20px'
       textareaRef.current.dataset.multiline = 'false'
     }
     onSubmit(trimmed)
