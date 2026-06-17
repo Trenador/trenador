@@ -1,8 +1,8 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { motion, type MotionProps } from 'motion/react'
-import { type CSSProperties, type ElementType, type JSX, memo, useMemo } from 'react'
+import { motion, type MotionProps, type MotionStyle } from 'motion/react'
+import { type ElementType, type JSX, memo, useMemo } from 'react'
 
 type MotionHTMLProps = MotionProps & Record<string, unknown>
 
@@ -49,7 +49,7 @@ const ShimmerComponent = ({
         '--spread': `${dynamicSpread}px`,
         backgroundImage:
           'var(--bg), linear-gradient(var(--color-muted-foreground), var(--color-muted-foreground))',
-      } as CSSProperties}
+      } as MotionStyle}
     >
       {children}
     </MotionComponent>
