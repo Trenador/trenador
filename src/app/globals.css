@@ -119,11 +119,6 @@
   }
 }
 
-@keyframes shimmer-sweep {
-  from { background-position: 100% center; }
-  to   { background-position: 0% center; }
-}
-
 @layer utilities {
   .font-serif {
     font-family: var(--font-serif);
