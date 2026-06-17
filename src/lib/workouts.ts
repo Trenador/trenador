@@ -1,5 +1,5 @@
 import 'server-only'
-import { eq, and, isNull, isNotNull } from 'drizzle-orm'
+import { eq, and, isNull, isNotNull, ilike } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
 import { db } from '@/db'
 import { workouts, workoutBlocks, exerciseCatalog, coaches } from '@/db/schema'
@@ -104,7 +104,10 @@ export async function getPublishedWorkout(workoutId: string) {
 }
 
 export async function getExerciseCatalog(search?: string) {
-  const rows = await db
+  const conditions = [eq(exerciseCatalog.tenantId, APP_CONFIG.tenantId)]
+  if (search) conditions.push(ilike(exerciseCatalog.name, `%${search}%`))
+
+  return db
     .select({
       id: exerciseCatalog.id,
       name: exerciseCatalog.name,
@@ -112,10 +115,6 @@ export async function getExerciseCatalog(search?: string) {
       muscleGroup: exerciseCatalog.muscleGroup,
     })
     .from(exerciseCatalog)
-    .where(eq(exerciseCatalog.tenantId, APP_CONFIG.tenantId))
+    .where(and(...conditions))
     .orderBy(exerciseCatalog.name)
-
-  if (!search) return rows
-  const q = search.toLowerCase()
-  return rows.filter(r => r.name.toLowerCase().includes(q))
 }

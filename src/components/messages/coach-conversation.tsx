@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { cn } from '@/lib/utils'
+import { messageTimestamp } from '@/lib/format-date'
 import { Composer } from '@/components/chat/composer'
 import { sendCoachMessage, markCoachMessagesRead } from '@/actions/messages'
 import type { CoachMessage } from '@/db/schema'
@@ -10,14 +11,6 @@ type Props = {
   initialMessages: CoachMessage[]
 }
 
-function formatTimestamp(date: Date): string {
-  const d = new Date(date)
-  const now = new Date()
-  const sameDay = d.toDateString() === now.toDateString()
-  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-  if (sameDay) return time
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + time
-}
 
 export function CoachConversation({ initialMessages }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -68,7 +61,7 @@ export function CoachConversation({ initialMessages }: Props) {
 
           {messages.map(msg => {
               const isCoach = msg.senderRole === 'coach'
-              const ts = formatTimestamp(msg.createdAt)
+              const ts = messageTimestamp(msg.createdAt)
 
               if (isCoach) {
                 return (

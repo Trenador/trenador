@@ -4,17 +4,11 @@ import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Camera, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { signAvatarUrlClient } from '@/lib/avatar-client'
 import { updateProfileAction } from '@/actions/profile'
 
 type Gender = 'female' | 'male' | 'non-binary'
 
-async function signAvatar(path: string | null): Promise<string> {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  const supabase = createClient()
-  const { data } = await supabase.storage.from('avatars').createSignedUrl(path, 60 * 60 * 24 * 7)
-  return data?.signedUrl ?? ''
-}
 
 export function ProfileClient({
   authUserId,
@@ -79,7 +73,7 @@ export function ProfileClient({
         await supabase.storage.from('avatars').remove([photoPath])
       }
       setPhotoPath(path)
-      setAvatarUrl(await signAvatar(path))
+      setAvatarUrl(await signAvatarUrlClient(path))
       window.dispatchEvent(new CustomEvent('profile:refresh'))
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Upload failed')

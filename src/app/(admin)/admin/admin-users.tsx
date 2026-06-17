@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { cn, getInitials } from '@/lib/utils'
+import { fmtLongDate, relativeAge } from '@/lib/format-date'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { adminGetMembers, adminAssignCoach } from '@/actions/admin'
 
@@ -23,17 +24,6 @@ type Coach = { id: string; displayName: string }
 type SortKey = 'name' | 'created'
 type SortDir = 'asc' | 'desc'
 
-function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
-function relative(iso: string) {
-  const diff = (Date.now() - new Date(iso).getTime()) / 86_400_000
-  if (diff < 1) return 'today'
-  if (diff < 2) return 'yesterday'
-  if (diff < 30) return `${Math.floor(diff)}d ago`
-  return fmt(iso)
-}
 
 export function AdminUsers({ coaches }: { coaches: Coach[] }) {
   const [rows, setRows] = useState<Member[]>([])
@@ -123,7 +113,7 @@ export function AdminUsers({ coaches }: { coaches: Coach[] }) {
                       <button type="button" className="block w-full text-left text-sm font-medium hover:underline" onClick={() => setSelectedId(r.id)}>
                         {r.displayName}
                       </button>
-                      <div className="mt-0.5 text-[11px] text-muted-foreground">Joined {fmt(r.createdAt)} · {relative(r.createdAt)}</div>
+                      <div className="mt-0.5 text-[11px] text-muted-foreground">Joined {fmtLongDate(r.createdAt)} · {relativeAge(r.createdAt)}</div>
                     </div>
                   </div>
                   <div className="mt-3">
@@ -165,8 +155,8 @@ export function AdminUsers({ coaches }: { coaches: Coach[] }) {
                       </div>
                     </td>
                     <td className="px-5 py-3">
-                      <span>{fmt(r.createdAt)}</span>
-                      <span className="ml-2 text-[11px] text-muted-foreground">{relative(r.createdAt)}</span>
+                      <span>{fmtLongDate(r.createdAt)}</span>
+                      <span className="ml-2 text-[11px] text-muted-foreground">{relativeAge(r.createdAt)}</span>
                     </td>
                     <td className="px-5 py-3">
                       {r.subscriptionStatus === 'active' ? (
@@ -215,10 +205,10 @@ export function AdminUsers({ coaches }: { coaches: Coach[] }) {
               </div>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border/60 pt-4 text-sm">
                 {[
-                  ['Signed up', fmt(selectedMember.createdAt)],
+                  ['Signed up', fmtLongDate(selectedMember.createdAt)],
                   ['Subscription', selectedMember.subscriptionStatus],
                   ['Assigned coach', coaches.find((c) => c.id === selectedMember.assignedCoachId)?.displayName ?? 'Unassigned'],
-                  ['Verified', selectedMember.memberVerifiedAt ? fmt(selectedMember.memberVerifiedAt) : '—'],
+                  ['Verified', selectedMember.memberVerifiedAt ? fmtLongDate(selectedMember.memberVerifiedAt) : '—'],
                   ['Age', selectedMember.yearOfBirth ? `${new Date().getFullYear() - selectedMember.yearOfBirth} (born ${selectedMember.yearOfBirth})` : '—'],
                   ['Gender', selectedMember.gender ?? '—'],
                   ['Weight', selectedMember.weightLbs ? `${selectedMember.weightLbs} lbs` : '—'],

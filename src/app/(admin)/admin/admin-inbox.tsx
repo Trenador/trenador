@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn, getInitials } from '@/lib/utils'
+import { inboxBucket, inboxRelative } from '@/lib/format-date'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Mail, MailOpen, Pencil, Trash2, Check, X, Send } from 'lucide-react'
 import { MobileFilterButton, MobileFilterSheet, type FilterSection } from './admin-filter-sheet'
@@ -36,23 +37,6 @@ type Message = {
 
 type Coach = { id: string; displayName: string }
 
-function bucket(iso: string): string {
-  const diff = (Date.now() - new Date(iso).getTime()) / 86_400_000
-  if (diff < 1) return 'Today'
-  if (diff < 7) return 'This week'
-  return 'Earlier'
-}
-
-function relativeLabel(iso: string): string {
-  const d = new Date(iso)
-  const now = new Date()
-  const sameDay = d.toDateString() === now.toDateString()
-  if (sameDay) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-  const diff = (now.getTime() - d.getTime()) / 86_400_000
-  if (diff < 2) return 'yesterday'
-  if (diff < 7) return (['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][d.getDay()] ?? '')
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
 
 export function AdminInbox({ coaches }: { coaches: Coach[] }) {
   const [conversations, setConversations] = useState<InboxItem[]>([])
@@ -155,7 +139,7 @@ export function AdminInbox({ coaches }: { coaches: Coach[] }) {
   const grouped = useMemo(() => {
     const out: Record<string, InboxItem[]> = {}
     for (const c of filteredConversations) {
-      const k = bucket(c.lastMessageAt)
+      const k = inboxBucket(c.lastMessageAt)
       ;(out[k] ??= []).push(c)
     }
     return out
@@ -287,7 +271,7 @@ export function AdminInbox({ coaches }: { coaches: Coach[] }) {
                       >
                         {unread ? 'Unread' : 'Read'}
                       </button>
-                      <span className="w-16 shrink-0 text-right text-[11px] text-muted-foreground sm:w-24">{relativeLabel(c.lastMessageAt)}</span>
+                      <span className="w-16 shrink-0 text-right text-[11px] text-muted-foreground sm:w-24">{inboxRelative(c.lastMessageAt)}</span>
                     </div>
                   )
                 })}

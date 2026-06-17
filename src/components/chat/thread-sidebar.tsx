@@ -8,6 +8,8 @@ import {
   MessageCircle, User, Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { threadBucket, threadRelative } from '@/lib/format-date'
+import { signAvatarUrlClient } from '@/lib/avatar-client'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -42,22 +44,6 @@ type Props = {
   initialAvatarUrl?: string
 }
 
-function dateBucket(date: Date | null): string {
-  if (!date) return 'Older'
-  const diff = (Date.now() - new Date(date).getTime()) / 86_400_000
-  if (diff < 7) return 'Recent'
-  if (diff < 30) return 'Last 30 Days'
-  return 'Older'
-}
-
-function relativeTime(date: Date | null): string {
-  if (!date) return ''
-  const d = new Date(date)
-  const now = new Date()
-  const sameDay = d.toDateString() === now.toDateString()
-  if (sameDay) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
 
 const BUCKET_ORDER = ['Recent', 'Last 30 Days', 'Older']
 
@@ -122,10 +108,7 @@ export function ThreadSidebar({
         .eq('auth_user_id', user.id)
         .single()
       const path = (data as { photo_url: string | null } | null)?.photo_url ?? null
-      if (!path) { setAvatarUrl(''); return }
-      if (path.startsWith('http')) { setAvatarUrl(path); return }
-      const { data: signed } = await supabase.storage.from('avatars').createSignedUrl(path, 60 * 60 * 24 * 7)
-      setAvatarUrl(signed?.signedUrl ?? '')
+      setAvatarUrl(await signAvatarUrlClient(path))
     }
     window.addEventListener('profile:refresh', onRefresh)
     return () => window.removeEventListener('profile:refresh', onRefresh)
@@ -154,7 +137,7 @@ export function ThreadSidebar({
   }
 
   const grouped = threads.reduce<Record<string, ThreadItem[]>>((acc, t) => {
-    const key = dateBucket(t.lastMessageAt ?? t.createdAt)
+    const key = threadBucket(t.lastMessageAt ?? t.createdAt)
     ;(acc[key] ??= []).push(t)
     return acc
   }, {})
@@ -287,7 +270,7 @@ export function ThreadSidebar({
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-[13px] font-medium leading-tight">{truncated}</div>
                             <div className="label-mono normal-case tracking-[0.12em] mt-1">
-                              {relativeTime(thread.lastMessageAt ?? thread.createdAt)}
+                              {threadRelative(thread.lastMessageAt ?? thread.createdAt)}
                             </div>
                           </div>
                           <button
