@@ -19,7 +19,9 @@ export default function NewWorkoutPage() {
     if (!title.trim()) { setError('Workout name is required'); return }
 
     startTransition(async () => {
-      const workout = await createMyWorkoutAction(title.trim(), category || undefined)
+      const p: Parameters<typeof createMyWorkoutAction>[0] = { title: title.trim() }
+      if (category) p.category = category
+      const workout = await createMyWorkoutAction(p)
       router.push(`/workouts/mine/${workout.id}`)
     })
   }

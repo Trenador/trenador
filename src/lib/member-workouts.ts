@@ -1,5 +1,6 @@
 import 'server-only'
 import { eq, and, isNull } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { memberWorkouts, memberWorkoutExercises, workouts, workoutBlocks } from '@/db/schema'
 import { APP_CONFIG } from '@/lib/config'
@@ -15,10 +16,10 @@ export async function getMemberWorkouts(memberId: string) {
       structure: memberWorkouts.structure,
       updatedAt: memberWorkouts.updatedAt,
       createdAt: memberWorkouts.createdAt,
-      // from source workout (null for scratch workouts)
-      level: workouts.level,
-      muscleGroups: workouts.muscleGroups,
-      durationMinutes: workouts.durationMinutes,
+      // prefer member_workouts columns; fall back to source workout for old remixed copies
+      level: sql<string | null>`COALESCE(${memberWorkouts.level}, ${workouts.level})`,
+      muscleGroups: sql<string[]>`COALESCE(NULLIF(${memberWorkouts.tags}, '{}'), ${workouts.muscleGroups}, '{}')`,
+      durationMinutes: sql<number | null>`COALESCE(${memberWorkouts.durationMinutes}, ${workouts.durationMinutes})`,
     })
     .from(memberWorkouts)
     .leftJoin(workouts, eq(memberWorkouts.sourceWorkoutId, workouts.id))
@@ -87,6 +88,10 @@ export async function remixWorkout(memberId: string, sourceWorkoutId: string) {
       sourceWorkoutId,
       title: source[0].title,
       category: source[0].category ?? undefined,
+      level: source[0].level ?? undefined,
+      durationMinutes: source[0].durationMinutes ?? undefined,
+      tags: (source[0].muscleGroups as string[] | null) ?? [],
+      summary: source[0].summary ?? undefined,
       structure: source[0].structure as Record<string, unknown>,
     } satisfies NewMemberWorkout)
     .returning()
@@ -123,14 +128,32 @@ export async function remixWorkout(memberId: string, sourceWorkoutId: string) {
   return newWorkout
 }
 
-export async function createMemberWorkout(memberId: string, title: string, category?: string) {
+export async function createMemberWorkout(
+  memberId: string,
+  data: {
+    title: string
+    category?: string
+    level?: string
+    durationMinutes?: number
+    numWeeks?: number
+    tags?: string[]
+    summary?: string
+    bannerUrl?: string
+  },
+) {
   const [workout] = await db
     .insert(memberWorkouts)
     .values({
       tenantId: APP_CONFIG.tenantId,
       memberId,
-      title,
-      category: category ?? undefined,
+      title: data.title,
+      category: data.category ?? undefined,
+      level: data.level ?? undefined,
+      durationMinutes: data.durationMinutes ?? undefined,
+      numWeeks: data.numWeeks ?? undefined,
+      tags: data.tags ?? [],
+      summary: data.summary ?? undefined,
+      bannerUrl: data.bannerUrl ?? undefined,
       structure: {},
     } satisfies NewMemberWorkout)
     .returning()
@@ -161,7 +184,7 @@ export async function updateMemberWorkoutStructure(
 export async function updateMemberWorkout(
   memberId: string,
   workoutId: string,
-  data: { title?: string; category?: string; notes?: string }
+  data: { title?: string; category?: string; level?: string; durationMinutes?: number; numWeeks?: number; tags?: string[]; summary?: string; bannerUrl?: string; notes?: string }
 ) {
   const [updated] = await db
     .update(memberWorkouts)

@@ -1,14 +1,12 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Check, ChevronDown, Copy, Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Check, ChevronDown, Clock, Copy, Gauge, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   updateMyWorkoutStructureAction,
   updateMyWorkoutAction,
-  deleteMyWorkoutAction,
 } from '@/actions/workouts'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
@@ -25,6 +23,10 @@ type Workout = {
   category: string | null
   sourceWorkoutId: string | null
   structure: unknown
+  level?: string | null
+  durationMinutes?: number | null
+  muscleGroups?: string[] | null
+  summary?: string | null
 }
 
 const CATEGORY_IMAGE: Record<string, string> = {
@@ -115,6 +117,119 @@ function clone<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T
 }
 
+// --- EditBlockSheet ---
+function EditBlockSheet({
+  open, onOpenChange, block, onSave, onDelete,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  block: WorkoutBlock | null
+  onSave: (updated: WorkoutBlock) => void
+  onDelete: () => void
+}) {
+  const [name, setName] = useState('')
+  const [detail, setDetail] = useState('')
+  const [rows, setRows] = useState<SetRow[]>([])
+
+  useEffect(() => {
+    if (block) {
+      setName(block.name)
+      setDetail(block.detail)
+      setRows(block.setRows ? [...block.setRows] : [])
+    }
+  }, [block])
+
+  function handleSave() {
+    if (!name.trim()) return
+    onSave({
+      name: name.trim().slice(0, 120),
+      detail: detail.trim().slice(0, 600),
+      ...(rows.length ? { setRows: rows } : {}),
+    })
+    onOpenChange(false)
+  }
+
+  function handleDelete() {
+    onDelete()
+    onOpenChange(false)
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="left" className="flex h-full w-full max-w-sm flex-col gap-0 p-0">
+        <SheetHeader className="border-b border-border/60 px-5 py-4 text-left">
+          <SheetTitle>Edit block</SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Name</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              maxLength={120}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Notes</label>
+            <textarea
+              value={detail}
+              onChange={e => setDetail(e.target.value)}
+              maxLength={600}
+              rows={4}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Sets</label>
+            {rows.map((row, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="label-mono w-10 shrink-0 text-[11px] normal-case tracking-[1px] text-muted-foreground">SET {i + 1}</span>
+                <input
+                  placeholder="reps"
+                  value={row.reps}
+                  onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, reps: e.target.value } : x))}
+                  className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-sm outline-none"
+                />
+                <input
+                  placeholder="weight"
+                  value={row.weight}
+                  onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, weight: e.target.value } : x))}
+                  className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-sm outline-none"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setRows(r => [...r, { reps: '', weight: '' }])}
+              className="text-[13px] text-muted-foreground hover:text-foreground"
+            >
+              + Add set
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between border-t border-border/60 px-5 py-4">
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!name.trim()}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition hover:opacity-90 disabled:opacity-40"
+          >
+            <Check className="h-3.5 w-3.5" /> Save
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 // --- AddBlockSheet ---
 function AddBlockSheet({
   open, onOpenChange, onAdd,
@@ -145,11 +260,11 @@ function AddBlockSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="flex h-[75vh] w-full flex-col gap-0 rounded-t-2xl p-0">
         <SheetHeader className="border-b border-border/60 px-5 py-4 text-left">
-          <SheetTitle>Add block</SheetTitle>
+          <SheetTitle>Create block</SheetTitle>
         </SheetHeader>
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Exercise name</label>
+            <label className="text-sm font-medium">Name</label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
@@ -187,21 +302,14 @@ function AddBlockSheet({
                   onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, weight: e.target.value } : x))}
                   className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-sm outline-none"
                 />
-                <button
-                  type="button"
-                  onClick={() => setRows(r => r.filter((_, j) => j !== i))}
-                  className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
               </div>
             ))}
             <button
               type="button"
               onClick={() => setRows(r => [...r, { reps: '', weight: '' }])}
-              className="inline-flex w-full items-center justify-center gap-1 rounded-full border border-border/70 px-2.5 py-2 text-[12px] text-muted-foreground transition hover:bg-foreground/[0.06] hover:text-foreground"
+              className="text-[13px] text-muted-foreground hover:text-foreground"
             >
-              <Plus className="h-3.5 w-3.5" /> Add set
+              + Add set
             </button>
           </div>
         </div>
@@ -210,7 +318,7 @@ function AddBlockSheet({
             type="button"
             onClick={handleSave}
             disabled={!name.trim()}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition hover:opacity-90 disabled:opacity-40"
           >
             <Check className="h-4 w-4" /> Save
           </button>
@@ -279,7 +387,7 @@ function EditWorkoutSheet({
             type="button"
             onClick={handleSave}
             disabled={!title.trim() || isPending}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition hover:opacity-90 disabled:opacity-40"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition hover:opacity-90 disabled:opacity-40"
           >
             <Check className="h-4 w-4" /> {isPending ? 'Saving…' : 'Save'}
           </button>
@@ -293,93 +401,16 @@ function EditWorkoutSheet({
 function BlockItem({
   block, wi, di, bi,
   completed, onToggle,
-  onDelete, onEdit,
-  showActions,
+  onDelete, onEditOpen,
 }: {
   block: WorkoutBlock
   wi: number; di: number; bi: number
   completed: boolean
   onToggle: () => void
   onDelete: () => void
-  onEdit: (updated: WorkoutBlock) => void
-  showActions: boolean
+  onEditOpen: () => void
 }) {
-  const [editing, setEditing] = useState(false)
-  const [name, setName] = useState(block.name)
-  const [detail, setDetail] = useState(block.detail)
-  const [rows, setRows] = useState<SetRow[]>(block.setRows ?? [])
-
-  useEffect(() => {
-    if (!editing) { setName(block.name); setDetail(block.detail); setRows(block.setRows ?? []) }
-  }, [block, editing])
-
-  function saveEdit() {
-    onEdit({ ...block, name: name.trim() || block.name, detail: detail.trim(), ...(rows.length ? { setRows: rows } : {}) })
-    setEditing(false)
-  }
-
   const id = `block-w${wi}-d${di}-b${bi}`
-
-  if (editing) {
-    return (
-      <div id={id} className="border-t border-border/40 px-4 py-4">
-        <div className="space-y-3">
-          <input
-            value={name}
-            onChange={e => setName(e.target.value)}
-            maxLength={120}
-            autoFocus
-            className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-          />
-          <textarea
-            value={detail}
-            onChange={e => setDetail(e.target.value)}
-            maxLength={600}
-            rows={2}
-            placeholder="Notes…"
-            className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
-          />
-          <div className="space-y-2">
-            {rows.map((row, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="label-mono w-10 shrink-0 text-[11px] normal-case tracking-[1px] text-muted-foreground">SET {i + 1}</span>
-                <input
-                  placeholder="reps"
-                  value={row.reps}
-                  onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, reps: e.target.value } : x))}
-                  className="h-7 flex-1 rounded-md border border-input bg-background px-2 text-sm outline-none"
-                />
-                <input
-                  placeholder="weight"
-                  value={row.weight}
-                  onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, weight: e.target.value } : x))}
-                  className="h-7 flex-1 rounded-md border border-input bg-background px-2 text-sm outline-none"
-                />
-                <button type="button" onClick={() => setRows(r => r.filter((_, j) => j !== i))} className="shrink-0 text-muted-foreground hover:text-red-500">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => setRows(r => [...r, { reps: '', weight: '' }])}
-              className="text-[12px] text-muted-foreground hover:text-foreground"
-            >
-              + Add set
-            </button>
-          </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={saveEdit} className="inline-flex h-8 items-center gap-1 rounded-full bg-foreground px-3 text-[12px] font-medium text-background hover:opacity-90">
-              <Check className="h-3 w-3" /> Save
-            </button>
-            <button type="button" onClick={() => setEditing(false)} className="inline-flex h-8 items-center gap-1 rounded-full border border-border px-3 text-[12px] text-muted-foreground hover:text-foreground">
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div id={id} className={cn('group flex items-start gap-3 border-t border-border/40 px-4 py-3', completed && 'opacity-60')}>
@@ -406,23 +437,28 @@ function BlockItem({
           </div>
         )}
       </div>
-      {showActions && (
-        <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-          <button type="button" onClick={() => setEditing(true)} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground">
-            <Pencil className="h-3.5 w-3.5" />
-          </button>
-          <button type="button" onClick={onDelete} className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-red-500/10 hover:text-red-500">
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
+      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+        <button
+          type="button"
+          onClick={onEditOpen}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   )
 }
 
 // --- Main Component ---
 export function MyWorkoutClient({ workout }: { workout: Workout }) {
-  const router = useRouter()
   const raw = (workout.structure ?? {}) as { weeks?: WorkoutWeek[] }
   const [structure, setStructure] = useState<WorkoutStructure>({
     weeks: raw.weeks?.length ? raw.weeks : [{ label: 'Week 1', days: [{ label: 'Day 1', blocks: [] }] }],
@@ -431,8 +467,9 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
   const [category, setCategory] = useState(workout.category ?? '')
   const [openWeek, setOpenWeek] = useState<number>(0)
   const [openDay, setOpenDay] = useState<string | null>(null)
-  const [editOpen, setEditOpen] = useState(false)
+  const [editWorkoutOpen, setEditWorkoutOpen] = useState(false)
   const [addBlockTarget, setAddBlockTarget] = useState<{ wi: number; di: number } | null>(null)
+  const [editBlockTarget, setEditBlockTarget] = useState<{ wi: number; di: number; bi: number } | null>(null)
   const [, startTransition] = useTransition()
 
   const { isCompleted, toggle } = useBlockCompletion(workout.id)
@@ -445,6 +482,10 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
   const cat = category || ''
   const bannerClass = CATEGORY_BANNER[cat] ?? 'bg-foreground/80'
   const img = CATEGORY_IMAGE[cat]
+
+  const editBlock = editBlockTarget
+    ? weeks[editBlockTarget.wi]?.days[editBlockTarget.di]?.blocks[editBlockTarget.bi] ?? null
+    : null
 
   function saveStructure(next: WorkoutStructure) {
     setStructure(next)
@@ -459,7 +500,7 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
     saveStructure(next)
   }
 
-  function editBlock(wi: number, di: number, bi: number, updated: WorkoutBlock) {
+  function updateBlock(wi: number, di: number, bi: number, updated: WorkoutBlock) {
     const next = clone(structure)
     next.weeks[wi]!.days[di]!.blocks[bi] = updated
     saveStructure(next)
@@ -502,6 +543,14 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
     setOpenWeek(next.weeks.length - 1)
   }
 
+  function duplicateWeek(wi: number) {
+    const next = clone(structure)
+    const week = clone(next.weeks[wi]!)
+    week.label = `Week ${next.weeks.length + 1}`
+    next.weeks.splice(wi + 1, 0, week)
+    saveStructure(next)
+  }
+
   function deleteWeek(wi: number) {
     if (weeks.length <= 1) return
     const next = clone(structure)
@@ -527,12 +576,12 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
             href="/workouts/mine"
             className="absolute left-6 top-6 hidden items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-[13px] font-medium text-white ring-1 ring-inset ring-white/30 backdrop-blur-sm transition hover:bg-white/25 sm:inline-flex lg:left-10"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> My workouts
+            <ArrowLeft className="h-3.5 w-3.5" /> Go back
           </Link>
 
           {total > 0 && (
             <span className="label-mono absolute right-6 top-6 inline-flex items-center rounded-full bg-black/40 px-3 py-1 normal-case tracking-[0.15em] !text-white backdrop-blur-sm lg:right-10">
-              {done}/{total} days done
+              {done}/{total} {total === 1 ? 'day' : 'days'} done
             </span>
           )}
 
@@ -548,7 +597,7 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
           <div className="absolute bottom-6 right-6 lg:right-10">
             <button
               type="button"
-              onClick={() => setEditOpen(true)}
+              onClick={() => setEditWorkoutOpen(true)}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-inset ring-white/30 backdrop-blur-sm transition hover:bg-white/25"
             >
               <Pencil className="h-4 w-4" />
@@ -560,11 +609,11 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
       {/* Mobile back */}
       <div className="flex items-center gap-3 px-4 pt-3 sm:hidden">
         <Link href="/workouts/mine" className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> My workouts
+          <ArrowLeft className="h-4 w-4" /> Go back
         </Link>
         <button
           type="button"
-          onClick={() => setEditOpen(true)}
+          onClick={() => setEditWorkoutOpen(true)}
           className="ml-auto flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
         >
           <Pencil className="h-4 w-4" />
@@ -572,16 +621,40 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
       </div>
 
       {/* Workout content */}
-      <div className="mx-auto w-full max-w-4xl px-4 pb-16 pt-4 lg:px-8">
-        {workout.sourceWorkoutId && (
-          <p className="label-mono mb-4 normal-case tracking-[0.15em] text-muted-foreground">Remixed from library</p>
+      <div className="mx-auto w-full max-w-4xl px-6 pb-16 pt-5 lg:px-10">
+
+        {/* Meta row — mirrors workout detail page */}
+        {(workout.durationMinutes || workout.level || (workout.muscleGroups?.length)) && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            {workout.durationMinutes && (
+              <span className="label-mono flex items-center gap-1.5 normal-case tracking-[0.12em] text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" /> {workout.durationMinutes >= 60 ? '1 HR' : `${workout.durationMinutes} MIN`}
+              </span>
+            )}
+            {workout.level && (
+              <span className="label-mono flex items-center gap-1.5 normal-case tracking-[0.12em] text-muted-foreground">
+                <Gauge className="h-3.5 w-3.5" /> {workout.level.toUpperCase()}
+              </span>
+            )}
+            {workout.muscleGroups?.map(tag => (
+              <span key={tag} className="rounded-full border border-border/70 bg-background px-2.5 py-1 text-[12px] text-muted-foreground">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Summary */}
+        {workout.summary && (
+          <p className="mt-4 text-[15px] leading-relaxed text-foreground/80">{workout.summary}</p>
         )}
 
         {/* Weeks */}
-        <div className="border-t border-border/60">
+        <div className={cn('border-t border-border/60', (workout.durationMinutes || workout.level || workout.muscleGroups?.length || workout.summary) ? 'mt-6' : 'mt-0')}>
           {weeks.map((week, wi) => {
             const weekOpen = openWeek === wi
-            const allWeekDone = week.days.every((_, di) => isDayDone(wi, di))
+            const weekHasBlocks = week.days.some(d => d.blocks.some(b => !b.deleted))
+            const allWeekDone = weekHasBlocks && week.days.every((_, di) => isDayDone(wi, di))
             return (
               <div key={wi} className="border-b border-border/60">
                 {/* Week header */}
@@ -594,8 +667,15 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
                     <span className={cn('label-mono normal-case tracking-[0.12em] text-muted-foreground', allWeekDone && 'line-through opacity-60')}>
                       {week.label}
                     </span>
-                    {allWeekDone && (
-                      <span className="text-[12px] font-medium text-green-500">Week complete!</span>
+                    {weekHasBlocks && (
+                      <span className={cn(
+                        'min-w-0 truncate text-[11px]',
+                        allWeekDone
+                          ? 'font-medium text-green-500'
+                          : 'label-mono normal-case tracking-[1px] font-normal text-muted-foreground',
+                      )}>
+                        {allWeekDone ? `You've finished week ${wi + 1}!` : 'INCOMPLETE'}
+                      </span>
                     )}
                   </div>
                   <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200', weekOpen && 'rotate-180')} />
@@ -612,13 +692,27 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
                         const visibleBlocks = day.blocks.filter(b => !b.deleted)
                         const allBlocksDone = visibleBlocks.length > 0 && visibleBlocks.every((_, bi) => isCompleted(wi, di, bi))
 
+                        if (visibleBlocks.length === 0 && !dayOpen) {
+                          return (
+                            <div key={di} className="flex items-center justify-center rounded-lg border border-dashed border-border/60 bg-background px-4 py-6">
+                              <button
+                                type="button"
+                                onClick={() => setAddBlockTarget({ wi, di })}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition hover:opacity-90"
+                              >
+                                <Plus className="h-3.5 w-3.5" /> Add block
+                              </button>
+                            </div>
+                          )
+                        }
+
                         return (
                           <div key={di} className="overflow-hidden rounded-lg border border-border/60 bg-background">
                             {/* Day header */}
                             <button
                               type="button"
                               onClick={() => setOpenDay(dayOpen ? null : dayKey)}
-                              className="flex w-full items-center justify-between px-4 py-3 text-left hover:no-underline"
+                              className="flex w-full items-center justify-between px-4 py-3 text-left"
                             >
                               <span className={cn('text-[15px] font-medium sm:text-[14px]', dayDone && 'line-through opacity-60')}>
                                 {`Day ${di + 1}`}
@@ -628,32 +722,17 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
 
                             {dayOpen && (
                               <>
-                                {/* Blocks */}
-                                <div className="divide-y-0">
-                                  {visibleBlocks.length === 0 && (
-                                    <div className="flex items-center justify-center border-t border-border/40 px-4 py-6">
-                                      <button
-                                        type="button"
-                                        onClick={() => setAddBlockTarget({ wi, di })}
-                                        className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition hover:opacity-90"
-                                      >
-                                        <Plus className="h-3.5 w-3.5" /> Add block
-                                      </button>
-                                    </div>
-                                  )}
-                                  {visibleBlocks.map((block, bi) => (
-                                    <BlockItem
-                                      key={bi}
-                                      block={block}
-                                      wi={wi} di={di} bi={bi}
-                                      completed={isCompleted(wi, di, bi)}
-                                      onToggle={() => toggle(wi, di, bi)}
-                                      onDelete={() => deleteBlock(wi, di, bi)}
-                                      onEdit={updated => editBlock(wi, di, bi, updated)}
-                                      showActions
-                                    />
-                                  ))}
-                                </div>
+                                {visibleBlocks.map((block, bi) => (
+                                  <BlockItem
+                                    key={bi}
+                                    block={block}
+                                    wi={wi} di={di} bi={bi}
+                                    completed={isCompleted(wi, di, bi)}
+                                    onToggle={() => toggle(wi, di, bi)}
+                                    onDelete={() => deleteBlock(wi, di, bi)}
+                                    onEditOpen={() => setEditBlockTarget({ wi, di, bi })}
+                                  />
+                                ))}
 
                                 {/* Day action bar */}
                                 <div className="flex items-stretch border-t border-border/60">
@@ -683,9 +762,7 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
                                   <button
                                     type="button"
                                     disabled={allBlocksDone}
-                                    onClick={() => {
-                                      setDayDone(wi, di, !dayDone)
-                                    }}
+                                    onClick={() => setDayDone(wi, di, !dayDone)}
                                     className={cn(
                                       'inline-flex flex-1 items-center justify-center px-4 py-3 transition',
                                       dayDone ? 'text-foreground hover:bg-foreground/[0.06]' : 'bg-foreground text-background hover:opacity-90',
@@ -702,17 +779,8 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
                       })}
                     </div>
 
-                    {/* Week action bar */}
+                    {/* Week action bar — matches phchat: Add week | Duplicate week | Delete week */}
                     <div className="mb-3 flex items-stretch overflow-hidden rounded-lg border border-border/60 bg-background">
-                      <button
-                        type="button"
-                        onClick={() => addDay(wi)}
-                        className="inline-flex flex-1 items-center justify-center gap-1.5 border-r border-border/60 px-2 py-3 text-[13px] font-medium text-foreground transition hover:bg-foreground/[0.06] sm:px-4"
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span className="sm:hidden">Add day</span>
-                        <span className="hidden sm:inline">Add day</span>
-                      </button>
                       <button
                         type="button"
                         onClick={addWeek}
@@ -722,17 +790,25 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
                         <span className="sm:hidden">Add wk</span>
                         <span className="hidden sm:inline">Add week</span>
                       </button>
-                      {weeks.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => deleteWeek(wi)}
-                          className="inline-flex flex-1 items-center justify-center gap-1.5 px-2 py-3 text-[13px] font-medium text-foreground transition hover:bg-foreground/[0.06] sm:px-4"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sm:hidden">Del wk</span>
-                          <span className="hidden sm:inline">Delete week</span>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => duplicateWeek(wi)}
+                        className="inline-flex flex-1 items-center justify-center gap-1.5 border-r border-border/60 px-2 py-3 text-[13px] font-medium text-foreground transition hover:bg-foreground/[0.06] sm:px-4"
+                      >
+                        <Copy className="h-4 w-4" />
+                        <span className="sm:hidden">Copy wk</span>
+                        <span className="hidden sm:inline">Duplicate week</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteWeek(wi)}
+                        disabled={weeks.length <= 1}
+                        className="inline-flex flex-1 items-center justify-center gap-1.5 px-2 py-3 text-[13px] font-medium text-foreground transition hover:bg-foreground/[0.06] disabled:opacity-30 sm:px-4"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sm:hidden">Delete wk</span>
+                        <span className="hidden sm:inline">Delete week</span>
+                      </button>
                     </div>
                   </>
                 )}
@@ -752,9 +828,23 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
         }}
       />
 
+      <EditBlockSheet
+        open={editBlockTarget !== null}
+        onOpenChange={v => { if (!v) setEditBlockTarget(null) }}
+        block={editBlock}
+        onSave={updated => {
+          if (editBlockTarget) updateBlock(editBlockTarget.wi, editBlockTarget.di, editBlockTarget.bi, updated)
+          setEditBlockTarget(null)
+        }}
+        onDelete={() => {
+          if (editBlockTarget) deleteBlock(editBlockTarget.wi, editBlockTarget.di, editBlockTarget.bi)
+          setEditBlockTarget(null)
+        }}
+      />
+
       <EditWorkoutSheet
-        open={editOpen}
-        onOpenChange={setEditOpen}
+        open={editWorkoutOpen}
+        onOpenChange={setEditWorkoutOpen}
         workout={{ ...workout, title, category }}
         onSave={(t, c) => { setTitle(t); setCategory(c) }}
       />

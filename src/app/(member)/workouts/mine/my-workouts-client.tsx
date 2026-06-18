@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState, useEffect, useTransition } from 'react'
+import { useMemo, useState, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Plus, Trash2, Copy, Search, X, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
+import { Check, Plus, Trash2, Copy, Search, Upload, X, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { deleteMyWorkoutAction, createMyWorkoutAction } from '@/actions/workouts'
 import {
@@ -178,6 +178,7 @@ function MobileFilterSheet({
 }
 
 const CREATE_CATEGORIES = ['Strength', 'Hypertrophy', 'Cardio', 'Mobility'] as const
+const CREATE_LEVELS = ['All Levels', 'Beginner', 'Intermediate', 'Advanced'] as const
 
 function CreateWorkoutSheet({
   open,
@@ -190,65 +191,200 @@ function CreateWorkoutSheet({
 }) {
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState<string>('Strength')
+  const [level, setLevel] = useState<string>('All Levels')
+  const [durationMin, setDurationMin] = useState('45')
+  const [numWeeks, setNumWeeks] = useState('')
+  const [tagInput, setTagInput] = useState('')
+  const [tags, setTags] = useState<string[]>([])
   const [summary, setSummary] = useState('')
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const bannerRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (open) {
-      setTitle('')
-      setCategory('Strength')
-      setSummary('')
+      setTitle(''); setCategory('Strength'); setLevel('All Levels')
+      setDurationMin('45'); setNumWeeks(''); setTagInput(''); setTags([])
+      setSummary(''); setBannerPreview(null)
     }
   }, [open])
+
+  function handleBannerFile(file: File) {
+    if (!file.type.startsWith('image/')) return
+    if (file.size > 4 * 1024 * 1024) return
+    const reader = new FileReader()
+    reader.onload = () => { if (typeof reader.result === 'string') setBannerPreview(reader.result) }
+    reader.readAsDataURL(file)
+  }
+
+  function addTag(raw: string) {
+    const t = raw.trim().slice(0, 40)
+    if (t && !tags.includes(t) && tags.length < 12) setTags(prev => [...prev, t])
+  }
 
   function handleSubmit() {
     const t = title.trim()
     if (!t) return
+    const dur = Number(durationMin)
+    const wks = Number(numWeeks)
     startTransition(async () => {
-      const workout = await createMyWorkoutAction(t, category)
+      const payload: Parameters<typeof createMyWorkoutAction>[0] = { title: t.slice(0, 120), category, tags: tags.filter(Boolean) }
+      if (level !== 'All Levels') payload.level = level
+      if (Number.isFinite(dur) && dur > 0) payload.durationMinutes = Math.floor(dur)
+      if (Number.isFinite(wks) && wks > 0) payload.numWeeks = Math.floor(wks)
+      const trimmedSummary = summary.trim().slice(0, 1000)
+      if (trimmedSummary) payload.summary = trimmedSummary
+      const workout = await createMyWorkoutAction(payload)
       onCreated(workout.id)
     })
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="flex h-full w-full max-w-md flex-col gap-0 p-0"
-      >
+      <SheetContent side="right" className="flex h-full w-full max-w-md flex-col gap-0 p-0">
         <SheetHeader className="border-b border-border/60 px-5 py-4 text-left">
           <SheetTitle>Create workout</SheetTitle>
         </SheetHeader>
+
         <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+          {/* Banner image */}
           <div className="space-y-1.5">
-            <label htmlFor="create-title" className="text-sm font-medium">Title</label>
+            <label className="text-sm font-medium">Banner image</label>
+            <div
+              className={`relative h-32 w-full overflow-hidden rounded-md bg-muted/40 ${bannerPreview ? 'border border-input' : 'border-2 border-dashed border-input'}`}
+            >
+              {bannerPreview ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={bannerPreview} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-black/20" />
+                  <button
+                    type="button"
+                    onClick={() => bannerRef.current?.click()}
+                    className="absolute bottom-2 right-2 rounded-full bg-white/90 px-3 py-1 text-[12px] font-medium text-foreground hover:bg-white"
+                  >
+                    Replace
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => bannerRef.current?.click()}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-muted-foreground transition hover:bg-foreground/[0.04] hover:text-foreground"
+                >
+                  <Upload className="h-5 w-5" />
+                  <span className="text-[13px]">Upload</span>
+                </button>
+              )}
+              <input
+                ref={bannerRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleBannerFile(f) }}
+              />
+            </div>
+          </div>
+
+          {/* Title */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Title</label>
             <input
-              id="create-title"
               value={title}
               onChange={e => setTitle(e.target.value)}
               maxLength={120}
               autoFocus
-              onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
               className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
-          <div className="space-y-1.5">
-            <label htmlFor="create-category" className="text-sm font-medium">Category</label>
-            <select
-              id="create-category"
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              {CREATE_CATEGORIES.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+
+          {/* Category + Level */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Category</label>
+              <select
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {CREATE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Level</label>
+              <select
+                value={level}
+                onChange={e => setLevel(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {CREATE_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </div>
           </div>
+
+          {/* Duration + # Wks */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Duration (min)</label>
+              <input
+                type="number"
+                min={1}
+                max={300}
+                value={durationMin}
+                onChange={e => setDurationMin(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium"># Wks</label>
+              <input
+                type="number"
+                min={1}
+                max={52}
+                value={numWeeks}
+                onChange={e => setNumWeeks(e.target.value)}
+                placeholder="—"
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+          </div>
+
+          {/* Tags */}
           <div className="space-y-1.5">
-            <label htmlFor="create-summary" className="text-sm font-medium">Summary</label>
+            <label className="text-sm font-medium">Tags</label>
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {tags.map(t => (
+                  <span key={t} className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background px-2.5 py-0.5 text-[12px]">
+                    {t}
+                    <button type="button" onClick={() => setTags(prev => prev.filter(x => x !== t))} className="text-muted-foreground hover:text-foreground">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <input
+              value={tagInput}
+              onChange={e => setTagInput(e.target.value)}
+              placeholder="e.g. Chest, Hamstrings…"
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ',') {
+                  e.preventDefault()
+                  addTag(tagInput)
+                  setTagInput('')
+                }
+              }}
+              onBlur={() => { if (tagInput.trim()) { addTag(tagInput); setTagInput('') } }}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-1 focus:ring-ring"
+            />
+            <p className="text-[11px] text-muted-foreground">Press Enter or comma to add</p>
+          </div>
+
+          {/* Summary */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Summary</label>
             <textarea
-              id="create-summary"
               value={summary}
               onChange={e => setSummary(e.target.value)}
               maxLength={1000}
@@ -257,20 +393,35 @@ function CreateWorkoutSheet({
             />
           </div>
         </div>
+
         <div className="flex items-center justify-end border-t border-border/60 px-5 py-4">
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!title.trim() || isPending}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-5 text-[13px] font-medium text-background transition hover:opacity-90 disabled:opacity-40"
           >
             <Check className="h-4 w-4" />
-            {isPending ? 'Creating…' : 'Create'}
+            {isPending ? 'Creating…' : 'Submit'}
           </button>
         </div>
       </SheetContent>
     </Sheet>
   )
+}
+
+function useWorkoutDaysDone(workoutId: string, weeks: Array<{ days: unknown[] }>) {
+  const [done, setDone] = useState(0)
+  useEffect(() => {
+    try {
+      const all = JSON.parse(window.localStorage.getItem('workouts:daysDone') ?? '{}') as Record<string, Record<string, boolean>>
+      const map = all[workoutId] ?? {}
+      let count = 0
+      weeks.forEach((w, wi) => w.days.forEach((_, di) => { if (map[`w${wi}-d${di}`]) count++ }))
+      setDone(count)
+    } catch {}
+  }, [workoutId, weeks])
+  return done
 }
 
 function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: (id: string) => void }) {
@@ -281,7 +432,9 @@ function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: (id: st
     month: 'short', day: 'numeric', year: 'numeric',
   })
   const totalDays = getTotalDays(workout.structure)
-  const daysDone = 0 // tracking not yet implemented
+  const s = (workout.structure as { weeks?: Array<{ days: unknown[] }> } | null)
+  const weeks = s?.weeks ?? [{ days: Array.from({ length: totalDays }) }]
+  const daysDone = useWorkoutDaysDone(workout.id, weeks)
 
   return (
     <li className="relative grid cursor-pointer grid-cols-[88px_minmax(0,1fr)] items-stretch gap-4 overflow-hidden rounded-lg border border-border/60 py-3 pr-4 transition-colors hover:bg-foreground/[0.03] sm:grid-cols-[88px_minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_44px_44px]">

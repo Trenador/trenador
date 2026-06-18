@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, smallint, numeric, timestamp, jsonb, index } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, integer, smallint, numeric, timestamp, jsonb, index } from 'drizzle-orm/pg-core'
 import { tenants } from './tenants'
 import { members } from './members'
 import { workouts, exerciseCatalog } from './workouts'
@@ -12,6 +12,12 @@ export const memberWorkouts = pgTable('member_workouts', {
   sourceWorkoutId: uuid('source_workout_id').references(() => workouts.id),
   title: text('title').notNull(),
   category: text('category'),
+  level: text('level'),
+  durationMinutes: integer('duration_minutes'),
+  numWeeks: integer('num_weeks'),
+  tags: text('tags').array().notNull().default([]),
+  summary: text('summary'),
+  bannerUrl: text('banner_url'),
   notes: text('notes'),
   // weeks/days scaffold mirroring the org library shape so a clone is a faithful copy
   structure: jsonb('structure').notNull().default({}),

@@ -61,11 +61,19 @@ export async function remixWorkoutAction(sourceWorkoutId: string) {
   return workout
 }
 
-export async function createMyWorkoutAction(title: string, category?: string) {
+export async function createMyWorkoutAction(data: {
+  title: string
+  category?: string
+  level?: string
+  durationMinutes?: number
+  numWeeks?: number
+  tags?: string[]
+  summary?: string
+}) {
   const member = await getAuthenticatedMember()
   assertActiveSubscription(member)
 
-  const workout = await createMemberWorkout(member.id, title, category)
+  const workout = await createMemberWorkout(member.id, data)
   revalidatePath('/workouts/mine')
   return workout
 }
@@ -82,7 +90,7 @@ export async function updateMyWorkoutStructureAction(
 
 export async function updateMyWorkoutAction(
   workoutId: string,
-  data: { title?: string; category?: string; notes?: string }
+  data: { title?: string; category?: string; level?: string; durationMinutes?: number; numWeeks?: number; tags?: string[]; summary?: string; notes?: string }
 ) {
   const member = await getAuthenticatedMember()
   assertActiveSubscription(member)
