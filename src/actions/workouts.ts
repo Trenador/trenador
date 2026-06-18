@@ -13,6 +13,7 @@ import {
   remixWorkout,
   createMemberWorkout,
   updateMemberWorkout,
+  updateMemberWorkoutStructure,
   deleteMemberWorkout,
   upsertMemberWorkoutExercises,
 } from '@/lib/member-workouts'
@@ -67,6 +68,16 @@ export async function createMyWorkoutAction(title: string, category?: string) {
   const workout = await createMemberWorkout(member.id, title, category)
   revalidatePath('/workouts/mine')
   return workout
+}
+
+export async function updateMyWorkoutStructureAction(
+  workoutId: string,
+  structure: Record<string, unknown>
+) {
+  const member = await getAuthenticatedMember()
+  assertActiveSubscription(member)
+  await updateMemberWorkoutStructure(member.id, workoutId, structure)
+  revalidatePath(`/workouts/mine/${workoutId}`)
 }
 
 export async function updateMyWorkoutAction(

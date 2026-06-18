@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Clock, Gauge, ChevronDown } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Clock, Gauge } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { RemixButton } from './remix-button'
 import type { WorkoutStructure } from '@/lib/workouts'
@@ -63,87 +63,77 @@ function BlockItem({ name, detail, index }: { name: string; detail: string; inde
 }
 
 function WorkoutContent({ workout }: { workout: WorkoutData }) {
-  const [openWeeks, setOpenWeeks] = useState<Set<number>>(new Set([0]))
-  const [openDays, setOpenDays] = useState<Set<string>>(new Set())
-
-  const toggleWeek = (wi: number) => {
-    setOpenWeeks(prev => {
-      const next = new Set(prev)
-      next.has(wi) ? next.delete(wi) : next.add(wi)
-      return next
-    })
-  }
-
-  const toggleDay = (key: string) => {
-    setOpenDays(prev => {
-      const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
-      return next
-    })
-  }
+  const [openWeek, setOpenWeek] = useState<number>(0)
+  const [openDay, setOpenDay] = useState<string | null>(null)
 
   if (workout.structure.weeks?.length) {
     const weeks = workout.structure.weeks
     return (
       <div className="border-t border-border/60">
-        {weeks.map((week, wi) => (
-          <div key={wi} className="border-b border-border/60">
-            <button
-              type="button"
-              onClick={() => toggleWeek(wi)}
-              className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-foreground/[0.02] lg:px-8"
-            >
-              <span className="label-mono normal-case tracking-[0.12em] text-muted-foreground">{week.label}</span>
-              <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', openWeeks.has(wi) && 'rotate-180')} />
-            </button>
-            {openWeeks.has(wi) && week.days.map((day, di) => {
-              const key = `${wi}-${di}`
-              return (
-                <div key={di} className="border-t border-border/40">
-                  <button
-                    type="button"
-                    onClick={() => toggleDay(key)}
-                    className="flex w-full items-center justify-between px-6 py-3 pl-10 text-left transition-colors hover:bg-foreground/[0.02] lg:pl-12 lg:pr-8"
-                  >
-                    <span className="text-[15px] font-medium sm:text-[14px]">{`Day ${di + 1}`}</span>
-                    <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground/60 transition-transform', openDays.has(key) && 'rotate-180')} />
-                  </button>
-                  {openDays.has(key) && (
-                    <div className="divide-y divide-border/40 border-t border-border/40 px-6 lg:px-8">
-                      {day.blocks.map((block, bi) => (
-                        <BlockItem key={bi} name={block.name} detail={block.detail} index={bi} />
-                      ))}
-                    </div>
-                  )}
+        {weeks.map((week, wi) => {
+          const weekOpen = openWeek === wi
+          return (
+            <div key={wi} className="border-b border-border/60">
+              <button
+                type="button"
+                onClick={() => setOpenWeek(weekOpen ? -1 : wi)}
+                className="flex w-full items-center justify-between px-6 py-4 text-left hover:no-underline lg:px-8"
+              >
+                <span className="label-mono normal-case tracking-[0.12em] text-muted-foreground">
+                  {week.label}
+                </span>
+                <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200', weekOpen && 'rotate-180')} />
+              </button>
+              {weekOpen && (
+                <div className="space-y-2 px-4 pb-4 lg:px-6">
+                  {week.days.map((day, di) => {
+                    const dayKey = `w${wi}-d${di}`
+                    const dayOpen = openDay === dayKey
+                    return (
+                      <div key={di} className="overflow-hidden rounded-lg border border-border/60 bg-background">
+                        <button
+                          type="button"
+                          onClick={() => setOpenDay(dayOpen ? null : dayKey)}
+                          className="flex w-full items-center justify-between px-4 py-3 text-left hover:no-underline"
+                        >
+                          <span className="text-[15px] font-medium sm:text-[14px]">{`Day ${di + 1}`}</span>
+                          <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200', dayOpen && 'rotate-180')} />
+                        </button>
+                        {dayOpen && (
+                          <div className="divide-y divide-border/40 border-t border-border/40 px-4 lg:px-5">
+                            {day.blocks.map((block, bi) => (
+                              <BlockItem key={bi} name={block.name} detail={block.detail} index={bi} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-              )
-            })}
-          </div>
-        ))}
+              )}
+            </div>
+          )
+        })}
       </div>
     )
   }
 
   // Legacy flat blocks
   if (workout.legacyBlocks.length) {
+    const exercises = workout.legacyBlocks.flatMap((block, bi) => {
+      const exs = Array.isArray(block.exercises) ? block.exercises as Array<{
+        name: string; targetSets?: number; targetReps?: number; notes?: string
+      }> : []
+      return exs.map((ex, ei) => ({ key: `${bi}-${ei}`, name: ex.name, detail: [
+        ex.targetSets && ex.targetReps ? `${ex.targetSets}×${ex.targetReps}` : null,
+        ex.notes ?? null,
+      ].filter(Boolean).join(' · ') }))
+    })
     return (
       <div className="divide-y divide-border/40 border-t border-border/60 px-6 lg:px-8">
-        {workout.legacyBlocks.map((block, bi) => {
-          const exercises = Array.isArray(block.exercises) ? block.exercises as Array<{
-            name: string; targetSets?: number; targetReps?: number; notes?: string
-          }> : []
-          return exercises.map((ex, ei) => (
-            <BlockItem
-              key={`${bi}-${ei}`}
-              name={ex.name}
-              detail={[
-                ex.targetSets && ex.targetReps ? `${ex.targetSets}×${ex.targetReps}` : null,
-                ex.notes ?? null,
-              ].filter(Boolean).join(' · ')}
-              index={ei}
-            />
-          ))
-        })}
+        {exercises.map((ex, i) => (
+          <BlockItem key={ex.key} name={ex.name} detail={ex.detail} index={i} />
+        ))}
       </div>
     )
   }

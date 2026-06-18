@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, Copy, Search, X, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
+import { Check, Plus, Trash2, Copy, Search, X, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { deleteMyWorkoutAction } from '@/actions/workouts'
+import { deleteMyWorkoutAction, createMyWorkoutAction } from '@/actions/workouts'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -177,6 +177,102 @@ function MobileFilterSheet({
   )
 }
 
+const CREATE_CATEGORIES = ['Strength', 'Hypertrophy', 'Cardio', 'Mobility'] as const
+
+function CreateWorkoutSheet({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  onCreated: (id: string) => void
+}) {
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState<string>('Strength')
+  const [summary, setSummary] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    if (open) {
+      setTitle('')
+      setCategory('Strength')
+      setSummary('')
+    }
+  }, [open])
+
+  function handleSubmit() {
+    const t = title.trim()
+    if (!t) return
+    startTransition(async () => {
+      const workout = await createMyWorkoutAction(t, category)
+      onCreated(workout.id)
+    })
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="flex h-full w-full max-w-md flex-col gap-0 p-0"
+      >
+        <SheetHeader className="border-b border-border/60 px-5 py-4 text-left">
+          <SheetTitle>Create workout</SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+          <div className="space-y-1.5">
+            <label htmlFor="create-title" className="text-sm font-medium">Title</label>
+            <input
+              id="create-title"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              maxLength={120}
+              autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="create-category" className="text-sm font-medium">Category</label>
+            <select
+              id="create-category"
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {CREATE_CATEGORIES.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="create-summary" className="text-sm font-medium">Summary</label>
+            <textarea
+              id="create-summary"
+              value={summary}
+              onChange={e => setSummary(e.target.value)}
+              maxLength={1000}
+              rows={4}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-end border-t border-border/60 px-5 py-4">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!title.trim() || isPending}
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Check className="h-4 w-4" />
+            {isPending ? 'Creating…' : 'Create'}
+          </button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: (id: string) => void }) {
   const router = useRouter()
   const banner = workout.category ? (CATEGORY_BANNER[workout.category] ?? 'bg-muted') : 'bg-muted'
@@ -266,6 +362,7 @@ export function MyWorkoutsClient({ workouts: initial }: { workouts: Workout[] })
   const router = useRouter()
   const [workouts, setWorkouts] = useState(initial)
   const [, startTransition] = useTransition()
+  const [createOpen, setCreateOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [activeLevel, setActiveLevel] = useState<string | null>(null)
@@ -324,7 +421,7 @@ export function MyWorkoutsClient({ workouts: initial }: { workouts: Workout[] })
           <h1 className="font-serif text-[44px] leading-[1.05] tracking-tight">My workouts</h1>
           <button
             type="button"
-            onClick={() => router.push('/workouts/mine/new')}
+            onClick={() => setCreateOpen(true)}
             className="hidden shrink-0 items-center gap-1.5 rounded-full bg-foreground px-4 py-2.5 text-[13px] font-medium text-background ring-1 ring-foreground/10 transition hover:opacity-90 sm:inline-flex"
           >
             <Plus className="h-4 w-4" />
@@ -391,7 +488,7 @@ export function MyWorkoutsClient({ workouts: initial }: { workouts: Workout[] })
       {/* Mobile FAB */}
       <button
         type="button"
-        onClick={() => router.push('/workouts/mine/new')}
+        onClick={() => setCreateOpen(true)}
         className="fixed bottom-6 right-5 z-30 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-3 text-[13px] font-medium text-background shadow-lg ring-1 ring-foreground/10 transition hover:opacity-90 sm:hidden"
       >
         <Plus className="h-4 w-4" />
@@ -415,6 +512,15 @@ export function MyWorkoutsClient({ workouts: initial }: { workouts: Workout[] })
         setActiveDuration={setMobileDurations}
         clearAll={clearAllFilters}
         resultCount={filtered.length}
+      />
+
+      <CreateWorkoutSheet
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={id => {
+          setCreateOpen(false)
+          router.push(`/workouts/mine/${id}`)
+        }}
       />
     </div>
   )

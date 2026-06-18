@@ -139,6 +139,25 @@ export async function createMemberWorkout(memberId: string, title: string, categ
   return workout
 }
 
+export async function updateMemberWorkoutStructure(
+  memberId: string,
+  workoutId: string,
+  structure: Record<string, unknown>
+) {
+  const [updated] = await db
+    .update(memberWorkouts)
+    .set({ structure, updatedAt: new Date() })
+    .where(
+      and(
+        eq(memberWorkouts.id, workoutId),
+        eq(memberWorkouts.memberId, memberId),
+        isNull(memberWorkouts.deletedAt),
+      )
+    )
+    .returning()
+  return updated ?? null
+}
+
 export async function updateMemberWorkout(
   memberId: string,
   workoutId: string,

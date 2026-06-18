@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { Bookmark, CalendarDays, Clock, Gauge, MoveHorizontal, Plus, Search, SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Bookmark, CalendarDays, Check, Clock, Gauge, MoveHorizontal, Plus, Search, SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
+import { remixWorkoutAction } from '@/actions/workouts'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -56,13 +58,26 @@ function formatDuration(min: number | null) {
 }
 
 function WorkoutCard({ workout }: { workout: Workout }) {
+  const router = useRouter()
+  const [remixed, setRemixed] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const img = workout.category ? CATEGORY_IMAGE[workout.category] : undefined
   const banner = workout.category ? (CATEGORY_BANNER[workout.category] ?? 'bg-muted') : 'bg-muted'
+
+  function handleRemix(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    startTransition(async () => {
+      const copy = await remixWorkoutAction(workout.id)
+      setRemixed(true)
+      setTimeout(() => router.push(`/workouts/mine/${copy.id}`), 500)
+    })
+  }
 
   return (
     <Link
       href={`/workouts/${workout.id}`}
-      className="group flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border/60 bg-background text-left transition-colors hover:border-foreground/30"
+      className="group flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-md border border-border/60 bg-background text-left transition-colors hover:border-foreground/30"
     >
       {/* Banner */}
       <div className={cn('relative h-[170px] items-start justify-between overflow-hidden p-4 flex', banner)}>
@@ -145,14 +160,15 @@ function WorkoutCard({ workout }: { workout: Workout }) {
         )}
 
         {/* Remix button */}
-        <Link
-          href={`/workouts/${workout.id}`}
-          onClick={e => e.stopPropagation()}
-          className="label-mono flex w-full items-center justify-center gap-1 rounded-full border border-border bg-background px-2.5 py-1.5 normal-case tracking-[0.15em] text-foreground transition-colors hover:bg-foreground/[0.04]"
+        <button
+          type="button"
+          onClick={handleRemix}
+          disabled={isPending || remixed}
+          className="label-mono flex w-full items-center justify-center gap-1 rounded-full border border-border bg-background px-2.5 py-1.5 normal-case tracking-[0.15em] text-foreground transition-colors hover:bg-foreground/[0.04] disabled:opacity-60"
         >
-          <Plus className="h-3 w-3" />
-          Remix
-        </Link>
+          {remixed ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+          {remixed ? 'Added!' : isPending ? 'Adding…' : 'Remix'}
+        </button>
       </div>
     </Link>
   )
@@ -444,9 +460,7 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
         <div className="mx-auto w-full max-w-6xl px-6 pb-16 pt-10 lg:px-10 lg:pt-14">
 
           <div className="flex items-start justify-between gap-4">
-            <h1 className="font-serif text-[44px] leading-[1.05] tracking-tight">
-              Workout library
-            </h1>
+            <h1 className="text-3xl font-semibold tracking-tight">Library</h1>
           </div>
 
           <div className="sticky top-0 z-20 mt-8 flex flex-col gap-4 bg-background pb-3 pt-2 lg:static lg:pb-0 lg:pt-0">
