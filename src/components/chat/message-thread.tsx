@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Menu, Sparkles, Pencil, SquarePen } from 'lucide-react'
+import { Menu, Sparkles, Pencil, SquarePen, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom'
@@ -25,11 +25,24 @@ type Props = {
   initialMessage: string | undefined
 }
 
-const SHORTCUTS = [
-  'How should I structure my training week?',
-  'What should I eat around my workouts?',
-  "I'm a beginner — where do I start?",
-  'How do I recover faster between sessions?',
+type SeedPrompt = {
+  label: string
+  userText?: string
+  assistantOpener?: string
+  navigateTo?: string
+  action?: 'pick-block' | 'message-center'
+}
+
+const SEED_PROMPTS: SeedPrompt[] = [
+  { label: 'Browse the library.', navigateTo: '/workouts' },
+  { label: 'Talk with an advisor.', action: 'message-center' },
+  { label: 'Jump to a specific workout block.', action: 'pick-block' },
+  {
+    label: 'Modify my workout.',
+    assistantOpener:
+      "Of course — describe what you'd like to modify. For example: swap an exercise, change the duration, adjust the difficulty, or focus on a different muscle group. The more detail you share, the better I can tailor it.",
+  },
+  { label: 'Tell me fun facts about the human body.', userText: 'Tell me fun facts about the human body.' },
 ]
 
 function formatTimestamp(iso: string | undefined): string {
@@ -43,7 +56,7 @@ function formatTimestamp(iso: string | undefined): string {
   return `${date} · ${time}`
 }
 
-function ShortcutsMenu({ onPick, open, onOpenChange }: { onPick: (s: string) => void; open: boolean; onOpenChange: (v: boolean) => void }) {
+function ShortcutsMenu({ onPick, open, onOpenChange }: { onPick: (p: SeedPrompt) => void; open: boolean; onOpenChange: (v: boolean) => void }) {
   const panel = (
     <div
       className={`grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-300 ease-out ${
@@ -55,18 +68,18 @@ function ShortcutsMenu({ onPick, open, onOpenChange }: { onPick: (s: string) => 
           <span className="text-[13px] text-muted-foreground">Shortcuts</span>
         </div>
         <div className="max-h-[min(50vh,calc(100vh-12rem))] overflow-y-auto overscroll-contain px-2">
-          {SHORTCUTS.map((s, i) => (
+          {SEED_PROMPTS.map((p, i) => (
             <button
-              key={s}
+              key={p.label}
               type="button"
-              onClick={() => { onOpenChange(false); onPick(s) }}
+              onClick={() => { onOpenChange(false); onPick(p) }}
               style={{ transitionDelay: open ? `${i * 40}ms` : '0ms' }}
               className={`flex w-full items-center gap-3 rounded-lg py-3 text-left text-[15px] leading-snug text-foreground transition-all duration-300 hover:bg-foreground/[0.04] ${
                 open ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
               }`}
             >
               <Pencil className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span>{s}</span>
+              <span>{p.label}</span>
             </button>
           ))}
         </div>
@@ -97,9 +110,10 @@ function ScrollToBottomButton() {
   return (
     <button
       onClick={() => scrollToBottom()}
-      className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground shadow-md hover:bg-muted transition-colors"
+      aria-label="Scroll to bottom"
+      className="absolute bottom-4 left-1/2 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background shadow-md text-muted-foreground transition-colors hover:bg-muted"
     >
-      ↓ Jump to latest
+      <ChevronDown className="h-4 w-4" />
     </button>
   )
 }
@@ -119,6 +133,18 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
     })),
   )
   const [isStreaming, setIsStreaming] = useState(false)
+
+  function handleSeedPrompt(prompt: SeedPrompt) {
+    setShortcutsOpen(false)
+    if (prompt.navigateTo) { router.push(prompt.navigateTo); return }
+    if (prompt.action === 'message-center') { router.push('/messages'); return }
+    if (prompt.action === 'pick-block') { router.push('/workouts/mine'); return }
+    if (prompt.assistantOpener) {
+      setMessages(prev => [...prev, msg({ role: 'assistant', content: prompt.assistantOpener! })])
+      return
+    }
+    if (prompt.userText) sendMessage(prompt.userText)
+  }
 
   useEffect(() => {
     if (initialMessage && !hasSentInitial.current) {
@@ -267,7 +293,7 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
       >
         <div className="mx-auto w-full max-w-3xl">
           <div className="mb-2 flex w-full">
-            <ShortcutsMenu onPick={sendMessage} open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+            <ShortcutsMenu onPick={handleSeedPrompt} open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
           </div>
           <div onFocusCapture={() => setShortcutsOpen(false)}>
             <Composer onSubmit={sendMessage} disabled={isStreaming} />

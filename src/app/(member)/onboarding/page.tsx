@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getCoachesForPicker, completeOnboarding } from '@/actions/onboarding'
 import { getInitials, cn } from '@/lib/utils'
+import { FloatingField } from '@/components/ui/floating-field'
 
 type Gender = 'female' | 'male' | 'non-binary'
 
@@ -21,8 +22,7 @@ type CoachOption = {
 
 const TOTAL_STEPS = 5
 
-const inp = 'h-11 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring'
-const btn = 'h-10 rounded-md bg-foreground px-6 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50'
+const btn = 'h-12 w-full rounded-md bg-foreground text-base font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50'
 
 function CoachCard({
   coach,
@@ -173,7 +173,7 @@ export default function OnboardingPage() {
               {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
                 <div
                   key={i}
-                  className={`h-1 w-8 rounded-full transition-colors ${i <= step ? 'bg-foreground' : 'bg-foreground/15'}`}
+                  className={`h-1 w-8 rounded-full transition-colors ${i <= step ? 'bg-orange-500' : 'bg-foreground/15'}`}
                 />
               ))}
             </div>
@@ -187,33 +187,25 @@ export default function OnboardingPage() {
                 <p className="text-sm text-muted-foreground">So we can address you properly.</p>
               </div>
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="firstName" className="text-sm font-medium">First name</label>
-                  <input
-                    id="firstName"
-                    type="text"
-                    autoComplete="given-name"
-                    value={firstName}
-                    onChange={e => setFirstName(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && submitName()}
-                    className={inp}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="lastName" className="text-sm font-medium">Last name</label>
-                  <input
-                    id="lastName"
-                    type="text"
-                    autoComplete="family-name"
-                    value={lastName}
-                    onChange={e => setLastName(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && submitName()}
-                    className={inp}
-                  />
-                </div>
+                <FloatingField
+                  id="firstName"
+                  label="First name"
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && submitName()}
+                  autoComplete="given-name"
+                />
+                <FloatingField
+                  id="lastName"
+                  label="Last name"
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && submitName()}
+                  autoComplete="family-name"
+                />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <div className="flex justify-end pt-2">
+              <div className="pt-2">
                 <button type="button" onClick={submitName} className={btn}>Continue</button>
               </div>
             </div>
@@ -226,22 +218,19 @@ export default function OnboardingPage() {
                 <h1 className="text-2xl font-semibold tracking-tight">What year were you born?</h1>
                 <p className="text-sm text-muted-foreground">Helps us tailor your training.</p>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="year" className="text-sm font-medium">Year of birth</label>
-                <input
-                  id="year"
-                  type="number"
-                  inputMode="numeric"
-                  min={1900}
-                  max={new Date().getFullYear()}
-                  value={year}
-                  onChange={e => setYear(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && submitYear()}
-                  className={inp}
-                />
-              </div>
+              <FloatingField
+                id="year"
+                label="Year of birth"
+                type="number"
+                inputMode="numeric"
+                min={1900}
+                max={new Date().getFullYear()}
+                value={year}
+                onChange={e => setYear(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && submitYear()}
+              />
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <div className="flex justify-end pt-2">
+              <div className="pt-2">
                 <button type="button" onClick={submitYear} className={btn}>Continue</button>
               </div>
             </div>
@@ -267,7 +256,7 @@ export default function OnboardingPage() {
                 ))}
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <div className="flex justify-end pt-2">
+              <div className="pt-2">
                 <button type="button" onClick={submitGender} className={btn}>Continue</button>
               </div>
             </div>
@@ -280,22 +269,19 @@ export default function OnboardingPage() {
                 <h1 className="text-2xl font-semibold tracking-tight">What&apos;s your weight?</h1>
                 <p className="text-sm text-muted-foreground">You can update this anytime in your profile.</p>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="weight" className="text-sm font-medium">Weight (lbs)</label>
-                <input
-                  id="weight"
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  step="0.1"
-                  value={weight}
-                  onChange={e => setWeight(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && submitWeight()}
-                  className={inp}
-                />
-              </div>
+              <FloatingField
+                id="weight"
+                label="Weight (lbs)"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.1"
+                value={weight}
+                onChange={e => setWeight(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && submitWeight()}
+              />
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <div className="flex justify-end pt-2">
+              <div className="pt-2">
                 <button type="button" onClick={submitWeight} className={btn}>Continue</button>
               </div>
             </div>
@@ -328,7 +314,7 @@ export default function OnboardingPage() {
                 )}
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <div className="flex justify-end pt-2">
+              <div className="pt-2">
                 <button
                   type="button"
                   onClick={finish}

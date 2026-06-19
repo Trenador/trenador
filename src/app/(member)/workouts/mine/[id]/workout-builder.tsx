@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Check, ChevronDown, Clock, Copy, Gauge, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowUp, Check, ChevronDown, Clock, Copy, Gauge, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   updateMyWorkoutStructureAction,
@@ -399,58 +399,70 @@ function EditWorkoutSheet({
 
 // --- BlockItem ---
 function BlockItem({
-  block, wi, di, bi,
-  completed, onToggle,
-  onDelete, onEditOpen,
+  block, bi,
+  completed,
+  onEditOpen,
+  totalBlocks, onMoveUp, onMoveDown, onDuplicate,
 }: {
   block: WorkoutBlock
   wi: number; di: number; bi: number
   completed: boolean
-  onToggle: () => void
-  onDelete: () => void
   onEditOpen: () => void
+  totalBlocks: number
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onDuplicate: () => void
 }) {
-  const id = `block-w${wi}-d${di}-b${bi}`
-
   return (
-    <div id={id} className={cn('group flex items-start gap-3 border-t border-border/40 px-4 py-3', completed && 'opacity-60')}>
-      <button
-        type="button"
-        onClick={onToggle}
-        className={cn(
-          'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition',
-          completed ? 'border-foreground bg-foreground text-background' : 'border-border/60 text-transparent hover:border-foreground/40',
-        )}
+    <div className={cn('flex flex-col border-t border-border/40', completed && 'opacity-60')}>
+      <div
+        className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-foreground/[0.02]"
+        onClick={onEditOpen}
+        role="button"
       >
-        <Check className="h-3 w-3" />
-      </button>
-      <div className="min-w-0 flex-1">
-        <p className={cn('text-[14px] font-medium leading-snug', completed && 'line-through')}>{block.name}</p>
-        {block.detail && <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{block.detail}</p>}
-        {block.setRows && block.setRows.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {block.setRows.map((row, i) => (
-              <span key={i} className="label-mono rounded-full border border-border/60 px-2 py-0.5 text-[11px] normal-case tracking-[0.08em] text-muted-foreground">
-                {[row.reps && `${row.reps} reps`, row.weight && `@ ${row.weight}`].filter(Boolean).join(' ')}
-              </span>
-            ))}
-          </div>
-        )}
+        <span className="label-mono mt-0.5 w-6 shrink-0 normal-case tracking-[0.12em] text-muted-foreground">
+          {bi + 1}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className={cn('text-[14px] font-medium leading-snug', completed && 'line-through')}>{block.name}</p>
+          {block.detail && <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{block.detail}</p>}
+          {block.setRows && block.setRows.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {block.setRows.map((row, i) => (
+                <span key={i} className="label-mono rounded-full border border-border/60 px-2 py-0.5 text-[11px] normal-case tracking-[0.08em] text-muted-foreground">
+                  {[row.reps && `${row.reps} reps`, row.weight && `@ ${row.weight}`].filter(Boolean).join(' ')}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="flex items-center justify-end gap-1.5 px-3 pb-2">
         <button
           type="button"
-          onClick={onEditOpen}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
+          onClick={onMoveUp}
+          disabled={bi === 0}
+          aria-label="Move block up"
+          className="inline-flex items-center justify-center rounded-full border border-border/70 p-1.5 text-muted-foreground transition hover:bg-foreground/[0.06] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Pencil className="h-3.5 w-3.5" />
+          <ArrowUp className="h-3.5 w-3.5" />
         </button>
         <button
           type="button"
-          onClick={onDelete}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+          onClick={onMoveDown}
+          disabled={bi >= totalBlocks - 1}
+          aria-label="Move block down"
+          className="inline-flex items-center justify-center rounded-full border border-border/70 p-1.5 text-muted-foreground transition hover:bg-foreground/[0.06] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <ArrowDown className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onDuplicate}
+          aria-label="Duplicate block"
+          className="inline-flex items-center justify-center rounded-full border border-border/70 p-1.5 text-muted-foreground transition hover:bg-foreground/[0.06] hover:text-foreground"
+        >
+          <Copy className="h-3.5 w-3.5" />
         </button>
       </div>
     </div>
@@ -497,6 +509,24 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
   function deleteBlock(wi: number, di: number, bi: number) {
     const next = clone(structure)
     next.weeks[wi]!.days[di]!.blocks.splice(bi, 1)
+    saveStructure(next)
+  }
+
+  function moveBlock(wi: number, di: number, bi: number, direction: 'up' | 'down') {
+    const next = clone(structure)
+    const blocks = next.weeks[wi]!.days[di]!.blocks
+    const target = direction === 'up' ? bi - 1 : bi + 1
+    if (target < 0 || target >= blocks.length) return
+    ;[blocks[bi], blocks[target]] = [blocks[target]!, blocks[bi]!]
+    saveStructure(next)
+  }
+
+  function duplicateBlock(wi: number, di: number, bi: number) {
+    const next = clone(structure)
+    const blocks = next.weeks[wi]!.days[di]!.blocks
+    const block = blocks[bi]
+    if (!block) return
+    blocks.splice(bi + 1, 0, clone(block))
     saveStructure(next)
   }
 
@@ -728,9 +758,11 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
                                     block={block}
                                     wi={wi} di={di} bi={bi}
                                     completed={isCompleted(wi, di, bi)}
-                                    onToggle={() => toggle(wi, di, bi)}
-                                    onDelete={() => deleteBlock(wi, di, bi)}
                                     onEditOpen={() => setEditBlockTarget({ wi, di, bi })}
+                                    totalBlocks={visibleBlocks.length}
+                                    onMoveUp={() => moveBlock(wi, di, bi, 'up')}
+                                    onMoveDown={() => moveBlock(wi, di, bi, 'down')}
+                                    onDuplicate={() => duplicateBlock(wi, di, bi)}
                                   />
                                 ))}
 

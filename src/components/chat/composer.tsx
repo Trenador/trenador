@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { ArrowRight, Paperclip, Camera } from 'lucide-react'
+import { ArrowUp, Square, Paperclip, Camera } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -99,15 +99,15 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
 
       <button
         onClick={submit}
-        disabled={disabled || !value.trim()}
-        aria-label="Send message"
+        disabled={!disabled && !value.trim()}
+        aria-label={disabled ? 'Stop' : 'Send message'}
         className={cn(
           'shrink-0 flex h-8 w-8 items-center justify-center rounded-full transition-opacity',
           'bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-40',
           multiline && 'self-end mb-0.5 mr-0.5',
         )}
       >
-        <ArrowRight className="h-4 w-4" />
+        {disabled ? <Square className="h-4 w-4" /> : <ArrowUp className="h-4 w-4" />}
       </button>
     </div>
   )

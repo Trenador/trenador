@@ -150,7 +150,7 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
       <div className="mx-auto w-full max-w-4xl">
 
         {/* Hero */}
-        <div className={cn('relative flex min-h-[220px] items-end overflow-hidden p-6 h-[44vh] sm:h-[220px]', banner)}>
+        <div className={cn('relative flex min-h-[220px] items-end overflow-hidden p-6 h-[44vh] sm:h-[280px]', banner)}>
           {img && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={img} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover brightness-110" />
@@ -167,11 +167,6 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
             Go back
           </Link>
 
-          {/* Remix — top-right in hero */}
-          <div className="absolute right-4 top-4">
-            <RemixButton workoutId={workout.id} variant="hero" />
-          </div>
-
           {/* Category + title at bottom */}
           <div className="relative min-w-0 flex-1">
             {workout.category && (
@@ -182,6 +177,11 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
             <h1 className="mt-2 font-serif text-[32px] italic leading-[1.05] !text-white sm:text-[40px] [text-shadow:0_2px_8px_rgba(0,0,0,0.8)]">
               {workout.title}
             </h1>
+          </div>
+
+          {/* Remix — bottom-right inline (desktop only) */}
+          <div className="relative ml-4 hidden shrink-0 items-end sm:flex">
+            <RemixButton workoutId={workout.id} variant="hero" />
           </div>
         </div>
 
@@ -224,38 +224,6 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
           <WorkoutContent workout={workout} />
         </div>
 
-        {/* Coach notes */}
-        {workout.coachNotes && (
-          <div className="border-t border-border/60 px-6 py-6 lg:px-8">
-            <h2 className="label-mono mb-3 normal-case tracking-[0.18em] text-foreground">Coach notes</h2>
-            <p className="text-[14px] leading-relaxed text-muted-foreground">{workout.coachNotes}</p>
-          </div>
-        )}
-
-        {/* Coach bio */}
-        {workout.coachName && (
-          <div className="border-t border-border/60 px-6 py-6 lg:px-8">
-            <div className="flex items-center gap-4">
-              {workout.coachPhotoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={workout.coachPhotoUrl} alt={workout.coachName} className="h-16 w-16 rounded-full object-cover" />
-              ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-[18px] font-semibold text-background">
-                  {getInitials(workout.coachName)}
-                </div>
-              )}
-              <div>
-                <p className="font-medium">{workout.coachName}</p>
-                {workout.coachSpecialties?.[0] && (
-                  <p className="label-mono mt-0.5 normal-case tracking-wide text-muted-foreground">{workout.coachSpecialties[0]}</p>
-                )}
-              </div>
-            </div>
-            {workout.coachBio && (
-              <p className="mt-4 text-[14px] leading-relaxed text-muted-foreground">{workout.coachBio}</p>
-            )}
-          </div>
-        )}
 
       </div>
     </div>
