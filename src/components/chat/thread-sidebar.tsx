@@ -195,7 +195,7 @@ export function ThreadSidebar({
       >
         {/* Header: logo + collapse */}
         <div className="flex h-[60px] items-center justify-between pl-5 pr-3">
-          <div className="w-[42%] sm:w-[30%] lg:w-[60%]">
+          <div className="w-[42%] sm:w-[60%]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/trenador-logo-mark.svg" alt="Trenador" className="h-auto w-full object-contain" />
           </div>
@@ -226,9 +226,9 @@ export function ThreadSidebar({
         <nav className="space-y-px px-2 pb-3">
           <SidebarTab
             icon={<Dumbbell className="h-4 w-4" />}
-            label="Workout library"
+            label="Library"
             onClick={() => { router.push('/workouts'); closeOnMobile() }}
-            active={pathname === '/workouts' || pathname.startsWith('/workouts/')}
+            active={pathname === '/workouts'}
           />
           <SidebarTab
             icon={<Bookmark className="h-4 w-4" />}
@@ -238,7 +238,7 @@ export function ThreadSidebar({
           />
           <SidebarTab
             icon={<MessageCircle className="h-4 w-4" />}
-            label="Message center"
+            label="Advisor"
             onClick={() => { router.push('/messages'); closeOnMobile() }}
             active={pathname === '/messages'}
           />
@@ -303,7 +303,7 @@ export function ThreadSidebar({
                 )}
               </div>
               <div className="flex flex-col items-start leading-tight">
-                <span className="text-[13px]">{member.displayName}</span>
+                <span className="text-[13px]">{member.displayName || 'Your profile'}</span>
                 <span className="text-[11px] font-medium text-primary">Pro</span>
               </div>
             </DropdownMenuTrigger>

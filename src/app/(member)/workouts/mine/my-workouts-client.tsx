@@ -46,6 +46,19 @@ const CATEGORIES = ['Strength', 'Hypertrophy', 'Cardio', 'Mobility'] as const
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'All Levels'] as const
 const ALL = '__all__'
 
+const TAG_SUGGESTIONS = [
+  'Full Body', 'Upper Body', 'Lower Body', 'Push', 'Pull', 'Legs', 'Core', 'Glutes',
+  'Hamstrings', 'Quads', 'Calves', 'Chest', 'Back', 'Lats', 'Shoulders', 'Biceps',
+  'Triceps', 'Forearms', 'Abs', 'Obliques', 'Hip Flexors',
+  'Strength', 'Hypertrophy', 'Power', 'Endurance', 'Conditioning', 'HIIT', 'Cardio',
+  'Mobility', 'Flexibility', 'Yoga', 'Pilates', 'Stretching', 'Recovery', 'Warm-up',
+  'Cool-down', 'Plyometrics', 'Calisthenics', 'Bodyweight',
+  'Barbell', 'Dumbbell', 'Kettlebell', 'Cable', 'Machine', 'Resistance Band',
+  'Bench', 'Pull-up Bar', 'Medicine Ball', 'Foam Roller', 'No Equipment',
+  'Fat Loss', 'Muscle Gain', 'Beginner Friendly', 'Quick', 'Low Impact',
+  'High Intensity', 'At Home', 'Gym', 'Outdoor',
+]
+
 function getTotalDays(structure: unknown): number {
   const s = structure as WorkoutStructure
   if (!s?.weeks?.length) return 1
@@ -189,12 +202,22 @@ function CreateWorkoutSheet({
   onOpenChange: (v: boolean) => void
   onCreated: (id: string) => void
 }) {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)')
+    setIsMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState<string>('Strength')
   const [level, setLevel] = useState<string>('All Levels')
-  const [durationMin, setDurationMin] = useState('45')
+  const [durationMin, setDurationMin] = useState('')
   const [numWeeks, setNumWeeks] = useState('')
   const [tagInput, setTagInput] = useState('')
+  const [tagFocused, setTagFocused] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [summary, setSummary] = useState('')
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
@@ -204,7 +227,7 @@ function CreateWorkoutSheet({
   useEffect(() => {
     if (open) {
       setTitle(''); setCategory('Strength'); setLevel('All Levels')
-      setDurationMin('45'); setNumWeeks(''); setTagInput(''); setTags([])
+      setDurationMin(''); setNumWeeks(''); setTagInput(''); setTagFocused(false); setTags([])
       setSummary(''); setBannerPreview(null)
     }
   }, [open])
@@ -215,11 +238,6 @@ function CreateWorkoutSheet({
     const reader = new FileReader()
     reader.onload = () => { if (typeof reader.result === 'string') setBannerPreview(reader.result) }
     reader.readAsDataURL(file)
-  }
-
-  function addTag(raw: string) {
-    const t = raw.trim().slice(0, 40)
-    if (t && !tags.includes(t) && tags.length < 12) setTags(prev => [...prev, t])
   }
 
   function handleSubmit() {
@@ -241,7 +259,15 @@ function CreateWorkoutSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex h-full w-full max-w-md flex-col gap-0 p-0">
+      <SheetContent
+        side={isMobile ? 'bottom' : 'right'}
+        className={cn(
+          'flex flex-col gap-0 p-0',
+          isMobile
+            ? 'h-[100dvh] w-full rounded-none sm:h-[95vh] sm:rounded-t-2xl'
+            : 'h-full w-full max-w-md sm:max-w-md',
+        )}
+      >
         <SheetHeader className="border-b border-border/60 px-5 py-4 text-left">
           <SheetTitle>Create workout</SheetTitle>
         </SheetHeader>
@@ -251,7 +277,7 @@ function CreateWorkoutSheet({
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Banner image</label>
             <div
-              className={`relative h-32 w-full overflow-hidden rounded-md bg-muted/40 ${bannerPreview ? 'border border-input' : 'border-2 border-dashed border-input'}`}
+              className={cn('relative h-32 w-full overflow-hidden rounded-md bg-background', bannerPreview ? 'border border-input' : 'border-2 border-dashed border-input')}
             >
               {bannerPreview ? (
                 <>
@@ -273,7 +299,7 @@ function CreateWorkoutSheet({
                   className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-muted-foreground transition hover:bg-foreground/[0.04] hover:text-foreground"
                 >
                   <Upload className="h-5 w-5" />
-                  <span className="text-[13px]">Upload</span>
+                  <span className="text-[13px] font-medium">Upload</span>
                 </button>
               )}
               <input
@@ -281,7 +307,7 @@ function CreateWorkoutSheet({
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) handleBannerFile(f) }}
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleBannerFile(f); e.target.value = '' }}
               />
             </div>
           </div>
@@ -352,33 +378,52 @@ function CreateWorkoutSheet({
           {/* Tags */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Tags</label>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
+            <div className="rounded-md border border-input bg-background px-2 py-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {tags.map(t => (
-                  <span key={t} className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background px-2.5 py-0.5 text-[12px]">
+                  <span key={t} className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[12px]">
                     {t}
-                    <button type="button" onClick={() => setTags(prev => prev.filter(x => x !== t))} className="text-muted-foreground hover:text-foreground">
-                      <X className="h-3 w-3" />
+                    <button type="button" aria-label={`Remove ${t}`} onClick={() => setTags(tags.filter(x => x !== t))} className="text-muted-foreground hover:text-foreground">
+                      ×
                     </button>
                   </span>
                 ))}
+                <input
+                  value={tagInput}
+                  onChange={e => setTagInput(e.target.value)}
+                  onFocus={() => setTagFocused(true)}
+                  onBlur={() => setTimeout(() => setTagFocused(false), 150)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && tagInput.trim()) {
+                      e.preventDefault()
+                      const v = tagInput.trim()
+                      if (!tags.includes(v) && tags.length < 12) setTags([...tags, v])
+                      setTagInput('')
+                    } else if (e.key === 'Backspace' && !tagInput && tags.length) {
+                      setTags(tags.slice(0, -1))
+                    }
+                  }}
+                  className="min-w-[120px] flex-1 bg-transparent px-1 py-1 text-sm outline-none"
+                />
               </div>
-            )}
-            <input
-              value={tagInput}
-              onChange={e => setTagInput(e.target.value)}
-              placeholder="e.g. Chest, Hamstrings…"
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ',') {
-                  e.preventDefault()
-                  addTag(tagInput)
-                  setTagInput('')
-                }
-              }}
-              onBlur={() => { if (tagInput.trim()) { addTag(tagInput); setTagInput('') } }}
-              className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-1 focus:ring-ring"
-            />
-            <p className="text-[11px] text-muted-foreground">Press Enter or comma to add</p>
+            </div>
+            {tagFocused && (() => {
+              const q = tagInput.trim().toLowerCase()
+              const matches = TAG_SUGGESTIONS.filter(s => !tags.includes(s) && (!q || s.toLowerCase().includes(q))).slice(0, 12)
+              if (!matches.length) return null
+              return (
+                <div className="mt-1 max-h-56 overflow-y-auto rounded-md border border-border/70 bg-popover p-1 shadow-md">
+                  {matches.map(s => (
+                    <button key={s} type="button"
+                      onMouseDown={e => { e.preventDefault(); if (tags.length < 12) setTags([...tags, s]); setTagInput('') }}
+                      className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )
+            })()}
           </div>
 
           {/* Summary */}
@@ -394,12 +439,12 @@ function CreateWorkoutSheet({
           </div>
         </div>
 
-        <div className="flex items-center justify-end border-t border-border/60 px-5 py-4">
+        <div className="flex items-center justify-end gap-2 border-t border-border/60 px-5 py-4">
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!title.trim() || isPending}
-            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-5 text-[13px] font-medium text-background transition hover:opacity-90 disabled:opacity-40"
+            className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition hover:opacity-90 disabled:opacity-40 sm:h-10 sm:w-auto"
           >
             <Check className="h-4 w-4" />
             {isPending ? 'Creating…' : 'Submit'}
@@ -461,7 +506,6 @@ function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: (id: st
       >
         <div className="truncate font-serif text-[17px] italic leading-tight">{workout.title}</div>
         <div className="mt-1 flex flex-col gap-0.5 text-[12px] tabular-nums text-foreground/80 sm:hidden">
-          {workout.category && <span>{workout.category}</span>}
           <span>{daysDone}/{totalDays} days done</span>
           <span>{createdDate}</span>
         </div>
@@ -569,9 +613,9 @@ export function MyWorkoutsClient({ workouts: initial }: { workouts: Workout[] })
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 md:px-6 lg:px-10 lg:pt-14">
+      <div className="mx-auto w-full max-w-6xl px-6 pb-16 pt-10 lg:px-10 lg:pt-14">
         <div className="flex items-start justify-between gap-4">
-          <h1 className="font-serif text-[44px] leading-[1.05] tracking-tight">My workouts</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">My workouts</h1>
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
@@ -583,7 +627,7 @@ export function MyWorkoutsClient({ workouts: initial }: { workouts: Workout[] })
         </div>
 
         {/* Search + filters */}
-        <div className="mt-8 flex flex-col gap-4">
+        <div className="sticky top-0 z-20 mt-8 flex flex-col gap-4 bg-background pb-3 pt-2 lg:static lg:pb-0 lg:pt-0">
           <div className="relative w-full">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -619,7 +663,7 @@ export function MyWorkoutsClient({ workouts: initial }: { workouts: Workout[] })
           </button>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-8">
           {workouts.length === 0 ? (
             <div className="py-16 text-center text-sm text-muted-foreground">
               You haven&apos;t added any workouts yet.{' '}
