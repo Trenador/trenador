@@ -4,8 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { ProfileClient } from './profile-client'
 import ProfileLoading from './loading'
 
-export const dynamic = 'force-dynamic'
-
 export default function ProfilePage() {
   return (
     <Suspense fallback={<ProfileLoading />}>
