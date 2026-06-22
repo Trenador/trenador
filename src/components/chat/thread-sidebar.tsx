@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Plus, Trash2, Menu, LogOut, Dumbbell, Bookmark,
-  MessageCircle, User, Settings,
+  MessageCircle, User, Settings, Pin,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { threadBucket, threadRelative } from '@/lib/format-date'
@@ -26,6 +26,7 @@ type ThreadItem = {
   title: string | null
   lastMessageAt: Date | null
   createdAt: Date
+  pinnedAt: Date | null
 }
 
 type Member = {
@@ -46,6 +47,44 @@ type Props = {
 
 
 const BUCKET_ORDER = ['Recent', 'Last 30 Days', 'Older']
+
+function ThreadRow({
+  thread,
+  isActive,
+  onNavigate,
+  onDelete,
+}: {
+  thread: ThreadItem
+  isActive: boolean
+  onNavigate: () => void
+  onDelete: (e: React.MouseEvent) => void
+}) {
+  const title = thread.title ?? 'New conversation'
+  const truncated = title.length > 22 ? title.slice(0, 22) + '…' : title
+  return (
+    <div
+      onClick={onNavigate}
+      className={cn(
+        'group flex cursor-pointer items-start gap-2 rounded-md px-3 py-2',
+        isActive ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.04]',
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[13px] font-medium leading-tight">{truncated}</div>
+        <div className="label-mono normal-case tracking-[0.12em] mt-1">
+          {threadRelative(thread.lastMessageAt ?? thread.createdAt)}
+        </div>
+      </div>
+      <button
+        onClick={onDelete}
+        className="mt-0.5 rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+        aria-label="Delete conversation"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+  )
+}
 
 function SidebarTab({
   icon,
@@ -136,7 +175,10 @@ export function ThreadSidebar({
     }
   }
 
-  const grouped = threads.reduce<Record<string, ThreadItem[]>>((acc, t) => {
+  const pinned = threads.filter((t) => t.pinnedAt)
+  const unpinned = threads.filter((t) => !t.pinnedAt)
+
+  const grouped = unpinned.reduce<Record<string, ThreadItem[]>>((acc, t) => {
     const key = threadBucket(t.lastMessageAt ?? t.createdAt)
     ;(acc[key] ??= []).push(t)
     return acc
@@ -250,42 +292,42 @@ export function ThreadSidebar({
             {threads.length === 0 ? (
               <p className="px-3 py-6 text-center text-xs text-muted-foreground">No conversations yet</p>
             ) : (
-              BUCKET_ORDER.filter((b) => grouped[b]?.length).map((bucket) => (
-                <div key={bucket} className="mb-4">
-                  <div className="label-mono px-3 pb-2 pt-1">{bucket}</div>
-                  <div className="space-y-px">
-                    {grouped[bucket]!.map((thread) => {
-                      const isActive = pathname === `/chat/${thread.id}`
-                      const title = thread.title ?? 'New conversation'
-                      const truncated = title.length > 22 ? title.slice(0, 22) + '…' : title
-                      return (
-                        <div
+              <>
+                {pinned.length > 0 && (
+                  <div className="mb-4">
+                    <div className="label-mono flex items-center gap-1.5 px-3 pb-2 pt-1">
+                      <Pin className="h-3 w-3" /> Pinned
+                    </div>
+                    <div className="space-y-px">
+                      {pinned.map((thread) => (
+                        <ThreadRow
                           key={thread.id}
-                          onClick={() => { router.push(`/chat/${thread.id}`); closeOnMobile() }}
-                          className={cn(
-                            'group flex cursor-pointer items-start gap-2 rounded-md px-3 py-2',
-                            isActive ? 'bg-foreground/[0.06]' : 'hover:bg-foreground/[0.04]',
-                          )}
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-[13px] font-medium leading-tight">{truncated}</div>
-                            <div className="label-mono normal-case tracking-[0.12em] mt-1">
-                              {threadRelative(thread.lastMessageAt ?? thread.createdAt)}
-                            </div>
-                          </div>
-                          <button
-                            onClick={(e) => handleDelete(e, thread.id)}
-                            className="mt-0.5 rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                            aria-label="Delete conversation"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      )
-                    })}
+                          thread={thread}
+                          isActive={pathname === `/chat/${thread.id}`}
+                          onNavigate={() => { router.push(`/chat/${thread.id}`); closeOnMobile() }}
+                          onDelete={(e) => handleDelete(e, thread.id)}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))
+                )}
+                {BUCKET_ORDER.filter((b) => grouped[b]?.length).map((bucket) => (
+                  <div key={bucket} className="mb-4">
+                    <div className="label-mono px-3 pb-2 pt-1">{bucket}</div>
+                    <div className="space-y-px">
+                      {grouped[bucket]!.map((thread) => (
+                        <ThreadRow
+                          key={thread.id}
+                          thread={thread}
+                          isActive={pathname === `/chat/${thread.id}`}
+                          onNavigate={() => { router.push(`/chat/${thread.id}`); closeOnMobile() }}
+                          onDelete={(e) => handleDelete(e, thread.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </>
             )}
           </div>
         </ScrollArea>

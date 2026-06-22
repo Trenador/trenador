@@ -8,6 +8,7 @@ export const threads = pgTable('threads', {
   memberId: uuid('member_id').notNull().references(() => members.id),
   title: text('title'),
   lastMessageAt: timestamp('last_message_at', { withTimezone: true }),
+  pinnedAt: timestamp('pinned_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

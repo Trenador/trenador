@@ -13,6 +13,7 @@ type ThreadItem = {
   title: string | null
   lastMessageAt: Date | null
   createdAt: Date
+  pinnedAt: Date | null
 }
 
 type Member = {

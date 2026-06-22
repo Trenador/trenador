@@ -7,6 +7,14 @@ import type { Message } from '@/db/schema'
 import { APP_CONFIG } from '@/lib/config'
 import { getAuthenticatedMember } from './_auth'
 
+export type ThreadSummary = {
+  id: string
+  title: string | null
+  lastMessageAt: Date | null
+  createdAt: Date
+  pinnedAt: Date | null
+}
+
 export async function createThread(): Promise<{ id: string }> {
   const member = await getAuthenticatedMember()
 
@@ -22,7 +30,7 @@ export async function createThread(): Promise<{ id: string }> {
   return thread
 }
 
-export async function getThreads() {
+export async function getThreads(): Promise<ThreadSummary[]> {
   const member = await getAuthenticatedMember()
 
   return db
@@ -31,6 +39,7 @@ export async function getThreads() {
       title: threads.title,
       lastMessageAt: threads.lastMessageAt,
       createdAt: threads.createdAt,
+      pinnedAt: threads.pinnedAt,
     })
     .from(threads)
     .where(
@@ -41,6 +50,14 @@ export async function getThreads() {
     )
     .orderBy(desc(threads.lastMessageAt), desc(threads.createdAt))
     .limit(50)
+}
+
+export async function togglePinThread(threadId: string, pin: boolean): Promise<void> {
+  const member = await getAuthenticatedMember()
+  await db
+    .update(threads)
+    .set({ pinnedAt: pin ? new Date() : null, updatedAt: new Date() })
+    .where(and(eq(threads.id, threadId), eq(threads.memberId, member.id)))
 }
 
 export async function deleteThread(threadId: string) {
@@ -57,21 +74,24 @@ export async function deleteThread(threadId: string) {
     )
 }
 
-export async function getMessages(threadId: string): Promise<Message[] | null> {
+export async function getMessages(
+  threadId: string,
+): Promise<{ messages: Message[]; pinnedAt: Date | null } | null> {
   const member = await getAuthenticatedMember()
 
-  // verify the thread belongs to this member
   const [thread] = await db
-    .select({ id: threads.id })
+    .select({ id: threads.id, pinnedAt: threads.pinnedAt })
     .from(threads)
     .where(and(eq(threads.id, threadId), eq(threads.memberId, member.id)))
     .limit(1)
 
   if (!thread) return null
 
-  return db
+  const messages = await db
     .select()
     .from(chatMessages)
     .where(eq(chatMessages.threadId, threadId))
     .orderBy(asc(chatMessages.createdAt))
+
+  return { messages, pinnedAt: thread.pinnedAt }
 }

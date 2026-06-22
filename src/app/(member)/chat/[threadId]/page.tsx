@@ -20,13 +20,14 @@ export default function ThreadPage(props: Props) {
 async function ThreadContent({ params, searchParams }: Props) {
   const { threadId } = await params
   const { message } = await searchParams
-  const messages = await getMessages(threadId)
-  if (messages === null) notFound()
+  const result = await getMessages(threadId)
+  if (result === null) notFound()
   return (
     <MessageThread
       threadId={threadId}
-      initialMessages={messages}
+      initialMessages={result.messages}
       initialMessage={message}
+      initialPinnedAt={result.pinnedAt}
     />
   )
 }

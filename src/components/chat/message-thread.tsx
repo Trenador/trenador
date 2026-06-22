@@ -1,14 +1,21 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Menu, Sparkles, Pencil, SquarePen, ChevronDown } from 'lucide-react'
+import { Menu, Sparkles, Pencil, SquarePen, ChevronDown, MoreVertical, Pin, PinOff } from 'lucide-react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom'
 import { cn } from '@/lib/utils'
 import { Shimmer } from '@/components/shared/shimmer'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Composer } from './composer'
+import { togglePinThread } from '@/actions/chat'
 import type { Message } from '@/db/schema'
 
 type DisplayMessage = {
@@ -23,6 +30,7 @@ type Props = {
   threadId: string
   initialMessages: Message[]
   initialMessage: string | undefined
+  initialPinnedAt?: Date | null
 }
 
 type SeedPrompt = {
@@ -118,9 +126,11 @@ function ScrollToBottomButton() {
   )
 }
 
-export function MessageThread({ threadId, initialMessages, initialMessage }: Props) {
+export function MessageThread({ threadId, initialMessages, initialMessage, initialPinnedAt }: Props) {
   const router = useRouter()
   const hasSentInitial = useRef(false)
+  const [isPinned, setIsPinned] = useState(!!initialPinnedAt)
+  const [, startPinTransition] = useTransition()
 
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [messages, setMessages] = useState<DisplayMessage[]>(
@@ -161,6 +171,15 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
     createdAt: undefined,
     ...partial,
   })
+
+  function handleTogglePin() {
+    const next = !isPinned
+    setIsPinned(next)
+    startPinTransition(async () => {
+      await togglePinThread(threadId, next)
+      router.refresh()
+    })
+  }
 
   async function sendMessage(content: string) {
     const now = new Date().toISOString()
@@ -253,13 +272,32 @@ export function MessageThread({ threadId, initialMessages, initialMessage }: Pro
           <span className="block h-1.5 w-1.5 rounded-full bg-emerald-500" />
           <span className="label-mono">AI</span>
         </div>
-        <Link
-          href="/chat"
-          aria-label="New chat"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <SquarePen className="h-4 w-4" />
-        </Link>
+        <div className="flex items-center gap-0.5">
+          <Link
+            href="/chat"
+            aria-label="New chat"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <SquarePen className="h-4 w-4" />
+          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="More options"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={handleTogglePin} className="gap-2">
+                {isPinned ? (
+                  <><PinOff className="h-4 w-4" /> Unpin chat</>
+                ) : (
+                  <><Pin className="h-4 w-4" /> Pin chat</>
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Messages */}
