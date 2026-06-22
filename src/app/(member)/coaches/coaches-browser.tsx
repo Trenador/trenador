@@ -44,7 +44,7 @@ function FilterSelect({
         <span className={active ? '' : 'text-muted-foreground'}>{active ? `${label}:` : label}</span>
         {active && <SelectValue />}
       </SelectTrigger>
-      <SelectContent position="popper" className="rounded-xl border-border/60 bg-popover/95 p-1 shadow-lg backdrop-blur-xl" sideOffset={6}>
+      <SelectContent alignItemWithTrigger={false} className="rounded-xl border-border/60 bg-popover/95 p-1 shadow-lg backdrop-blur-xl" sideOffset={6}>
         <SelectItem value={ALL} className="rounded-lg text-[13px]">All</SelectItem>
         {options.map(o => (
           <SelectItem key={o} value={o} className="rounded-lg text-[13px]">{o}</SelectItem>

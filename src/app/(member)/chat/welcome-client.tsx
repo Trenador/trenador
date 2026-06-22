@@ -36,14 +36,12 @@ function getGreeting() {
   return 'Good evening'
 }
 
-function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (p: SeedPrompt) => void; direction?: 'up' | 'down' }) {
-  const [open, setOpen] = useState(false)
-
+function ShortcutsMenu({ onPick, direction = 'up', open, onOpenChange }: { onPick: (p: SeedPrompt) => void; direction?: 'up' | 'down'; open: boolean; onOpenChange: (v: boolean) => void }) {
   useEffect(() => {
-    const close = () => setOpen(false)
+    const close = () => onOpenChange(false)
     window.addEventListener('chat:new', close)
     return () => window.removeEventListener('chat:new', close)
-  }, [])
+  }, [onOpenChange])
 
   const panel = (
     <div
@@ -62,7 +60,7 @@ function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (p: SeedPrompt) =
             <button
               key={p.label}
               type="button"
-              onClick={() => { setOpen(false); onPick(p) }}
+              onClick={() => { onOpenChange(false); onPick(p) }}
               style={{ transitionDelay: open ? `${i * 40}ms` : '0ms' }}
               className={`flex w-full items-center gap-3 rounded-lg px-2 py-3 text-left text-[15px] leading-snug text-foreground transition-all duration-300 hover:bg-foreground/[0.04] ${
                 open ? 'translate-y-0 opacity-100' : 'translate-y-1 opacity-0'
@@ -80,7 +78,7 @@ function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (p: SeedPrompt) =
   const trigger = !open && (
     <button
       type="button"
-      onClick={() => setOpen(true)}
+      onClick={() => onOpenChange(true)}
       className="flex items-center gap-1.5 px-1 py-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
     >
       <Sparkles className="h-3.5 w-3.5" />
@@ -98,6 +96,7 @@ function ShortcutsMenu({ onPick, direction = 'up' }: { onPick: (p: SeedPrompt) =
 export function ChatWelcomeClient({ displayName }: { displayName: string }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const firstName = displayName.split(' ')[0] ?? displayName
   const greeting = `${getGreeting()}, ${firstName}`
 
@@ -162,11 +161,13 @@ export function ChatWelcomeClient({ displayName }: { displayName: string }) {
         >
           <div className="mx-auto w-full max-w-2xl">
             <div className="mb-2 flex md:hidden">
-              <ShortcutsMenu onPick={handlePick} direction="up" />
+              <ShortcutsMenu onPick={handlePick} direction="up" open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
             </div>
-            <Composer onSubmit={handleSubmit} disabled={isPending} />
+            <div onFocusCapture={() => setShortcutsOpen(false)}>
+              <Composer onSubmit={handleSubmit} disabled={isPending} />
+            </div>
             <div className="mt-3 hidden md:flex md:justify-center">
-              <ShortcutsMenu onPick={handlePick} direction="down" />
+              <ShortcutsMenu onPick={handlePick} direction="down" open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
             </div>
           </div>
         </div>
