@@ -181,9 +181,9 @@ export function ChatShell({
   const transition = dragging ? 'none' : 'transform 240ms ease-out, opacity 240ms ease-out'
   const progress = Math.min(1, offset / w)
 
-  // On chat thread pages, the thread component renders its own 60px header;
-  // show the shell header everywhere else on mobile.
-  const isOnChatThread = /^\/chat\/.+/.test(pathname)
+  // Some pages render their own 60px mobile header (chat threads, messages).
+  // Skip the shell's mobile header on those routes to avoid doubling up.
+  const hasOwnMobileHeader = /^\/chat\/.+/.test(pathname) || pathname === '/messages'
 
   return (
     <div
@@ -218,8 +218,8 @@ export function ChatShell({
             : undefined
         }
       >
-        {/* Mobile header — shown on non-chat-thread pages */}
-        {!isOnChatThread && (
+        {/* Mobile header — shown on pages that don't render their own header */}
+        {!hasOwnMobileHeader && (
           <header className="flex h-[60px] shrink-0 items-center px-3 lg:hidden bg-background border-b border-border/70">
             <button
               onClick={toggleSidebar}
