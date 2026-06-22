@@ -17,6 +17,7 @@ type WorkoutData = {
   summary: string | null
   lengthLabel: string | null
   savesCount: number
+  bannerUrl: string | null
   coachNotes: string | null
   structure: WorkoutStructure
   legacyBlocks: Array<{
@@ -142,7 +143,7 @@ function WorkoutContent({ workout }: { workout: WorkoutData }) {
 }
 
 export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
-  const img = workout.category ? CATEGORY_IMAGE[workout.category] : undefined
+  const img = workout.bannerUrl ?? (workout.category ? CATEGORY_IMAGE[workout.category] : undefined)
   const banner = workout.category ? (CATEGORY_BANNER[workout.category] ?? 'bg-muted') : 'bg-muted'
 
   return (

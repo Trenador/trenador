@@ -74,7 +74,7 @@ async function syncWorkouts() {
   const { workouts: rows } = await res.json() as { workouts: Array<{
     id: string; slug: string; title: string; category: string; level: string;
     durationMinutes: number; summary: string; tags: string[]; coachName: string;
-    bannerUrl: string | null; weeks: unknown[]; coachNotes: string;
+    saves: number; lengthLabel: string; bannerUrl: string | null; weeks: unknown[]; coachNotes: string;
   }> }
 
   // Coach name → slug map (inverse lookup)
@@ -116,6 +116,9 @@ async function syncWorkouts() {
         summary: w.summary,
         muscleGroups: w.tags,
         coachNotes: w.coachNotes,
+        bannerUrl: w.bannerUrl ?? null,
+        savesCount: w.saves ?? 0,
+        lengthLabel: w.lengthLabel ?? null,
         coachId: coachId ?? undefined,
         structure,
         publishedAt: new Date(),
@@ -131,6 +134,9 @@ async function syncWorkouts() {
         summary: w.summary,
         muscleGroups: w.tags,
         coachNotes: w.coachNotes,
+        bannerUrl: w.bannerUrl ?? null,
+        savesCount: w.saves ?? 0,
+        lengthLabel: w.lengthLabel ?? null,
         coachId: coachId ?? undefined,
         structure,
         publishedAt: new Date(),

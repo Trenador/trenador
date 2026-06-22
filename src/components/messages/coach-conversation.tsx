@@ -1,21 +1,48 @@
 'use client'
 
 import { useState, useEffect, useRef, useTransition } from 'react'
-import { cn } from '@/lib/utils'
+import { cn, getInitials } from '@/lib/utils'
 import { messageTimestamp } from '@/lib/format-date'
 import { Composer } from '@/components/chat/composer'
 import { sendCoachMessage, markCoachMessagesRead } from '@/actions/messages'
 import type { CoachMessage } from '@/db/schema'
 
+type CoachInfo = {
+  displayName: string
+  photoUrl: string | null
+}
+
 type Props = {
   initialMessages: CoachMessage[]
+  coach: CoachInfo | null
 }
 
 
-export function CoachConversation({ initialMessages }: Props) {
+function CoachAvatar({ coach, size = 8 }: { coach: CoachInfo | null; size?: number }) {
+  const px = size * 4
+  if (coach?.photoUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={coach.photoUrl}
+        alt={coach.displayName}
+        className="h-full w-full object-cover"
+      />
+    )
+  }
+  return (
+    <span className="font-mono text-[9px] font-semibold tracking-wider text-background">
+      {getInitials(coach?.displayName ?? 'C')}
+    </span>
+  )
+}
+
+export function CoachConversation({ initialMessages, coach }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const [messages, setMessages] = useState(initialMessages)
   const [isPending, startTransition] = useTransition()
+
+  const firstName = coach?.displayName.split(' ')[0] ?? 'your advisor'
 
   useEffect(() => {
     const hasUnread = initialMessages.some(m => m.senderRole === 'coach' && !m.readAt)
@@ -45,54 +72,46 @@ export function CoachConversation({ initialMessages }: Props) {
       {/* message list */}
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl px-4 py-6 space-y-6 md:px-6">
-          {/* Pinned opener — always visible */}
+          {/* Pinned opener — always shown regardless of message history */}
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-foreground/10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/coach-sam.jpg" alt="Sam" className="h-full w-full object-cover" />
+            <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-foreground/10 flex items-center justify-center">
+              <CoachAvatar coach={coach} />
             </div>
             <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-[12px] font-medium text-foreground/60">Sam · Coach</span>
               <p className="text-[15px] leading-relaxed text-foreground">
-                Hi — Sam here, your advisor. How can I help you today?
+                Hi — {firstName} here, your advisor. How can I help you today?
               </p>
             </div>
           </div>
 
           {messages.map(msg => {
-              const isCoach = msg.senderRole === 'coach'
-              const ts = messageTimestamp(msg.createdAt)
+            const isCoach = msg.senderRole === 'coach'
+            const ts = messageTimestamp(msg.createdAt)
 
-              if (isCoach) {
-                return (
-                  <div key={msg.id} className="flex items-start gap-3">
-                    {/* Coach avatar */}
-                    <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-foreground/10">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/assets/coach-sam.jpg"
-                        alt="Sam"
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <p className="text-[15px] leading-relaxed text-foreground">
-                        {msg.content}
-                      </p>
-                      <span className="label-mono normal-case tracking-[0.1em]">{ts}</span>
-                    </div>
-                  </div>
-                )
-              }
-
+            if (isCoach) {
               return (
-                <div key={msg.id} className={cn('flex w-full max-w-[95%] flex-col gap-1 ml-auto items-end')}>
-                  <div className="rounded-2xl bg-foreground px-4 py-2.5 text-sm leading-relaxed text-background">
-                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                <div key={msg.id} className="flex items-start gap-3">
+                  <div className="mt-0.5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-foreground/10 flex items-center justify-center">
+                    <CoachAvatar coach={coach} />
                   </div>
-                  <span className="label-mono normal-case tracking-[0.1em]">{ts}</span>
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <p className="text-[15px] leading-relaxed text-foreground">
+                      {msg.content}
+                    </p>
+                    <span className="label-mono normal-case tracking-[0.1em]">{ts}</span>
+                  </div>
                 </div>
               )
+            }
+
+            return (
+              <div key={msg.id} className={cn('flex w-full max-w-[95%] flex-col gap-1 ml-auto items-end')}>
+                <div className="rounded-2xl bg-foreground px-4 py-2.5 text-sm leading-relaxed text-background">
+                  <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                </div>
+                <span className="label-mono normal-case tracking-[0.1em]">{ts}</span>
+              </div>
+            )
           })}
           <div ref={bottomRef} />
         </div>

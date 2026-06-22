@@ -23,6 +23,7 @@ type Workout = {
   summary: string | null
   lengthLabel: string | null
   savesCount: number
+  bannerUrl: string | null
   coachName: string | null
   coachPhotoUrl: string | null
 }
@@ -61,7 +62,7 @@ function WorkoutCard({ workout }: { workout: Workout }) {
   const router = useRouter()
   const [remixed, setRemixed] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const img = workout.category ? CATEGORY_IMAGE[workout.category] : undefined
+  const img = workout.bannerUrl ?? (workout.category ? CATEGORY_IMAGE[workout.category] : undefined)
   const banner = workout.category ? (CATEGORY_BANNER[workout.category] ?? 'bg-muted') : 'bg-muted'
 
   function handleRemix(e: React.MouseEvent) {
@@ -110,7 +111,7 @@ function WorkoutCard({ workout }: { workout: Workout }) {
         <div className="label-mono flex flex-nowrap items-center gap-3 whitespace-nowrap normal-case tracking-[0.12em] text-muted-foreground">
           {workout.durationMinutes && (
             <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" /> {workout.durationMinutes} min
+              <Clock className="h-3 w-3" /> {formatDuration(workout.durationMinutes)}
             </span>
           )}
           {workout.level && (
@@ -122,7 +123,7 @@ function WorkoutCard({ workout }: { workout: Workout }) {
 
         {workout.muscleGroups.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1.5">
-            {workout.muscleGroups.slice(0, 4).map(tag => (
+            {workout.muscleGroups.map(tag => (
               <span
                 key={tag}
                 className="rounded-full border border-border/70 bg-background px-2.5 py-0.5 text-[11px] text-muted-foreground"
@@ -151,11 +152,9 @@ function WorkoutCard({ workout }: { workout: Workout }) {
               )}
               <span className="text-[12px] text-muted-foreground">{workout.coachName}</span>
             </div>
-            {workout.savesCount > 0 && (
-              <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
-                <Bookmark className="h-3 w-3" /> {workout.savesCount.toLocaleString()} {workout.savesCount === 1 ? 'remix' : 'remixes'}
-              </span>
-            )}
+            <span className="flex items-center gap-1 text-[12px] text-muted-foreground">
+              <Bookmark className="h-3 w-3" /> {workout.savesCount.toLocaleString()} {workout.savesCount === 1 ? 'remix' : 'remixes'}
+            </span>
           </div>
         )}
 
