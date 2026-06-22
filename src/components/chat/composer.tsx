@@ -43,6 +43,13 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
     setMultiline(next > 32)
   }
 
+  function handleFocus() {
+    // After the virtual keyboard finishes opening, scroll the composer into view
+    setTimeout(() => {
+      textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, 150)
+  }
+
   return (
     <div
       className={cn(
@@ -66,6 +73,7 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
           placeholder={placeholder}
           disabled={disabled}
           rows={1}
@@ -79,6 +87,7 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
           placeholder={placeholder}
           disabled={disabled}
           rows={1}
