@@ -232,27 +232,44 @@ function EditBlockSheet({
 
 // --- AddBlockSheet ---
 function AddBlockSheet({
-  open, onOpenChange, onAdd,
+  open, onOpenChange, weeks, defaultWi, defaultDi, onAdd,
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
-  onAdd: (block: WorkoutBlock) => void
+  weeks: WorkoutWeek[]
+  defaultWi: number
+  defaultDi: number
+  onAdd: (block: WorkoutBlock, wi: number, di: number) => void
 }) {
+  const [weekIdx, setWeekIdx] = useState(defaultWi)
+  const [dayIdx, setDayIdx] = useState(defaultDi)
   const [name, setName] = useState('')
   const [detail, setDetail] = useState('')
   const [rows, setRows] = useState<SetRow[]>([])
 
   useEffect(() => {
-    if (open) { setName(''); setDetail(''); setRows([]) }
-  }, [open])
+    if (open) {
+      setWeekIdx(defaultWi)
+      setDayIdx(defaultDi)
+      setName('')
+      setDetail('')
+      setRows([])
+    }
+  }, [open, defaultWi, defaultDi])
+
+  const days = weeks[weekIdx]?.days ?? []
 
   function handleSave() {
     if (!name.trim()) return
-    onAdd({
-      name: name.trim().slice(0, 120),
-      detail: detail.trim().slice(0, 600),
-      ...(rows.length ? { setRows: rows } : {}),
-    })
+    onAdd(
+      {
+        name: name.trim().slice(0, 120),
+        detail: detail.trim().slice(0, 600),
+        ...(rows.length ? { setRows: rows } : {}),
+      },
+      weekIdx,
+      dayIdx,
+    )
     onOpenChange(false)
   }
 
@@ -262,7 +279,40 @@ function AddBlockSheet({
         <SheetHeader className="border-b border-border/60 px-5 py-4 text-left">
           <SheetTitle>Create block</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Week</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={weeks.length}
+                value={weekIdx + 1}
+                onChange={e => {
+                  const n = Math.min(Math.max(1, Math.floor(Number(e.target.value))), weeks.length)
+                  setWeekIdx(n - 1)
+                  setDayIdx(0)
+                }}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Day</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={Math.max(days.length, 1)}
+                value={dayIdx + 1}
+                onChange={e => {
+                  const n = Math.min(Math.max(1, Math.floor(Number(e.target.value))), Math.max(days.length, 1))
+                  setDayIdx(n - 1)
+                }}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+          </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Name</label>
             <input
@@ -280,36 +330,48 @@ function AddBlockSheet({
               value={detail}
               onChange={e => setDetail(e.target.value)}
               maxLength={600}
-              rows={3}
+              rows={4}
               placeholder="Sets, reps, tempo, cues…"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Sets</label>
-            {rows.map((row, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="label-mono w-10 shrink-0 text-[11px] normal-case tracking-[1px] text-muted-foreground">SET {i + 1}</span>
-                <input
-                  placeholder="reps"
-                  value={row.reps}
-                  onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, reps: e.target.value } : x))}
-                  className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-sm outline-none"
-                />
-                <input
-                  placeholder="weight"
-                  value={row.weight}
-                  onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, weight: e.target.value } : x))}
-                  className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-sm outline-none"
-                />
+            {rows.length > 0 && (
+              <div className="space-y-2">
+                {rows.map((row, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="label-mono w-10 shrink-0 text-[11px] normal-case tracking-[1px] text-muted-foreground">SET {i + 1}</span>
+                    <input
+                      placeholder="reps"
+                      value={row.reps}
+                      onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, reps: e.target.value } : x))}
+                      className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-sm outline-none"
+                    />
+                    <input
+                      placeholder="weight"
+                      value={row.weight}
+                      onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, weight: e.target.value } : x))}
+                      className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-sm outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setRows(r => r.filter((_, j) => j !== i))}
+                      aria-label={`Remove set ${i + 1}`}
+                      className="inline-flex shrink-0 items-center justify-center rounded-full p-1.5 text-muted-foreground transition hover:bg-red-500/10 hover:text-red-500"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
             <button
               type="button"
               onClick={() => setRows(r => [...r, { reps: '', weight: '' }])}
-              className="text-[13px] text-muted-foreground hover:text-foreground"
+              className="inline-flex w-full items-center justify-center gap-1 rounded-full border border-border/70 px-2.5 py-2 text-[12px] text-muted-foreground transition hover:bg-foreground/[0.06] hover:text-foreground"
             >
-              + Add set
+              <Plus className="h-3.5 w-3.5" /> Add set
             </button>
           </div>
         </div>
@@ -854,8 +916,11 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
       <AddBlockSheet
         open={addBlockTarget !== null}
         onOpenChange={v => { if (!v) setAddBlockTarget(null) }}
-        onAdd={block => {
-          if (addBlockTarget) addBlock(addBlockTarget.wi, addBlockTarget.di, block)
+        weeks={weeks}
+        defaultWi={addBlockTarget?.wi ?? 0}
+        defaultDi={addBlockTarget?.di ?? 0}
+        onAdd={(block, wi, di) => {
+          addBlock(wi, di, block)
           setAddBlockTarget(null)
         }}
       />
