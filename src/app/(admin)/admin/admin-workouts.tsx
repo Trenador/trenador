@@ -114,7 +114,7 @@ export function AdminWorkouts({ coaches }: { coaches: Coach[] }) {
 
   const filterSections: FilterSection[] = [
     { label: 'Status', value: statusFilter, defaultValue: 'all', setValue: (v) => setStatusFilter(v as 'all' | 'draft' | 'published'), options: [{ value: 'all', label: 'All' }, { value: 'draft', label: 'Draft' }, { value: 'published', label: 'Published' }] },
-    { label: 'Category', value: categoryFilter, defaultValue: 'all', setValue: setCategoryFilter, options: [{ value: 'all', label: 'All categories' }, ...CATEGORIES.map((c) => ({ value: c, label: c }))] },
+    { label: 'Function', value: categoryFilter, defaultValue: 'all', setValue: setCategoryFilter, options: [{ value: 'all', label: 'All functions' }, ...CATEGORIES.map((c) => ({ value: c, label: c }))] },
     { label: 'Coach', value: coachFilter, defaultValue: 'all', setValue: setCoachFilter, options: [{ value: 'all', label: 'All coaches' }, ...coaches.map((c) => ({ value: c.id, label: c.displayName }))] },
   ]
 
@@ -124,7 +124,7 @@ export function AdminWorkouts({ coaches }: { coaches: Coach[] }) {
         <div>
           <div className="text-sm font-medium">Workouts</div>
           <div className="text-[11px] text-muted-foreground">
-            {rows.filter((w) => !w.publishedAt).length} drafts · {rows.filter((w) => !!w.publishedAt).length} published
+            {rows.filter((w) => !w.publishedAt).length} pending · {rows.filter((w) => !!w.publishedAt).length} visible to users
           </div>
         </div>
       </div>
@@ -143,7 +143,7 @@ export function AdminWorkouts({ coaches }: { coaches: Coach[] }) {
             <option value="published">Published</option>
           </select>
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="h-8 rounded-md border border-border bg-background px-2 text-[12px] outline-none">
-            <option value="all">All categories</option>
+            <option value="all">All functions</option>
             {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
           <select value={coachFilter} onChange={(e) => setCoachFilter(e.target.value)} className="h-8 rounded-md border border-border bg-background px-2 text-[12px] outline-none">
@@ -202,10 +202,10 @@ export function AdminWorkouts({ coaches }: { coaches: Coach[] }) {
                 <tr className="border-b border-border/60">
                   <th className="px-5 py-2.5 text-left">Title</th>
                   <th className="px-5 py-2.5 text-left">Status</th>
-                  <th className="px-5 py-2.5 text-left">Category</th>
+                  <th className="px-5 py-2.5 text-left">Function</th>
                   <th className="px-5 py-2.5 text-left">Level</th>
                   <th className="px-5 py-2.5 text-left">Duration</th>
-                  <th className="px-5 py-2.5 text-left">Coach</th>
+                  <th className="px-5 py-2.5 text-left">Author</th>
                   <th className="px-5 py-2.5 text-right">Actions</th>
                 </tr>
               </thead>

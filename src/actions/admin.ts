@@ -7,6 +7,7 @@ import { eq, desc, and, isNull, inArray, asc, count, isNotNull } from 'drizzle-o
 import { revalidatePath } from 'next/cache'
 import { getAuthenticatedMember } from './_auth'
 import { APP_CONFIG } from '@/lib/config'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 async function requireAdmin() {
   const member = await getAuthenticatedMember()
@@ -37,6 +38,7 @@ export async function adminGetMembers() {
   const rows = await db
     .select({
       id: members.id,
+      authUserId: members.authUserId,
       displayName: members.displayName,
       photoUrl: members.photoUrl,
       yearOfBirth: members.yearOfBirth,
@@ -52,7 +54,42 @@ export async function adminGetMembers() {
     .where(eq(members.tenantId, APP_CONFIG.tenantId))
     .orderBy(desc(members.createdAt))
     .limit(500)
-  return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString(), memberVerifiedAt: r.memberVerifiedAt?.toISOString() ?? null, suspendedAt: r.suspendedAt?.toISOString() ?? null }))
+
+  const adminClient = createAdminClient()
+  const { data: { users: authUsers } } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+  const emailMap = new Map(authUsers.map((u) => [u.id, u.email ?? '']))
+
+  return rows.map((r) => ({
+    ...r,
+    email: emailMap.get(r.authUserId) ?? '',
+    createdAt: r.createdAt.toISOString(),
+    memberVerifiedAt: r.memberVerifiedAt?.toISOString() ?? null,
+    suspendedAt: r.suspendedAt?.toISOString() ?? null,
+  }))
+}
+
+export async function adminResendInvite(email: string) {
+  await requireAdmin()
+  const adminClient = createAdminClient()
+  await adminClient.auth.admin.inviteUserByEmail(email)
+}
+
+export async function adminInviteUser(data: { email: string; displayName: string; coachId?: string }) {
+  await requireAdmin()
+  const adminClient = createAdminClient()
+  const { data: authData, error } = await adminClient.auth.admin.inviteUserByEmail(data.email, {
+    data: { display_name: data.displayName },
+  })
+  if (error) throw error
+  const authUserId = authData.user.id
+
+  await db.insert(members).values({
+    tenantId: APP_CONFIG.tenantId,
+    authUserId,
+    displayName: data.displayName,
+    subscriptionStatus: 'inactive',
+    assignedCoachId: data.coachId ?? null,
+  })
 }
 
 export async function adminAssignCoach(memberId: string, coachId: string | null) {
@@ -152,6 +189,40 @@ export async function adminEditMessage(messageId: string, content: string) {
 
 // ─── Coaches ─────────────────────────────────────────────────────────────────
 
+export async function adminUploadCoachPhoto(formData: FormData): Promise<string> {
+  await requireAdmin()
+  const file = formData.get('file') as File
+  if (!file || !file.size) throw new Error('No file provided')
+  const bytes = await file.arrayBuffer()
+  const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+  const fileName = `coach-${Date.now()}.${ext}`
+  const adminClient = createAdminClient()
+  const { error } = await adminClient.storage.from('coach-photos').upload(fileName, Buffer.from(bytes), { contentType: file.type, upsert: true })
+  if (error) throw error
+  const { data } = adminClient.storage.from('coach-photos').getPublicUrl(fileName)
+  return data.publicUrl
+}
+
+export async function adminLinkCoachSignIn(coachId: string, email: string) {
+  await requireAdmin()
+  if (!email.trim()) {
+    await db.update(coaches).set({ authUserId: null, updatedAt: new Date() }).where(eq(coaches.id, coachId))
+    return
+  }
+  const adminClient = createAdminClient()
+  const { data: { users } } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+  const existing = users.find((u) => u.email === email.trim())
+  let authUserId: string
+  if (existing) {
+    authUserId = existing.id
+  } else {
+    const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email.trim())
+    if (error) throw error
+    authUserId = data.user.id
+  }
+  await db.update(coaches).set({ authUserId, updatedAt: new Date() }).where(eq(coaches.id, coachId))
+}
+
 export async function adminGetCoaches() {
   await requireAdmin()
   const rows = await db
@@ -169,9 +240,14 @@ export async function adminGetCoaches() {
 
   const countMap = new Map(memberCounts.map((r) => [r.coachId, r.total]))
 
+  const adminClient = createAdminClient()
+  const { data: { users: authUsers } } = await adminClient.auth.admin.listUsers({ perPage: 1000 })
+  const emailByAuthId = new Map(authUsers.map((u) => [u.id, u.email ?? '']))
+
   return rows.map((r) => ({
     ...r,
     memberCount: countMap.get(r.id) ?? 0,
+    signInEmail: r.authUserId ? (emailByAuthId.get(r.authUserId) ?? '') : '',
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   }))
@@ -191,10 +267,13 @@ export async function adminCreateCoach(data: {
   photoUrl?: string
   active: boolean
   isAuthor?: boolean
+  signInEmail?: string
 }) {
   await requireAdmin()
-  const rows = await db.insert(coaches).values({ tenantId: APP_CONFIG.tenantId, ...data }).returning()
+  const { signInEmail, ...rest } = data
+  const rows = await db.insert(coaches).values({ tenantId: APP_CONFIG.tenantId, ...rest }).returning()
   const row = rows[0]!
+  if (signInEmail) await adminLinkCoachSignIn(row.id, signInEmail)
   return { ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() }
 }
 
@@ -212,9 +291,12 @@ export async function adminUpdateCoach(coachId: string, data: {
   photoUrl?: string
   active?: boolean
   isAuthor?: boolean
+  signInEmail?: string
 }) {
   await requireAdmin()
-  await db.update(coaches).set({ ...data, updatedAt: new Date() }).where(eq(coaches.id, coachId))
+  const { signInEmail, ...rest } = data
+  await db.update(coaches).set({ ...rest, updatedAt: new Date() }).where(eq(coaches.id, coachId))
+  if (signInEmail !== undefined) await adminLinkCoachSignIn(coachId, signInEmail)
 }
 
 export async function adminDeleteCoach(coachId: string) {
