@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { CheckCircle2, Clock, ImageIcon, Pencil, Plus, Trash2, Upload } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { CheckCircle2, Clock, ImageIcon, Pencil, Plus, Sparkles, Trash2, Upload } from 'lucide-react'
 import { MobileFilterButton, MobileFilterSheet, type FilterSection } from './admin-filter-sheet'
 import {
   adminGetWorkouts,
@@ -384,10 +385,10 @@ export function AdminWorkouts({ coaches }: { coaches: Coach[] }) {
 
       {/* ── Full-page editor ────────────────────────────────────────────────── */}
       <Sheet open={creating} onOpenChange={(o) => !o && setCreating(false)}>
-        <SheetContent side="right" className="flex w-screen flex-col gap-0 overflow-hidden p-0 sm:max-w-none">
+        <SheetContent side="right" showCloseButton={false} className="flex !w-screen flex-col !gap-0 overflow-hidden !p-0 sm:!max-w-none">
 
           {/* Banner hero */}
-          <div className="relative h-52 shrink-0 overflow-hidden border-b border-border/60 bg-muted">
+          <div className="relative h-56 shrink-0 overflow-hidden border-b border-border/60 bg-muted">
             {draft.bannerUrl ? (
               <>
                 <img src={draft.bannerUrl} alt="" className="h-full w-full object-cover" />
@@ -411,19 +412,17 @@ export function AdminWorkouts({ coaches }: { coaches: Coach[] }) {
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) handleBannerFile(f) }} />
-                <button
-                  type="button"
-                  onClick={() => bannerInputRef.current?.click()}
-                  disabled={uploadingBanner}
-                  className="flex items-center gap-1.5 rounded-md bg-black/40 px-3 py-1.5 text-[12px] font-medium text-white backdrop-blur hover:bg-black/60 disabled:opacity-50"
-                >
-                  <Upload className="h-3.5 w-3.5" />
+                <Button size="sm" variant="secondary" type="button" onClick={() => bannerInputRef.current?.click()} disabled={uploadingBanner}>
+                  <Upload className="mr-1 h-3.5 w-3.5" />
                   {uploadingBanner ? 'Uploading…' : draft.bannerUrl ? 'Replace banner' : 'Upload banner'}
-                </button>
+                </Button>
+                <Button size="sm" variant="secondary" type="button" disabled>
+                  <Sparkles className="mr-1 h-3.5 w-3.5" /> Generate with AI
+                </Button>
                 {draft.bannerUrl && (
-                  <button type="button" onClick={() => setDraft((d) => ({ ...d, bannerUrl: '' }))} className="flex items-center gap-1 rounded-md bg-black/40 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur hover:bg-black/60">
-                    <Trash2 className="h-3.5 w-3.5" /> Remove
-                  </button>
+                  <Button size="sm" variant="ghost" type="button" onClick={() => setDraft((d) => ({ ...d, bannerUrl: '' }))}>
+                    <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
+                  </Button>
                 )}
               </div>
             </div>
