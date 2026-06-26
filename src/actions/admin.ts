@@ -304,6 +304,20 @@ export async function adminDeleteCoach(coachId: string) {
   await db.delete(coaches).where(eq(coaches.id, coachId))
 }
 
+export async function adminUploadWorkoutBanner(formData: FormData): Promise<string> {
+  await requireAdmin()
+  const file = formData.get('file') as File
+  if (!file || !file.size) throw new Error('No file provided')
+  const bytes = await file.arrayBuffer()
+  const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+  const fileName = `banner-${Date.now()}.${ext}`
+  const adminClient = createAdminClient()
+  const { error } = await adminClient.storage.from('workout-banners').upload(fileName, Buffer.from(bytes), { contentType: file.type, upsert: true })
+  if (error) throw error
+  const { data } = adminClient.storage.from('workout-banners').getPublicUrl(fileName)
+  return data.publicUrl
+}
+
 // ─── Workouts ────────────────────────────────────────────────────────────────
 
 export async function adminGetWorkouts() {
@@ -311,7 +325,7 @@ export async function adminGetWorkouts() {
   const rows = await db
     .select()
     .from(workouts)
-    .where(eq(workouts.tenantId, APP_CONFIG.tenantId))
+    .where(and(eq(workouts.tenantId, APP_CONFIG.tenantId), isNull(workouts.deletedAt)))
     .orderBy(desc(workouts.createdAt))
     .limit(500)
   return rows.map((r) => ({
