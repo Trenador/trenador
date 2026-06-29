@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowDown, ArrowLeft, ArrowUp, Check, ChevronDown, Clock, Copy, Gauge, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   updateMyWorkoutStructureAction,
@@ -487,16 +488,19 @@ function BlockItem({
         </span>
         <div className="min-w-0 flex-1">
           <p className={cn('text-[14px] font-medium leading-snug', completed && 'line-through')}>{block.name}</p>
-          {block.detail && <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{block.detail}</p>}
           {block.setRows && block.setRows.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-1.5 space-y-0.5">
               {block.setRows.map((row, i) => (
-                <span key={i} className="label-mono rounded-full border border-border/60 px-2 py-0.5 text-[11px] normal-case tracking-[0.08em] text-muted-foreground">
-                  {[row.reps && `${row.reps} reps`, row.weight && `@ ${row.weight}`].filter(Boolean).join(' ')}
-                </span>
+                <div key={i} className="flex items-baseline gap-2">
+                  <span className="label-mono w-10 shrink-0 text-[11px] normal-case tracking-[1px] text-muted-foreground">SET {i + 1}</span>
+                  <span className="text-[13px] text-muted-foreground">
+                    {[row.reps && `${row.reps} reps`, row.weight].filter(Boolean).join(' · ')}
+                  </span>
+                </div>
               ))}
             </div>
           )}
+          {block.detail && <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{block.detail}</p>}
         </div>
       </div>
       <div className="flex items-center justify-end gap-1.5 px-3 pb-2">
@@ -544,6 +548,7 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
   const [editWorkoutOpen, setEditWorkoutOpen] = useState(false)
   const [addBlockTarget, setAddBlockTarget] = useState<{ wi: number; di: number } | null>(null)
   const [editBlockTarget, setEditBlockTarget] = useState<{ wi: number; di: number; bi: number } | null>(null)
+  const [deleteDayConfirm, setDeleteDayConfirm] = useState<{ wi: number; di: number } | null>(null)
   const [, startTransition] = useTransition()
 
   const { isCompleted, toggle } = useBlockCompletion(workout.id)
@@ -572,6 +577,7 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
     const next = clone(structure)
     next.weeks[wi]!.days[di]!.blocks.splice(bi, 1)
     saveStructure(next)
+    toast.success('Block deleted')
   }
 
   function moveBlock(wi: number, di: number, bi: number, direction: 'up' | 'down') {
@@ -602,6 +608,7 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
     const next = clone(structure)
     next.weeks[wi]!.days[di]!.blocks.push(block)
     saveStructure(next)
+    toast.success('Block added')
   }
 
   function duplicateDay(wi: number, di: number) {
@@ -844,15 +851,14 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
                                   >
                                     <Copy className="h-4 w-4" />
                                   </button>
-                                  {week.days.length > 1 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => deleteDay(wi, di)}
-                                      className="inline-flex flex-1 items-center justify-center border-r border-border/60 px-4 py-3 text-foreground transition hover:bg-foreground/[0.06]"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </button>
-                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeleteDayConfirm({ wi, di })}
+                                    disabled={week.days.length <= 1}
+                                    className="inline-flex flex-1 items-center justify-center border-r border-border/60 px-4 py-3 text-foreground transition hover:bg-foreground/[0.06] disabled:cursor-not-allowed disabled:opacity-30"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
                                   <button
                                     type="button"
                                     disabled={allBlocksDone}
@@ -911,6 +917,37 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
           })}
         </div>
       </div>
+
+      {/* Delete day confirmation */}
+      {deleteDayConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-semibold text-foreground">Delete this day?</h2>
+            <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
+              Are you sure you want to delete this day&apos;s workouts? This can&apos;t be undone.
+            </p>
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteDayConfirm(null)}
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-medium text-foreground transition hover:border-transparent hover:bg-accent hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteDay(deleteDayConfirm.wi, deleteDayConfirm.di)
+                  setDeleteDayConfirm(null)
+                }}
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-foreground px-4 text-sm font-medium text-background transition hover:opacity-90"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sheets */}
       <AddBlockSheet
