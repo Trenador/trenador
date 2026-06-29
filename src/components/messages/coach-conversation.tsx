@@ -53,7 +53,7 @@ export function CoachConversation({ initialMessages, coach }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  function handleSubmit(content: string) {
+  function handleSubmit(content: string, _attachments?: unknown) {
     const optimistic: CoachMessage = {
       id: crypto.randomUUID(),
       tenantId: '',

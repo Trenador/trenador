@@ -16,7 +16,12 @@ const redis = new Redis({
 
 const BodySchema = z.object({
   threadId: z.string().uuid(),
-  content: z.string().min(1).max(4000),
+  content: z.string().max(4000).default(''),
+  attachments: z.array(z.object({
+    url: z.string().url(),
+    mediaType: z.string(),
+    name: z.string(),
+  })).optional(),
 })
 
 const DAILY_MESSAGE_LIMIT = 30
@@ -31,7 +36,10 @@ export async function POST(request: Request) {
   } catch {
     return Response.json({ error: 'Invalid request body' }, { status: 400 })
   }
-  const { threadId, content } = body
+  const { threadId, content, attachments } = body
+  if (!content.trim() && (!attachments || attachments.length === 0)) {
+    return Response.json({ error: 'Message must have content or attachments' }, { status: 400 })
+  }
 
   // 2. auth
   const supabase = await createClient()
@@ -103,7 +111,7 @@ export async function POST(request: Request) {
 
   // 9. build prompt
   const systemBlocks = buildSystemBlocks(latestIntake?.data ?? null)
-  const anthropicMessages = buildMessages(history, content)
+  const anthropicMessages = buildMessages(history, content, attachments)
 
   // 10. stream
   const encoder = new TextEncoder()

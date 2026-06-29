@@ -39,7 +39,7 @@ export function AdminConversationView({ memberId, initialMessages }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  function handleReply(content: string) {
+  function handleReply(content: string, _attachments?: unknown) {
     const optimistic: CoachMessage = {
       id: crypto.randomUUID(),
       tenantId: '',

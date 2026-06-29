@@ -4,7 +4,7 @@ import { useTransition, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sparkles, Pencil } from 'lucide-react'
 import { createThread } from '@/actions/chat'
-import { Composer } from '@/components/chat/composer'
+import { Composer, type ComposerAttachment } from '@/components/chat/composer'
 
 type SeedPrompt = {
   label: string
@@ -114,10 +114,14 @@ export function ChatWelcomeClient({ displayName }: { displayName: string }) {
   const firstName = displayName.split(' ')[0] ?? displayName
   const greeting = `${getGreeting()}, ${firstName}`
 
-  function handleSubmit(content: string) {
+  function handleSubmit(content: string, attachments: ComposerAttachment[]) {
     startTransition(async () => {
       const { id } = await createThread()
-      router.push(`/chat/${id}?message=${encodeURIComponent(content)}`)
+      const params = new URLSearchParams({ message: content })
+      if (attachments.length > 0) {
+        params.set('attachments', JSON.stringify(attachments))
+      }
+      router.push(`/chat/${id}?${params.toString()}`)
     })
   }
 
@@ -125,7 +129,7 @@ export function ChatWelcomeClient({ displayName }: { displayName: string }) {
     if (p.navigateTo) { router.push(p.navigateTo); return }
     if (p.action === 'message-center') { router.push('/messages'); return }
     const text = p.userText ?? p.assistantOpener ?? p.label
-    handleSubmit(text)
+    handleSubmit(text, [])
   }
 
   return (

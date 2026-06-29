@@ -1,5 +1,5 @@
 import 'server-only'
-import type { MessageParam, TextBlockParam } from '@anthropic-ai/sdk/resources/messages'
+import type { MessageParam, TextBlockParam, ImageBlockParam } from '@anthropic-ai/sdk/resources/messages'
 import type { Message } from '@/db/schema'
 import { TRENADOR_AI_SYSTEM_PROMPT } from './personas'
 
@@ -61,11 +61,14 @@ export function buildSystemBlocks(intake: unknown | null): TextBlockParam[] {
   return [staticBlock, memberBlock]
 }
 
+type Attachment = { url: string; mediaType: string }
+
 // converts DB message rows into the alternating user/assistant array Claude expects
 // history should NOT include the current in-flight user message
 export function buildMessages(
   history: Message[],
   currentContent: string,
+  attachments?: Attachment[],
 ): MessageParam[] {
   const past: MessageParam[] = history
     .filter((m) => m.role === 'user' || m.role === 'assistant')
@@ -74,5 +77,16 @@ export function buildMessages(
       content: m.content,
     }))
 
-  return [...past, { role: 'user', content: currentContent }]
+  const imageBlocks: ImageBlockParam[] = (attachments ?? [])
+    .filter((a) => a.mediaType.startsWith('image/'))
+    .map((a) => ({
+      type: 'image' as const,
+      source: { type: 'url' as const, url: a.url },
+    }))
+
+  const currentMessage: MessageParam = imageBlocks.length > 0
+    ? { role: 'user', content: [...imageBlocks, { type: 'text' as const, text: currentContent || 'What do you see in this image?' }] }
+    : { role: 'user', content: currentContent }
+
+  return [...past, currentMessage]
 }

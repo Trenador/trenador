@@ -17,11 +17,13 @@ import {
 import { Composer } from './composer'
 import { togglePinThread } from '@/actions/chat'
 import type { Message } from '@/db/schema'
+import type { ComposerAttachment } from './composer'
 
 type DisplayMessage = {
   id: string | undefined
   role: 'user' | 'assistant'
   content: string
+  attachments?: ComposerAttachment[]
   isStreaming: boolean | undefined
   createdAt: string | undefined
 }
@@ -30,6 +32,7 @@ type Props = {
   threadId: string
   initialMessages: Message[]
   initialMessage: string | undefined
+  initialAttachments?: ComposerAttachment[]
   initialPinnedAt?: Date | null
 }
 
@@ -126,7 +129,7 @@ function ScrollToBottomButton() {
   )
 }
 
-export function MessageThread({ threadId, initialMessages, initialMessage, initialPinnedAt }: Props) {
+export function MessageThread({ threadId, initialMessages, initialMessage, initialAttachments, initialPinnedAt }: Props) {
   const router = useRouter()
   const hasSentInitial = useRef(false)
   const [isPinned, setIsPinned] = useState(!!initialPinnedAt)
@@ -160,7 +163,7 @@ export function MessageThread({ threadId, initialMessages, initialMessage, initi
     if (initialMessage && !hasSentInitial.current) {
       hasSentInitial.current = true
       router.replace(`/chat/${threadId}`, { scroll: false })
-      sendMessage(initialMessage)
+      sendMessage(initialMessage, initialAttachments)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -181,9 +184,9 @@ export function MessageThread({ threadId, initialMessages, initialMessage, initi
     })
   }
 
-  async function sendMessage(content: string) {
+  async function sendMessage(content: string, attachments?: ComposerAttachment[]) {
     const now = new Date().toISOString()
-    setMessages((prev) => [...prev, msg({ role: 'user', content, createdAt: now })])
+    setMessages((prev) => [...prev, msg({ role: 'user', content, ...(attachments?.length ? { attachments } : {}), createdAt: now })])
     setMessages((prev) => [...prev, msg({ role: 'assistant', content: '', isStreaming: true })])
     setIsStreaming(true)
 
@@ -191,7 +194,7 @@ export function MessageThread({ threadId, initialMessages, initialMessage, initi
       const response = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ threadId, content }),
+        body: JSON.stringify({ threadId, content, ...(attachments?.length ? { attachments } : {}) }),
       })
 
       if (!response.ok || !response.body) {
@@ -356,12 +359,21 @@ function MessageBubble({ message }: { message: DisplayMessage }) {
 
   return (
     <div className={cn('group flex w-full max-w-[95%] flex-col gap-2', isUser ? 'ml-auto items-end' : 'items-start')}>
+      {isUser && message.attachments && message.attachments.length > 0 && (
+        <div className="flex flex-wrap justify-end gap-2">
+          {message.attachments.filter(a => a.mediaType.startsWith('image/')).map((a) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={a.url} src={a.url} alt={a.name} className="max-h-48 max-w-[240px] rounded-xl object-cover" />
+          ))}
+        </div>
+      )}
       <div
         className={cn(
           'flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm leading-relaxed',
           isUser
             ? 'ml-auto rounded-2xl bg-foreground px-4 py-2.5 text-background'
             : 'text-foreground',
+          isUser && !message.content && 'hidden',
         )}
       >
         {isUser ? (
