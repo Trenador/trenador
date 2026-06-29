@@ -1,11 +1,13 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { ArrowUp, Square, Paperclip, Camera, X, ImageIcon } from 'lucide-react'
+import { useRef, useState, useEffect } from 'react'
+import { ArrowUp, Square, Paperclip, Camera, X, ImageIcon, TriangleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 
 export type ComposerAttachment = { url: string; mediaType: string; name: string }
+
+const MAX_ATTACHMENTS = 5
 
 type PendingAttachment = {
   id: string
@@ -26,12 +28,18 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
   const [value, setValue] = useState('')
   const [multiline, setMultiline] = useState(false)
   const [attachments, setAttachments] = useState<PendingAttachment[]>([])
+  const [limitWarning, setLimitWarning] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
 
   const hasUploading = attachments.some((a) => a.uploading)
+  const atLimit = attachments.length >= MAX_ATTACHMENTS
   const canSubmit = !disabled && !hasUploading && (value.trim().length > 0 || attachments.some((a) => a.uploadedUrl))
+
+  useEffect(() => {
+    if (!atLimit) setLimitWarning(false)
+  }, [atLimit])
 
   function submit() {
     if (!canSubmit) return
@@ -73,7 +81,14 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
     if (!files || files.length === 0) return
     const supabase = createClient()
 
-    for (const file of Array.from(files)) {
+    const current = attachments.length
+    const incoming = Array.from(files)
+    const slots = MAX_ATTACHMENTS - current
+    const allowed = incoming.slice(0, slots)
+    if (incoming.length > slots) setLimitWarning(true)
+    if (allowed.length === 0) return
+
+    for (const file of allowed) {
       const id = crypto.randomUUID()
       const previewUrl = URL.createObjectURL(file)
       setAttachments((prev) => [...prev, { id, file, previewUrl, uploadedUrl: null, uploading: true, error: false }])
@@ -101,6 +116,20 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
+      {/* Limit warning */}
+      {limitWarning && (
+        <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-[13px] text-amber-700 dark:text-amber-400">
+          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+          <span className="flex-1">
+            You can attach up to {MAX_ATTACHMENTS} images per message.
+            {attachments.length === MAX_ATTACHMENTS ? ' Remove one to add another.' : ` ${MAX_ATTACHMENTS - attachments.length} remaining.`}
+          </span>
+          <button type="button" onClick={() => setLimitWarning(false)} className="shrink-0 rounded p-0.5 hover:bg-amber-500/20">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Attachment previews */}
       {attachments.length > 0 && (
         <div className="flex flex-wrap gap-2 px-1">
@@ -148,8 +177,9 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
         <button
           type="button"
           aria-label="Attach file"
-          onClick={() => fileRef.current?.click()}
-          className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+          onClick={() => atLimit ? setLimitWarning(true) : fileRef.current?.click()}
+          className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground disabled:opacity-40"
+          disabled={atLimit}
         >
           <Paperclip className="h-4 w-4" />
         </button>
@@ -188,8 +218,9 @@ export function Composer({ onSubmit, disabled, placeholder = '' }: Props) {
           <button
             type="button"
             aria-label="Attach image"
-            onClick={() => cameraRef.current?.click()}
-            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+            onClick={() => atLimit ? setLimitWarning(true) : cameraRef.current?.click()}
+            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground disabled:opacity-40"
+            disabled={atLimit}
           >
             <Camera className="h-4 w-4" />
           </button>
