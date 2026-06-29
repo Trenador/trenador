@@ -92,7 +92,7 @@ export function AdminDashboard() {
           {/* Sign out */}
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[12px] font-normal text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground hover:border-accent"
           >
             <LogOut className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Log out</span>
