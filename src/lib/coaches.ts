@@ -4,15 +4,31 @@ import { db } from '@/db'
 import { coaches, members } from '@/db/schema'
 import { APP_CONFIG } from '@/lib/config'
 
-type CoachSummary = {
+export type CoachProfile = {
   id: string
   displayName: string
   photoUrl: string | null
+  headline: string | null
+  bio: string | null
+  specialties: string[]
+  certifications: string[]
+  gym: string | null
 }
 
-async function fetchCoach(coachId: string): Promise<CoachSummary | null> {
+const COACH_SELECT = {
+  id: coaches.id,
+  displayName: coaches.displayName,
+  photoUrl: coaches.photoUrl,
+  headline: coaches.headline,
+  bio: coaches.bio,
+  specialties: coaches.specialties,
+  certifications: coaches.certifications,
+  gym: coaches.gym,
+}
+
+async function fetchCoach(coachId: string): Promise<CoachProfile | null> {
   const [row] = await db
-    .select({ id: coaches.id, displayName: coaches.displayName, photoUrl: coaches.photoUrl })
+    .select(COACH_SELECT)
     .from(coaches)
     .where(eq(coaches.id, coachId))
     .limit(1)
@@ -25,7 +41,7 @@ export async function getOrAssignCoach(member: {
   id: string
   tenantId: string
   assignedCoachId: string | null
-}): Promise<CoachSummary | null> {
+}): Promise<CoachProfile | null> {
   if (member.assignedCoachId) {
     return fetchCoach(member.assignedCoachId)
   }
@@ -43,7 +59,7 @@ export async function getOrAssignCoach(member: {
     .groupBy(members.assignedCoachId)
 
   const activeCoaches = await db
-    .select({ id: coaches.id, displayName: coaches.displayName, photoUrl: coaches.photoUrl })
+    .select(COACH_SELECT)
     .from(coaches)
     .where(and(eq(coaches.tenantId, APP_CONFIG.tenantId), eq(coaches.active, true)))
 
