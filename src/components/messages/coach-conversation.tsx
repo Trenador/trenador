@@ -106,6 +106,11 @@ export function CoachConversation({ initialMessages, coach }: Props) {
   )
 
   const firstName = coach?.displayName.split(' ')[0] ?? 'your advisor'
+  const [openerTs, setOpenerTs] = useState<string | null>(null)
+
+  useEffect(() => {
+    setOpenerTs(messageTimestamp(new Date()))
+  }, [])
 
   useEffect(() => {
     const hasUnread = initialMessages.some(m => m.senderRole === 'coach' && !m.readAt)
@@ -161,10 +166,13 @@ export function CoachConversation({ initialMessages, coach }: Props) {
             >
               <CoachAvatarImage coach={coach} />
             </button>
-            <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="flex min-w-0 flex-col gap-1">
               <p className="text-[15px] leading-relaxed text-foreground">
                 Hi — {firstName} here, your advisor. How can I help you today?
               </p>
+              {openerTs && (
+                <span className="label-mono normal-case tracking-[0.1em]">{openerTs}</span>
+              )}
             </div>
           </div>
 
