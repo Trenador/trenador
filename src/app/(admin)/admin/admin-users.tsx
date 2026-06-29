@@ -174,9 +174,9 @@ export function AdminUsers({ coaches, onMessage }: { coaches: Coach[]; onMessage
                       <button
                         onClick={() => onMessage?.(r.id)}
                         title="Open conversation"
-                        className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
                       >
-                        <MessageSquare className="h-3.5 w-3.5" />
+                        <MessageSquare className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => resendInvite(r)}
@@ -235,13 +235,13 @@ export function AdminUsers({ coaches, onMessage }: { coaches: Coach[]; onMessage
                         </select>
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => onMessage?.(r.id)}
                             title="Open conversation"
-                            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                           >
-                            <MessageSquare className="h-3.5 w-3.5" />
+                            <MessageSquare className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => resendInvite(r)}

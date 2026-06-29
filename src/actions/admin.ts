@@ -68,6 +68,16 @@ export async function adminGetMembers() {
   }))
 }
 
+export async function adminGetMemberBasic(memberId: string) {
+  await requireAdmin()
+  const rows = await db
+    .select({ id: members.id, displayName: members.displayName, photoUrl: members.photoUrl, assignedCoachId: members.assignedCoachId })
+    .from(members)
+    .where(eq(members.id, memberId))
+    .limit(1)
+  return rows[0] ?? null
+}
+
 export async function adminResendInvite(email: string) {
   await requireAdmin()
   const adminClient = createAdminClient()

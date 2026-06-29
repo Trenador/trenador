@@ -9,6 +9,7 @@ import { MobileFilterButton, MobileFilterSheet, type FilterSection } from './adm
 import {
   adminGetInbox,
   adminGetConversation,
+  adminGetMemberBasic,
   adminSendReply,
   adminMarkThreadRead,
   adminDeleteMessage,
@@ -82,13 +83,32 @@ export function AdminInbox({ coaches, initialThreadId }: { coaches: Coach[]; ini
   // auto-scroll to bottom of thread
   useEffect(() => { scrollEndRef.current?.scrollIntoView({ block: 'end' }) }, [activeThreadId, messages.length])
 
-  // open initial thread from URL param once conversations load
+  // open initial thread from URL param once conversations load (or synthesize stub for new threads)
   useEffect(() => {
-    if (!initialThreadId || conversations.length === 0 || activeThreadId) return
+    if (!initialThreadId || activeThreadId) return
     const conv = conversations.find((c) => c.memberId === initialThreadId)
-    if (conv) openThread(conv.memberId, conv.lastMessageAt)
+    if (conv) {
+      openThread(conv.memberId, conv.lastMessageAt)
+    } else if (conversations.length >= 0) {
+      // member has no messages yet — fetch their info and create a stub conversation
+      adminGetMemberBasic(initialThreadId).then((member) => {
+        if (!member) return
+        const stub: InboxItem = {
+          memberId: member.id,
+          displayName: member.displayName,
+          photoUrl: member.photoUrl,
+          assignedCoachId: member.assignedCoachId,
+          lastMessageText: '',
+          lastMessageFrom: 'coach',
+          lastMessageAt: new Date().toISOString(),
+          unreadCount: 0,
+        }
+        setConversations((prev) => prev.some((c) => c.memberId === member.id) ? prev : [stub, ...prev])
+        setActiveThreadId(member.id)
+      })
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialThreadId, conversations.length])
+  }, [initialThreadId])
 
   // mark thread read when opened
   const openThread = useCallback((memberId: string, lastAt: string) => {
