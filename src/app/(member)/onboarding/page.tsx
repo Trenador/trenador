@@ -23,6 +23,12 @@ type CoachOption = {
 
 const TOTAL_STEPS = 5
 
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: 'female', label: 'Female' },
+  { value: 'male', label: 'Male' },
+  { value: 'non-binary', label: 'Non-Binary' },
+]
+
 const btn = 'h-12 w-full rounded-md bg-foreground text-base font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50'
 
 function CoachCard({
@@ -42,7 +48,7 @@ function CoachCard({
     <div
       className={cn(
         'rounded-md border transition-colors',
-        selected ? 'border-foreground bg-foreground/5' : 'border-input',
+        selected ? 'border-foreground bg-muted' : 'border-input',
       )}
     >
       <button
@@ -156,22 +162,22 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col bg-background">
-      <header className="flex items-center justify-center bg-black py-5">
+    <div className="flex min-h-dvh flex-col bg-background">
+      <header className="flex items-center justify-center bg-black py-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/trenador-logo-white.svg" alt="Trenador" className="h-7 w-auto" />
+        <img src="/assets/trenador-logo-white.svg" alt="Trenador" className="h-6 w-auto" />
       </header>
 
-      <div className="flex flex-1 items-center justify-center px-6 py-10">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex-1 overflow-y-auto px-6 pt-8 pb-20">
+        <div className="mx-auto w-full max-w-md space-y-8">
           {/* Progress */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Step {step + 1} of {TOTAL_STEPS}</span>
-            <div className="flex gap-1">
+          <div className="flex items-center gap-4">
+            <span className="shrink-0 text-xs text-muted-foreground">Step {step + 1} of {TOTAL_STEPS}</span>
+            <div className="flex flex-1 gap-1">
               {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
                 <div
                   key={i}
-                  className={`h-1 w-8 rounded-full transition-colors ${i <= step ? 'bg-orange-500' : 'bg-foreground/15'}`}
+                  className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? 'bg-orange-500' : 'bg-foreground/15'}`}
                 />
               ))}
             </div>
@@ -240,14 +246,18 @@ export default function OnboardingPage() {
                 <p className="text-sm text-muted-foreground">Used to personalize recommendations.</p>
               </div>
               <div className="grid gap-2">
-                {(['female', 'male', 'non-binary'] as Gender[]).map(g => (
+                {GENDER_OPTIONS.map(({ value, label }) => (
                   <button
-                    key={g}
+                    key={value}
                     type="button"
-                    onClick={() => setGender(g)}
-                    className={`flex w-full items-center justify-between rounded-md border px-4 py-3 text-left text-sm capitalize transition-colors ${gender === g ? 'border-foreground bg-foreground/5' : 'border-input hover:bg-foreground/[0.03]'}`}
+                    onClick={() => setGender(value)}
+                    className={`flex w-full items-center rounded-md border px-4 py-3 text-left text-sm transition-colors ${
+                      gender === value
+                        ? 'border-foreground bg-muted'
+                        : 'border-input hover:bg-foreground/[0.03]'
+                    }`}
                   >
-                    {g}
+                    {label}
                   </button>
                 ))}
               </div>
