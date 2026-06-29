@@ -78,7 +78,7 @@ function WorkoutContent({ workout }: { workout: WorkoutData }) {
               <button
                 type="button"
                 onClick={() => setOpenWeek(weekOpen ? -1 : wi)}
-                className="flex w-full items-center justify-between px-6 py-4 text-left hover:no-underline lg:px-8"
+                className="flex w-full items-center justify-between py-4 text-left hover:no-underline"
               >
                 <span className="label-mono normal-case tracking-[0.12em] text-muted-foreground">
                   {week.label}
@@ -86,7 +86,7 @@ function WorkoutContent({ workout }: { workout: WorkoutData }) {
                 <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200', weekOpen && 'rotate-180')} />
               </button>
               {weekOpen && (
-                <div className="space-y-2 px-4 pb-4 lg:px-6">
+                <div className="space-y-2 pb-4">
                   {week.days.map((day, di) => {
                     const dayKey = `w${wi}-d${di}`
                     const dayOpen = openDay === dayKey
@@ -131,7 +131,7 @@ function WorkoutContent({ workout }: { workout: WorkoutData }) {
       ].filter(Boolean).join(' · ') }))
     })
     return (
-      <div className="divide-y divide-border/40 border-t border-border/60 px-6 lg:px-8">
+      <div className="divide-y divide-border/40 border-t border-border/60">
         {exercises.map((ex, i) => (
           <BlockItem key={ex.key} name={ex.name} detail={ex.detail} index={i} />
         ))}
@@ -139,7 +139,7 @@ function WorkoutContent({ workout }: { workout: WorkoutData }) {
     )
   }
 
-  return <p className="px-6 py-8 text-sm text-muted-foreground lg:px-8">No workout content yet.</p>
+  return <p className="py-8 text-sm text-muted-foreground">No workout content yet.</p>
 }
 
 export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
@@ -148,27 +148,28 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <div className="mx-auto w-full max-w-4xl">
 
-        {/* Hero */}
-        <div className={cn('relative flex min-h-[220px] items-end overflow-hidden p-6 h-[44vh] sm:h-[280px]', banner)}>
-          {img && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover brightness-110" />
-          )}
-          <div className="pointer-events-none absolute inset-0 bg-black/30" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
+      {/* Hero — full-width, image bleeds edge-to-edge */}
+      <div className={cn('relative w-full overflow-hidden h-[44vh] sm:h-[280px]', banner)}>
+        {img && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover brightness-110" />
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-black/30" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/50" />
 
+        {/* Inner container — content aligned to max-w-4xl */}
+        <div className="relative mx-auto flex h-full w-full max-w-4xl items-end px-6 py-6 lg:px-10">
           {/* Go back — desktop */}
           <Link
             href="/workouts"
-            className="absolute left-4 top-4 hidden items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-[13px] font-medium text-white ring-1 ring-inset ring-white/30 backdrop-blur-sm transition hover:bg-white/25 sm:inline-flex"
+            className="absolute left-6 top-6 hidden items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-[13px] font-medium text-white ring-1 ring-inset ring-white/30 backdrop-blur-sm transition hover:bg-white/25 sm:inline-flex lg:left-10"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Go back
           </Link>
 
-          {/* Category + title at bottom */}
+          {/* Category + title at bottom-left */}
           <div className="relative min-w-0 flex-1">
             {workout.category && (
               <span className="label-mono normal-case tracking-[0.18em] !text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
@@ -180,14 +181,17 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
             </h1>
           </div>
 
-          {/* Remix — bottom-right inline (desktop only) */}
+          {/* Remix — bottom-right (desktop only) */}
           <div className="relative ml-4 hidden shrink-0 items-end sm:flex">
             <RemixButton workoutId={workout.id} variant="hero" />
           </div>
         </div>
+      </div>
 
-        {/* Mobile go back */}
-        <div className="flex items-center justify-between px-4 pt-3 sm:hidden">
+      {/* Content below hero */}
+      <div className="mx-auto w-full max-w-4xl px-6 lg:px-10">
+        {/* Mobile go back + remix */}
+        <div className="flex items-center justify-between pt-3 sm:hidden">
           <Link href="/workouts" className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Go back
           </Link>
@@ -195,7 +199,7 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
         </div>
 
         {/* Meta row */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-6 pt-5 lg:px-8">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-5">
           {workout.durationMinutes && (
             <span className="label-mono flex items-center gap-1.5 normal-case tracking-[0.12em] text-muted-foreground">
               <Clock className="h-3.5 w-3.5" /> {workout.durationMinutes >= 60 ? '1 hr' : `${workout.durationMinutes} min`}
@@ -215,7 +219,7 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
 
         {/* Summary */}
         {workout.summary && (
-          <p className="px-6 pt-5 text-[15px] leading-relaxed text-foreground/80 lg:px-8">
+          <p className="pt-5 text-[15px] leading-relaxed text-foreground/80">
             {workout.summary}
           </p>
         )}
@@ -224,9 +228,8 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
         <div className="mt-6 pb-8">
           <WorkoutContent workout={workout} />
         </div>
-
-
       </div>
+
     </div>
   )
 }
