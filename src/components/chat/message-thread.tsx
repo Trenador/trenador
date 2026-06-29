@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Menu, Sparkles, Pencil, SquarePen, ChevronDown, MoreVertical, Pin, PinOff } from 'lucide-react'
+import { Menu, Sparkles, Pencil, SquarePen, ChevronDown, MoreVertical, Pin, PinOff, X } from 'lucide-react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom'
@@ -101,16 +101,14 @@ function ShortcutsMenu({ onPick, open, onOpenChange }: { onPick: (p: SeedPrompt)
   return (
     <div className="relative flex w-full flex-col items-stretch">
       {panel}
-      {!open && (
-        <button
-          type="button"
-          onClick={() => onOpenChange(true)}
-          className="flex items-center gap-1.5 px-1 py-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          Shortcuts
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => onOpenChange(!open)}
+        className="flex items-center gap-1.5 px-1 py-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {open ? <X className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
+        {open ? 'Close' : 'Shortcuts'}
+      </button>
     </div>
   )
 }
@@ -185,6 +183,7 @@ export function MessageThread({ threadId, initialMessages, initialMessage, initi
   }
 
   async function sendMessage(content: string, attachments?: ComposerAttachment[]) {
+    setShortcutsOpen(false)
     const now = new Date().toISOString()
     setMessages((prev) => [...prev, msg({ role: 'user', content, ...(attachments?.length ? { attachments } : {}), createdAt: now })])
     setMessages((prev) => [...prev, msg({ role: 'assistant', content: '', isStreaming: true })])
@@ -336,9 +335,7 @@ export function MessageThread({ threadId, initialMessages, initialMessage, initi
           <div className="mb-2 flex w-full">
             <ShortcutsMenu onPick={handleSeedPrompt} open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
           </div>
-          <div onFocusCapture={() => setShortcutsOpen(false)}>
-            <Composer onSubmit={sendMessage} disabled={isStreaming} />
-          </div>
+          <Composer onSubmit={sendMessage} disabled={isStreaming} />
         </div>
       </div>
     </div>
