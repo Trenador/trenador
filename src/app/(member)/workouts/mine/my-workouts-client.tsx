@@ -95,7 +95,7 @@ function FilterSelect({
         <span>{active ? `${label}:` : label}</span>
         {active && <SelectValue />}
       </SelectTrigger>
-      <SelectContent alignItemWithTrigger={false} className="rounded-xl border-border/60 bg-popover/95 p-1 shadow-lg backdrop-blur-xl" sideOffset={6}>
+      <SelectContent alignItemWithTrigger={false} align="start" className="rounded-xl border-border/60 bg-popover/95 p-1 shadow-lg backdrop-blur-xl" sideOffset={6}>
         <SelectItem value={ALL} className="rounded-lg text-[13px]">All</SelectItem>
         {options.map(o => (
           <SelectItem key={o} value={o} className="rounded-lg text-[13px]">{o}</SelectItem>
