@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition, useState, useEffect } from 'react'
+import { useTransition, useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sparkles, Pencil } from 'lucide-react'
 import { createThread } from '@/actions/chat'
@@ -15,8 +15,9 @@ type SeedPrompt = {
 }
 
 const SHORTCUTS: SeedPrompt[] = [
-  { label: 'Browse the workout library.', navigateTo: '/workouts' },
+  { label: 'Browse the library.', navigateTo: '/workouts' },
   { label: 'Talk with an advisor.', action: 'message-center' },
+  { label: 'Jump to a specific workout block.', navigateTo: '/workouts/mine' },
   {
     label: 'Modify my workout.',
     assistantOpener:
@@ -37,11 +38,24 @@ function getGreeting() {
 }
 
 function ShortcutsMenu({ onPick, direction = 'up', open, onOpenChange }: { onPick: (p: SeedPrompt) => void; direction?: 'up' | 'down'; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     const close = () => onOpenChange(false)
     window.addEventListener('chat:new', close)
     return () => window.removeEventListener('chat:new', close)
   }, [onOpenChange])
+
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        onOpenChange(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open, onOpenChange])
 
   const panel = (
     <div
@@ -87,7 +101,7 @@ function ShortcutsMenu({ onPick, direction = 'up', open, onOpenChange }: { onPic
   )
 
   return (
-    <div className="relative w-full">
+    <div ref={containerRef} className="relative w-full">
       {direction === 'down' ? <>{trigger}{panel}</> : <>{panel}{trigger}</>}
     </div>
   )
