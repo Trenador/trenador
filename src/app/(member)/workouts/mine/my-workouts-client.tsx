@@ -676,11 +676,7 @@ export function MyWorkoutsClient({ workouts: initial }: { workouts: Workout[] })
         <div className="mt-8">
           {workouts.length === 0 ? (
             <div className="py-16 text-center text-sm text-muted-foreground">
-              You haven&apos;t added any workouts yet.{' '}
-              <button type="button" onClick={() => router.push('/workouts')} className="underline underline-offset-2 hover:text-foreground">
-                Browse the library
-              </button>{' '}
-              to save one.
+              You haven&apos;t added any workouts yet.
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-16 text-center text-sm text-muted-foreground">No workouts match those filters.</div>
