@@ -124,7 +124,7 @@ export default function SignupPage() {
 
         <div className="relative z-10 rounded-t-[2.5rem] bg-card px-6 pb-10 pt-6 text-card-foreground shadow-[0_-20px_60px_-20px_rgba(0,0,0,0.6)]">
           <div className="mx-auto w-full max-w-sm space-y-5">
-            <h1 className="text-2xl font-bold tracking-tight">Today is your day.</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Get Started Now</h1>
             {formContent}
           </div>
         </div>
@@ -142,7 +142,7 @@ export default function SignupPage() {
           />
           <div className="w-full max-w-sm space-y-6">
             <div className="space-y-1">
-              <h1 className="text-4xl font-bold tracking-tight">Today is your day.</h1>
+              <h1 className="text-4xl font-bold tracking-tight">Get Started Now</h1>
               <p className="mt-2 text-sm text-muted-foreground">Create your account to get started.</p>
             </div>
             {formContent}

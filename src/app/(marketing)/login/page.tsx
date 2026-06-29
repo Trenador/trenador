@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [magicSent, setMagicSent] = useState(false)
+  const [mobileView, setMobileView] = useState<'choose' | 'form'>('choose')
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -149,8 +150,34 @@ export default function LoginPage() {
 
         <div className="relative z-10 rounded-t-[2.5rem] bg-card px-6 pb-10 pt-6 text-card-foreground shadow-[0_-20px_60px_-20px_rgba(0,0,0,0.6)]">
           <div className="mx-auto w-full max-w-sm space-y-5">
-            <h1 className="text-2xl font-bold tracking-tight">Today is your day.</h1>
-            {formContent}
+            {mobileView === 'choose' ? (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setMobileView('form')}
+                  className="h-12 w-full rounded-md bg-foreground text-base font-medium text-background transition-opacity hover:opacity-90"
+                >
+                  Log in
+                </button>
+                <Link
+                  href="/signup"
+                  className="flex h-12 w-full items-center justify-center rounded-md border border-border bg-background text-base font-normal text-foreground transition-colors hover:bg-muted"
+                >
+                  Sign up
+                </Link>
+                <p className="pt-1 text-center text-xs text-muted-foreground">
+                  By continuing, you agree to our{' '}
+                  <Link href="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>
+                  {' '}and{' '}
+                  <Link href="/terms" className="underline hover:text-foreground">Terms of Use</Link>.
+                </p>
+              </div>
+            ) : (
+              <>
+                <h1 className="text-2xl font-bold tracking-tight">Today is your day.</h1>
+                {formContent}
+              </>
+            )}
           </div>
         </div>
       </div>

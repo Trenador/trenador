@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 
 export default function ResetPasswordPage() {
@@ -9,7 +10,6 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -28,14 +28,14 @@ export default function ResetPasswordPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
-    if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
-    if (password !== confirm) { setError('Passwords do not match.'); return }
+    if (password.length < 8) { toast.error('Password must be at least 8 characters.'); return }
+    if (password !== confirm) { toast.error('Passwords do not match.'); return }
     setSubmitting(true)
     const supabase = createClient()
     const { error: err } = await supabase.auth.updateUser({ password })
     setSubmitting(false)
-    if (err) { setError(err.message); return }
+    if (err) { toast.error(err.message); return }
+    toast.success('Password updated.')
     setDone(true)
     setTimeout(() => router.push('/chat'), 2000)
   }
@@ -93,8 +93,6 @@ export default function ResetPasswordPage() {
               disabled={!ready}
             />
           </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <button
             type="submit"
