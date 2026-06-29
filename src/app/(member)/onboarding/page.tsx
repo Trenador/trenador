@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { getCoachesForPicker, completeOnboarding } from '@/actions/onboarding'
 import { getInitials, cn } from '@/lib/utils'
 import { FloatingField } from '@/components/ui/floating-field'
@@ -35,7 +36,7 @@ function CoachCard({
   expanded: boolean
   onSelect: () => void
 }) {
-  const subtitle = [coach.specialty?.[0], coach.location].filter(Boolean).join(' · ')
+  const specialtiesLine = coach.specialty?.join(' · ') || ''
 
   return (
     <div
@@ -61,8 +62,11 @@ function CoachCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-medium">{coach.displayName}</div>
-          {subtitle && (
-            <div className="truncate text-[12px] text-muted-foreground">{subtitle}</div>
+          {specialtiesLine && (
+            <div className="truncate text-[12px] text-muted-foreground">{specialtiesLine}</div>
+          )}
+          {coach.location && (
+            <div className="truncate text-[12px] text-muted-foreground">{coach.location}</div>
           )}
         </div>
       </button>
@@ -104,7 +108,6 @@ export default function OnboardingPage() {
   const [expandedCoachId, setExpandedCoachId] = useState('')
   const [coaches, setCoaches] = useState<CoachOption[]>([])
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     getCoachesForPicker().then(setCoaches).catch(() => {})
@@ -113,36 +116,31 @@ export default function OnboardingPage() {
   const next = () => setStep(s => s + 1)
 
   const submitName = () => {
-    if (!firstName.trim()) { setError('Enter your first name'); return }
-    if (!lastName.trim()) { setError('Enter your last name'); return }
-    setError(null)
+    if (!firstName.trim()) return toast.error('Enter your first name')
+    if (!lastName.trim()) return toast.error('Enter your last name')
     next()
   }
 
   const submitYear = () => {
     const n = parseInt(year, 10)
     const current = new Date().getFullYear()
-    if (!year || isNaN(n) || n < 1900 || n > current) { setError('Enter a valid year'); return }
-    setError(null)
+    if (!year || isNaN(n) || n < 1900 || n > current) return toast.error('Enter a valid year')
     next()
   }
 
   const submitGender = () => {
-    if (!gender) { setError('Select your gender'); return }
-    setError(null)
+    if (!gender) return toast.error('Select your gender')
     next()
   }
 
   const submitWeight = () => {
     const w = parseFloat(weight)
-    if (!weight || isNaN(w) || w <= 0 || w > 2000) { setError('Enter a valid weight'); return }
-    setError(null)
+    if (!weight || isNaN(w) || w <= 0 || w > 2000) return toast.error('Enter a valid weight')
     next()
   }
 
   const finish = async () => {
-    if (!coachId) { setError('Pick a coach to continue'); return }
-    setError(null)
+    if (!coachId) return toast.error('Pick a coach to continue')
     setSaving(true)
     const result = await completeOnboarding({
       firstName: firstName.trim(),
@@ -153,7 +151,7 @@ export default function OnboardingPage() {
       coachId,
     })
     setSaving(false)
-    if (result.error) { setError(result.error); return }
+    if (result.error) { toast.error(result.error); return }
     router.push('/chat')
   }
 
@@ -204,9 +202,8 @@ export default function OnboardingPage() {
                   autoComplete="family-name"
                 />
               </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="pt-2">
-                <button type="button" onClick={submitName} className={btn}>Continue</button>
+                <button type="button" onClick={submitName} disabled={!firstName.trim() || !lastName.trim()} className={btn}>Continue</button>
               </div>
             </div>
           )}
@@ -229,9 +226,8 @@ export default function OnboardingPage() {
                 onChange={e => setYear(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submitYear()}
               />
-              {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="pt-2">
-                <button type="button" onClick={submitYear} className={btn}>Continue</button>
+                <button type="button" onClick={submitYear} disabled={!year.trim()} className={btn}>Continue</button>
               </div>
             </div>
           )}
@@ -248,16 +244,15 @@ export default function OnboardingPage() {
                   <button
                     key={g}
                     type="button"
-                    onClick={() => { setGender(g); setError(null) }}
+                    onClick={() => setGender(g)}
                     className={`flex w-full items-center justify-between rounded-md border px-4 py-3 text-left text-sm capitalize transition-colors ${gender === g ? 'border-foreground bg-foreground/5' : 'border-input hover:bg-foreground/[0.03]'}`}
                   >
                     {g}
                   </button>
                 ))}
               </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="pt-2">
-                <button type="button" onClick={submitGender} className={btn}>Continue</button>
+                <button type="button" onClick={submitGender} disabled={!gender} className={btn}>Continue</button>
               </div>
             </div>
           )}
@@ -280,9 +275,8 @@ export default function OnboardingPage() {
                 onChange={e => setWeight(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submitWeight()}
               />
-              {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="pt-2">
-                <button type="button" onClick={submitWeight} className={btn}>Continue</button>
+                <button type="button" onClick={submitWeight} disabled={!weight.trim()} className={btn}>Continue</button>
               </div>
             </div>
           )}
@@ -307,13 +301,11 @@ export default function OnboardingPage() {
                       onSelect={() => {
                         setCoachId(coach.id)
                         setExpandedCoachId(prev => prev === coach.id ? '' : coach.id)
-                        setError(null)
                       }}
                     />
                   ))
                 )}
               </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="pt-2">
                 <button
                   type="button"
