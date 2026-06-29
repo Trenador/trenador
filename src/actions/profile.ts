@@ -25,10 +25,16 @@ export async function updateProfileAction(data: {
       yearOfBirth: data.yearOfBirth ?? undefined,
       gender: data.gender ?? undefined,
       weightLbs: data.weightLbs !== null ? String(data.weightLbs) : undefined,
-      photoUrl: data.photoUrl !== null ? data.photoUrl : undefined,
+      photoUrl: data.photoUrl,
       updatedAt: new Date(),
     })
     .where(eq(members.id, member.id))
 
+  revalidatePath('/', 'layout')
+}
+
+export async function updateAvatarAction(photoUrl: string | null) {
+  const member = await getAuthenticatedMember()
+  await db.update(members).set({ photoUrl, updatedAt: new Date() }).where(eq(members.id, member.id))
   revalidatePath('/', 'layout')
 }

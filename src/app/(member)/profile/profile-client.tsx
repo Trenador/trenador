@@ -2,9 +2,10 @@
 
 import { useRef, useState, useTransition } from 'react'
 import { Camera, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { signAvatarUrlClient } from '@/lib/avatar-client'
-import { updateProfileAction } from '@/actions/profile'
+import { updateProfileAction, updateAvatarAction } from '@/actions/profile'
 
 type Gender = 'female' | 'male' | 'non-binary'
 
@@ -50,8 +51,8 @@ export function ProfileClient({
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    if (!file.type.startsWith('image/')) { alert('Please choose an image'); return }
-    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5 MB'); return }
+    if (!file.type.startsWith('image/')) { toast.error('Please choose an image'); return }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5 MB'); return }
     setUploading(true)
     try {
       const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase()
@@ -64,11 +65,13 @@ export function ProfileClient({
       if (photoPath && photoPath !== path && !photoPath.startsWith('http')) {
         await supabase.storage.from('avatars').remove([photoPath])
       }
+      await updateAvatarAction(path)
       setPhotoPath(path)
       setAvatarUrl(await signAvatarUrlClient(path))
       window.dispatchEvent(new CustomEvent('profile:refresh'))
+      toast.success('Photo updated')
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Upload failed')
+      toast.error(err instanceof Error ? err.message : 'Upload failed')
     } finally {
       setUploading(false)
     }
@@ -80,11 +83,12 @@ export function ProfileClient({
     try {
       const supabase = createClient()
       await supabase.storage.from('avatars').remove([photoPath])
+      await updateAvatarAction(null)
       setPhotoPath(null)
       setAvatarUrl('')
       window.dispatchEvent(new CustomEvent('profile:refresh'))
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Remove failed')
+      toast.error(err instanceof Error ? err.message : 'Remove failed')
     } finally {
       setUploading(false)
     }
@@ -92,12 +96,12 @@ export function ProfileClient({
 
   const save = () => {
     const name = `${firstName.trim()} ${lastName.trim()}`.trim()
-    if (!name) { alert('Name is required'); return }
+    if (!name) { toast.error('Name is required'); return }
     const y = year ? parseInt(year, 10) : null
     const currentYear = new Date().getFullYear()
-    if (year && (isNaN(y!) || y! < 1900 || y! > currentYear)) { alert('Enter a valid year'); return }
+    if (year && (isNaN(y!) || y! < 1900 || y! > currentYear)) { toast.error('Enter a valid year'); return }
     const w = weight ? parseFloat(weight) : null
-    if (weight && (isNaN(w!) || w! <= 0 || w! > 2000)) { alert('Enter a valid weight'); return }
+    if (weight && (isNaN(w!) || w! <= 0 || w! > 2000)) { toast.error('Enter a valid weight'); return }
     setSaving(true)
     startTransition(async () => {
       try {
@@ -109,8 +113,9 @@ export function ProfileClient({
           photoUrl: photoPath,
         })
         window.dispatchEvent(new CustomEvent('profile:refresh'))
+        toast.success('Profile saved')
       } catch (err: unknown) {
-        alert(err instanceof Error ? err.message : 'Save failed')
+        toast.error(err instanceof Error ? err.message : 'Save failed')
       } finally {
         setSaving(false)
       }
