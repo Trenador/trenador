@@ -30,6 +30,7 @@ type Message = {
   id: string
   memberId: string
   senderRole: string
+  senderCoachId: string | null
   content: string
   createdAt: string
   readAt: string | null
@@ -38,10 +39,11 @@ type Message = {
 type Coach = { id: string; displayName: string }
 
 
-export function AdminInbox({ coaches }: { coaches: Coach[] }) {
+export function AdminInbox({ coaches, initialThreadId }: { coaches: Coach[]; initialThreadId?: string | null }) {
   const [conversations, setConversations] = useState<InboxItem[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
+  const [replyCoachId, setReplyCoachId] = useState<string>('')
   const [replyText, setReplyText] = useState('')
   const [sending, setSending] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -80,12 +82,28 @@ export function AdminInbox({ coaches }: { coaches: Coach[] }) {
   // auto-scroll to bottom of thread
   useEffect(() => { scrollEndRef.current?.scrollIntoView({ block: 'end' }) }, [activeThreadId, messages.length])
 
+  // open initial thread from URL param once conversations load
+  useEffect(() => {
+    if (!initialThreadId || conversations.length === 0 || activeThreadId) return
+    const conv = conversations.find((c) => c.memberId === initialThreadId)
+    if (conv) openThread(conv.memberId, conv.lastMessageAt)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialThreadId, conversations.length])
+
   // mark thread read when opened
   const openThread = useCallback((memberId: string, lastAt: string) => {
     setActiveThreadId(memberId)
     setReadMap((prev) => ({ ...prev, [memberId]: lastAt }))
     adminMarkThreadRead(memberId)
   }, [])
+
+  // set default reply coach when thread opens
+  useEffect(() => {
+    if (!activeThreadId) return
+    const conv = conversations.find((c) => c.memberId === activeThreadId)
+    const defaultCoach = conv?.assignedCoachId ?? coaches[0]?.id ?? ''
+    setReplyCoachId((prev) => prev || defaultCoach)
+  }, [activeThreadId, conversations, coaches])
 
   const isUnread = (c: InboxItem) => {
     const markedAt = readMap[c.memberId]
@@ -97,10 +115,10 @@ export function AdminInbox({ coaches }: { coaches: Coach[] }) {
     const text = replyText.trim()
     if (!text || !activeThreadId) return
     setSending(true)
-    const optimistic: Message = { id: crypto.randomUUID(), memberId: activeThreadId, senderRole: 'coach', content: text, createdAt: new Date().toISOString(), readAt: null }
+    const optimistic: Message = { id: crypto.randomUUID(), memberId: activeThreadId, senderRole: 'coach', senderCoachId: replyCoachId || null, content: text, createdAt: new Date().toISOString(), readAt: null }
     setMessages((prev) => [...prev, optimistic])
     setReplyText('')
-    await adminSendReply(activeThreadId, text)
+    await adminSendReply(activeThreadId, text, replyCoachId || undefined)
     setSending(false)
     await load()
   }
@@ -289,12 +307,15 @@ export function AdminInbox({ coaches }: { coaches: Coach[] }) {
               {/* Thread header */}
               <div className="flex h-[60px] shrink-0 items-center border-b border-border/60 px-5 pr-12">
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">{activeConversation.displayName}</div>
-                  {activeConversation.assignedCoachId && (
-                    <div className="text-[11px] text-muted-foreground">
-                      with {coaches.find((c) => c.id === activeConversation.assignedCoachId)?.displayName ?? 'Coach'}
-                    </div>
-                  )}
+                  <div className="truncate text-sm font-medium">
+                    {activeConversation.displayName}
+                    {activeConversation.assignedCoachId && (
+                      <span className="font-normal text-muted-foreground">
+                        {' · with '}
+                        {coaches.find((c) => c.id === activeConversation.assignedCoachId)?.displayName ?? 'Coach'}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -342,7 +363,12 @@ export function AdminInbox({ coaches }: { coaches: Coach[] }) {
                             </div>
                           </div>
                           <div className={cn('mt-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground', fromMember ? 'pl-9' : '')}>
-                            <span>{fromMember ? activeConversation.displayName : 'Coach'} · {ts}</span>
+                            <span>
+                              {fromMember
+                                ? activeConversation.displayName
+                                : (coaches.find((c) => c.id === m.senderCoachId)?.displayName ?? 'Coach') + ' (Human)'}
+                              {' · '}{ts}
+                            </span>
                             {!fromMember && (
                               <div className="flex items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
                                 <button type="button" onClick={() => { setEditingId(m.id); setEditingText(m.content) }} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground" title="Edit">
@@ -364,6 +390,18 @@ export function AdminInbox({ coaches }: { coaches: Coach[] }) {
 
               {/* Reply composer */}
               <div className="border-t border-border/60 bg-background px-5 py-3">
+                {coaches.length > 0 && (
+                  <div className="mb-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <span>Reply as:</span>
+                    <select
+                      value={replyCoachId}
+                      onChange={(e) => setReplyCoachId(e.target.value)}
+                      className="rounded-md border border-border bg-background px-2 py-1 text-[11px] outline-none"
+                    >
+                      {coaches.map((c) => <option key={c.id} value={c.id}>{c.displayName}</option>)}
+                    </select>
+                  </div>
+                )}
                 <div className="flex items-end gap-2">
                   <textarea
                     ref={replyRef}

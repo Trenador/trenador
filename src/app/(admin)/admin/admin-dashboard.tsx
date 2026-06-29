@@ -25,11 +25,20 @@ export function AdminDashboard() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const view = (searchParams.get('view') ?? 'inbox') as View
+  const initialThreadId = searchParams.get('t')
   const [coaches, setCoaches] = useState<Coach[]>([])
 
   const setView = (v: View) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('view', v)
+    params.delete('t')
+    router.push(`/admin?${params.toString()}`)
+  }
+
+  const openInboxThread = (memberId: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('view', 'inbox')
+    params.set('t', memberId)
     router.push(`/admin?${params.toString()}`)
   }
 
@@ -89,8 +98,8 @@ export function AdminDashboard() {
 
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-hidden">
-        {view === 'inbox' && <AdminInbox coaches={coaches} />}
-        {view === 'users' && <AdminUsers coaches={coaches} />}
+        {view === 'inbox' && <AdminInbox coaches={coaches} initialThreadId={initialThreadId} />}
+        {view === 'users' && <AdminUsers coaches={coaches} onMessage={openInboxThread} />}
         {view === 'workouts' && <AdminWorkouts coaches={coaches} />}
         {view === 'coaches' && <AdminCoaches onCoachesChange={setCoaches} />}
       </div>

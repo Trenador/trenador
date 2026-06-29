@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react'
 import { cn, getInitials } from '@/lib/utils'
 import { fmtLongDate, relativeAge } from '@/lib/format-date'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
-import { Mail, Plus, UserPlus } from 'lucide-react'
+import { Mail, MessageSquare, Plus, UserPlus } from 'lucide-react'
 import { adminGetMembers, adminAssignCoach, adminResendInvite, adminInviteUser } from '@/actions/admin'
 
 type Member = {
@@ -32,7 +32,7 @@ function splitName(displayName: string) {
   return { firstName: parts[0] ?? '', lastName: parts.slice(1).join(' ') }
 }
 
-export function AdminUsers({ coaches }: { coaches: Coach[] }) {
+export function AdminUsers({ coaches, onMessage }: { coaches: Coach[]; onMessage?: (memberId: string) => void }) {
   const [rows, setRows] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
@@ -172,6 +172,13 @@ export function AdminUsers({ coaches }: { coaches: Coach[] }) {
                         </select>
                       </div>
                       <button
+                        onClick={() => onMessage?.(r.id)}
+                        title="Open conversation"
+                        className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                      </button>
+                      <button
                         onClick={() => resendInvite(r)}
                         disabled={!r.email || resendingId === r.id}
                         className="flex items-center gap-1 rounded-md border border-border px-2 py-1.5 text-[12px] font-medium hover:bg-muted disabled:opacity-40"
@@ -228,14 +235,23 @@ export function AdminUsers({ coaches }: { coaches: Coach[] }) {
                         </select>
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <button
-                          onClick={() => resendInvite(r)}
-                          disabled={!r.email || resendingId === r.id}
-                          className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[12px] font-medium hover:bg-muted disabled:opacity-40 transition-colors"
-                        >
-                          <Mail className="h-3.5 w-3.5" />
-                          {resendingId === r.id ? 'Sending…' : 'Resend invite'}
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => onMessage?.(r.id)}
+                            title="Open conversation"
+                            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => resendInvite(r)}
+                            disabled={!r.email || resendingId === r.id}
+                            className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[12px] font-medium hover:bg-muted disabled:opacity-40 transition-colors"
+                          >
+                            <Mail className="h-3.5 w-3.5" />
+                            {resendingId === r.id ? 'Sending…' : 'Resend invite'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )

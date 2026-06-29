@@ -153,18 +153,18 @@ export async function adminGetConversation(memberId: string) {
     .from(coachMessages)
     .where(eq(coachMessages.memberId, memberId))
     .orderBy(asc(coachMessages.createdAt))
-  return msgs.map((m) => ({ ...m, createdAt: m.createdAt.toISOString(), readAt: m.readAt?.toISOString() ?? null }))
+  return msgs.map((m) => ({ ...m, createdAt: m.createdAt.toISOString(), readAt: m.readAt?.toISOString() ?? null, senderCoachId: m.senderCoachId ?? null }))
 }
 
-export async function adminSendReply(memberId: string, content: string) {
+export async function adminSendReply(memberId: string, content: string, coachId?: string) {
   await requireAdmin()
   await db.insert(coachMessages).values({
     tenantId: APP_CONFIG.tenantId,
     memberId,
     senderRole: 'coach',
+    senderCoachId: coachId ?? null,
     content,
   })
-  // mark all unread member messages as read
   await db.update(coachMessages).set({ readAt: new Date() }).where(
     and(eq(coachMessages.memberId, memberId), eq(coachMessages.senderRole, 'member'), isNull(coachMessages.readAt)),
   )

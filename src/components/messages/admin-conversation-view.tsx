@@ -45,6 +45,7 @@ export function AdminConversationView({ memberId, initialMessages }: Props) {
       tenantId: '',
       memberId,
       senderRole: 'coach',
+      senderCoachId: null,
       content,
       readAt: null,
       createdAt: new Date(),

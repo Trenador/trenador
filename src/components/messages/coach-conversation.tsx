@@ -59,6 +59,7 @@ export function CoachConversation({ initialMessages, coach }: Props) {
       tenantId: '',
       memberId: '',
       senderRole: 'member',
+      senderCoachId: null,
       content,
       readAt: null,
       createdAt: new Date(),
