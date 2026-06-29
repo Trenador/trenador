@@ -203,7 +203,6 @@ export function AdminUsers({ coaches, onMessage }: { coaches: Coach[]; onMessage
                   <th className="px-5 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-left">Email</th>
                   <SortTh k="created">Signed up</SortTh>
                   <th className="px-5 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-left">Assigned coach</th>
-                  <th className="px-5 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
@@ -228,33 +227,34 @@ export function AdminUsers({ coaches, onMessage }: { coaches: Coach[]; onMessage
                         <span className="ml-2 text-[11px] text-muted-foreground">{relativeAge(r.createdAt)}</span>
                       </td>
                       <td className="px-5 py-3">
-                        <select
-                          value={r.assignedCoachId ?? '__none__'}
-                          onChange={(e) => assign(r.id, e.target.value === '__none__' ? null : e.target.value)}
-                          className="h-8 w-48 rounded-md border border-border bg-background px-2 text-sm outline-none"
-                        >
-                          <option value="__none__">Unassigned</option>
-                          {coaches.map((c) => <option key={c.id} value={c.id}>{c.displayName}</option>)}
-                        </select>
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={r.assignedCoachId ?? '__none__'}
+                            onChange={(e) => assign(r.id, e.target.value === '__none__' ? null : e.target.value)}
+                            className="h-8 w-44 rounded-md border border-border bg-background px-2 text-sm outline-none"
+                          >
+                            <option value="__none__">Unassigned</option>
+                            {coaches.map((c) => <option key={c.id} value={c.id}>{c.displayName}</option>)}
+                          </select>
                           <Button
-                            size="icon-sm"
+                            size="sm"
                             variant="outline"
+                            className="h-8"
                             title="Open conversation"
                             onClick={() => onMessage?.({ id: r.id, displayName: r.displayName, photoUrl: r.photoUrl, assignedCoachId: r.assignedCoachId })}
                           >
                             <MessageSquare className="h-3.5 w-3.5" />
                           </Button>
-                          <button
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8"
                             onClick={() => resendInvite(r)}
                             disabled={!r.email || resendingId === r.id}
-                            className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[12px] font-medium hover:bg-muted disabled:opacity-40 transition-colors"
                           >
-                            <Mail className="h-3.5 w-3.5" />
+                            <Mail className="mr-1.5 h-3.5 w-3.5" />
                             {resendingId === r.id ? 'Sending…' : 'Resend invite'}
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
