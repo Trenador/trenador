@@ -190,13 +190,6 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
 
       {/* Content below hero */}
       <div className="mx-auto w-full max-w-4xl px-6 lg:px-10">
-        {/* Mobile go back + remix */}
-        <div className="flex items-center justify-between pt-3 sm:hidden">
-          <Link href="/workouts" className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Go back
-          </Link>
-          <RemixButton workoutId={workout.id} variant="mobile" />
-        </div>
 
         {/* Meta row */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-5">
@@ -215,6 +208,17 @@ export function WorkoutDetailClient({ workout }: { workout: WorkoutData }) {
               {tag}
             </span>
           ))}
+        </div>
+
+        {/* Mobile CTAs — stacked full-width buttons below meta row */}
+        <div className="mt-5 flex flex-col gap-2 sm:hidden">
+          <RemixButton workoutId={workout.id} variant="mobile-full" />
+          <Link
+            href="/workouts"
+            className="flex h-12 items-center justify-center gap-1.5 rounded-lg border border-border text-[15px] font-medium text-foreground transition hover:bg-foreground/[0.04]"
+          >
+            <ArrowLeft className="h-4 w-4" /> Go back
+          </Link>
         </div>
 
         {/* Summary */}

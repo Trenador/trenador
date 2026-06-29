@@ -3,8 +3,9 @@
 import { useMemo, useState, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Plus, Trash2, Copy, Search, Upload, X, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { deleteMyWorkoutAction, createMyWorkoutAction } from '@/actions/workouts'
+import { deleteMyWorkoutAction, createMyWorkoutAction, duplicateMyWorkoutAction } from '@/actions/workouts'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -471,6 +472,7 @@ function useWorkoutDaysDone(workoutId: string, weeks: Array<{ days: unknown[] }>
 
 function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: (id: string) => void }) {
   const router = useRouter()
+  const [isDuplicating, startDuplicate] = useTransition()
   const banner = workout.category ? (CATEGORY_BANNER[workout.category] ?? 'bg-muted') : 'bg-muted'
   const img = workout.category ? CATEGORY_IMAGE[workout.category] : undefined
   const createdDate = new Date(workout.createdAt).toLocaleDateString(undefined, {
@@ -529,8 +531,16 @@ function WorkoutRow({ workout, onRemove }: { workout: Workout; onRemove: (id: st
       {/* Actions */}
       <div className="absolute bottom-2 right-2 flex items-center gap-1 sm:static sm:contents">
         <button type="button"
-          onClick={e => { e.stopPropagation(); router.push(`/workouts/mine/${workout.id}`) }}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+          disabled={isDuplicating}
+          onClick={e => {
+            e.stopPropagation()
+            startDuplicate(async () => {
+              const copy = await duplicateMyWorkoutAction(workout.id)
+              toast.success('Workout duplicated')
+              router.push(`/workouts/mine/${copy.id}`)
+            })
+          }}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground disabled:opacity-40"
           aria-label="Duplicate workout"
         >
           <Copy className="h-4 w-4" />

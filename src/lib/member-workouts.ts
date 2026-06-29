@@ -128,6 +128,47 @@ export async function remixWorkout(memberId: string, sourceWorkoutId: string) {
   return newWorkout
 }
 
+// clones a member's own workout into their personal library
+export async function duplicateMemberWorkout(memberId: string, workoutId: string) {
+  const source = await getMemberWorkout(memberId, workoutId)
+  if (!source) throw new Error('Workout not found')
+
+  const [newWorkout] = await db
+    .insert(memberWorkouts)
+    .values({
+      tenantId: APP_CONFIG.tenantId,
+      memberId,
+      sourceWorkoutId: source.sourceWorkoutId ?? undefined,
+      title: `${source.title} (copy)`,
+      category: source.category ?? undefined,
+      level: source.level ?? undefined,
+      durationMinutes: source.durationMinutes ?? undefined,
+      tags: (source.tags as string[] | null) ?? [],
+      summary: source.summary ?? undefined,
+      structure: source.structure as Record<string, unknown>,
+    } satisfies NewMemberWorkout)
+    .returning()
+
+  if (!newWorkout) throw new Error('Failed to create workout')
+
+  if (source.exercises.length > 0) {
+    const exerciseRows: NewMemberWorkoutExercise[] = source.exercises.map(ex => ({
+      memberWorkoutId: newWorkout.id,
+      exerciseId: ex.exerciseId ?? undefined,
+      exerciseName: ex.exerciseName,
+      dayIndex: ex.dayIndex,
+      orderIndex: ex.orderIndex,
+      targetSets: ex.targetSets ?? undefined,
+      targetReps: ex.targetReps ?? undefined,
+      targetWeightKg: ex.targetWeightKg ?? undefined,
+      notes: ex.notes ?? undefined,
+    }))
+    await db.insert(memberWorkoutExercises).values(exerciseRows)
+  }
+
+  return newWorkout
+}
+
 export async function createMemberWorkout(
   memberId: string,
   data: {

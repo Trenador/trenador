@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bookmark, CalendarDays, Check, Clock, Gauge, MoveHorizontal, Plus, Search, SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Bookmark, CalendarDays, Clock, Gauge, MoveHorizontal, Plus, Search, SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn, getInitials } from '@/lib/utils'
 import { remixWorkoutAction } from '@/actions/workouts'
 import {
@@ -60,7 +61,6 @@ function formatDuration(min: number | null) {
 
 function WorkoutCard({ workout }: { workout: Workout }) {
   const router = useRouter()
-  const [remixed, setRemixed] = useState(false)
   const [isPending, startTransition] = useTransition()
   const img = workout.bannerUrl ?? (workout.category ? CATEGORY_IMAGE[workout.category] : undefined)
   const banner = workout.category ? (CATEGORY_BANNER[workout.category] ?? 'bg-muted') : 'bg-muted'
@@ -70,8 +70,8 @@ function WorkoutCard({ workout }: { workout: Workout }) {
     e.stopPropagation()
     startTransition(async () => {
       const copy = await remixWorkoutAction(workout.id)
-      setRemixed(true)
-      setTimeout(() => router.push(`/workouts/mine/${copy.id}`), 500)
+      toast.success('Added to your plan')
+      router.push(`/workouts/mine/${copy.id}`)
     })
   }
 
@@ -162,11 +162,11 @@ function WorkoutCard({ workout }: { workout: Workout }) {
         <button
           type="button"
           onClick={handleRemix}
-          disabled={isPending || remixed}
+          disabled={isPending}
           className="label-mono flex w-full items-center justify-center gap-1 rounded-full border border-border bg-background px-2.5 py-1.5 normal-case tracking-[0.15em] text-foreground transition-colors hover:bg-foreground/[0.04] disabled:opacity-60"
         >
-          {remixed ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-          {remixed ? 'Added!' : isPending ? 'Adding…' : 'Remix'}
+          <Plus className="h-3 w-3" />
+          {isPending ? 'Adding…' : 'Remix'}
         </button>
       </div>
     </Link>

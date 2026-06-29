@@ -11,6 +11,7 @@ import {
   getMemberWorkouts,
   getMemberWorkout,
   remixWorkout,
+  duplicateMemberWorkout,
   createMemberWorkout,
   updateMemberWorkout,
   updateMemberWorkoutStructure,
@@ -57,6 +58,14 @@ export async function remixWorkoutAction(sourceWorkoutId: string) {
   assertActiveSubscription(member)
 
   const workout = await remixWorkout(member.id, sourceWorkoutId)
+  revalidatePath('/workouts/mine')
+  return workout
+}
+
+export async function duplicateMyWorkoutAction(workoutId: string) {
+  const member = await getAuthenticatedMember()
+  assertActiveSubscription(member)
+  const workout = await duplicateMemberWorkout(member.id, workoutId)
   revalidatePath('/workouts/mine')
   return workout
 }
