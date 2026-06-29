@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { FloatingField } from '@/components/ui/floating-field'
 import { OAuthButtons } from '@/components/shared/oauth-buttons'
@@ -67,7 +68,8 @@ export default function LoginPage() {
     )
   }
 
-  const formContent = (
+  // Desktop-only form content
+  const desktopFormContent = (
     <>
       <form onSubmit={handleLogin} className="space-y-3">
         <FloatingField
@@ -79,7 +81,6 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-
         <div>
           <FloatingField
             id="password"
@@ -98,9 +99,7 @@ export default function LoginPage() {
             Forgot password?
           </button>
         </div>
-
         {error && <p className="text-sm text-destructive">{error}</p>}
-
         <button
           type="submit"
           disabled={loading}
@@ -109,20 +108,17 @@ export default function LoginPage() {
           {loading ? 'Signing in…' : 'Log in'}
         </button>
       </form>
-
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
         <Link href="/signup" className="font-medium text-primary hover:underline">
           Sign up
         </Link>
       </p>
-
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
         <span className="text-xs uppercase tracking-wider text-muted-foreground">Or</span>
         <div className="h-px flex-1 bg-border" />
       </div>
-
       <OAuthButtons />
     </>
   )
@@ -174,8 +170,64 @@ export default function LoginPage() {
               </div>
             ) : (
               <>
-                <h1 className="text-2xl font-bold tracking-tight">Today is your day.</h1>
-                {formContent}
+                {/* Back arrow + centered title */}
+                <div className="relative flex h-10 items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setMobileView('choose')}
+                    className="absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <span className="text-base font-medium">Log in</span>
+                </div>
+
+                {/* Mobile login form — "Continue" button, no cross-link */}
+                <form onSubmit={handleLogin} className="space-y-3">
+                  <FloatingField
+                    id="m-email"
+                    label="Email address"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <div>
+                    <FloatingField
+                      id="m-password"
+                      label="Password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="mt-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  {error && <p className="text-sm text-destructive">{error}</p>}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="mt-2 h-12 w-full rounded-md bg-foreground text-base font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    {loading ? 'Signing in…' : 'Continue'}
+                  </button>
+                </form>
+
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs uppercase tracking-wider text-muted-foreground">Or</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+
+                <OAuthButtons label="Continue with Google" />
               </>
             )}
           </div>
@@ -197,7 +249,7 @@ export default function LoginPage() {
               <h1 className="text-4xl font-bold tracking-tight">Today is your day.</h1>
               <p className="mt-2 text-sm text-muted-foreground">Access top workouts by elite coaches.</p>
             </div>
-            {formContent}
+            {desktopFormContent}
           </div>
           <p className="absolute bottom-6 left-0 right-0 text-center text-xs text-muted-foreground lg:bottom-8">
             © 2026 All rights reserved.

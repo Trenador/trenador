@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { FloatingField } from '@/components/ui/floating-field'
 import { OAuthButtons } from '@/components/shared/oauth-buttons'
@@ -44,7 +45,8 @@ export default function SignupPage() {
     )
   }
 
-  const formContent = (
+  // Desktop-only form content
+  const desktopFormContent = (
     <>
       <form onSubmit={handleSignup} className="space-y-3">
         <FloatingField
@@ -76,9 +78,7 @@ export default function SignupPage() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
-
         {error && <p className="text-sm text-destructive">{error}</p>}
-
         <button
           type="submit"
           disabled={loading}
@@ -87,20 +87,17 @@ export default function SignupPage() {
           {loading ? 'Creating account…' : 'Sign up'}
         </button>
       </form>
-
       <p className="text-center text-sm text-muted-foreground">
         Have an account?{' '}
         <Link href="/login" className="font-medium text-primary hover:underline">
           Log in
         </Link>
       </p>
-
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-border" />
         <span className="text-xs uppercase tracking-wider text-muted-foreground">Or</span>
         <div className="h-px flex-1 bg-border" />
       </div>
-
       <OAuthButtons label="Sign up with Google" />
     </>
   )
@@ -124,8 +121,67 @@ export default function SignupPage() {
 
         <div className="relative z-10 rounded-t-[2.5rem] bg-card px-6 pb-10 pt-6 text-card-foreground shadow-[0_-20px_60px_-20px_rgba(0,0,0,0.6)]">
           <div className="mx-auto w-full max-w-sm space-y-5">
-            <h1 className="text-2xl font-bold tracking-tight">Get Started Now</h1>
-            {formContent}
+            {/* Back arrow + centered title */}
+            <div className="relative flex h-10 items-center justify-center">
+              <Link
+                href="/login"
+                className="absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Link>
+              <span className="text-base font-medium">Sign up</span>
+            </div>
+
+            <h2 className="text-2xl font-bold tracking-tight">Create your account</h2>
+
+            {/* Mobile signup form — "Continue" button, no cross-link */}
+            <form onSubmit={handleSignup} className="space-y-3">
+              <FloatingField
+                id="m-email"
+                label="Email address"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <FloatingField
+                id="m-password"
+                label="Password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <FloatingField
+                id="m-confirmPassword"
+                label="Confirm password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 h-12 w-full rounded-md bg-foreground text-base font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {loading ? 'Creating account…' : 'Continue'}
+              </button>
+            </form>
+
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">Or</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+
+            <OAuthButtons label="Sign up with Google" />
           </div>
         </div>
       </div>
@@ -145,7 +201,7 @@ export default function SignupPage() {
               <h1 className="text-4xl font-bold tracking-tight">Get Started Now</h1>
               <p className="mt-2 text-sm text-muted-foreground">Create your account to get started.</p>
             </div>
-            {formContent}
+            {desktopFormContent}
           </div>
           <p className="absolute bottom-6 left-0 right-0 text-center text-xs text-muted-foreground lg:bottom-8">
             © 2026 All rights reserved.
