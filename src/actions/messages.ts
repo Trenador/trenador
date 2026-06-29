@@ -137,6 +137,25 @@ export async function sendCoachReply(memberId: string, content: string) {
     )
 }
 
+export async function pinCoachMessageAction(messageId: string, pin: boolean) {
+  const member = await getAuthenticatedMember()
+  await db
+    .update(coachMessages)
+    .set({ pinnedAt: pin ? new Date() : null })
+    .where(and(
+      eq(coachMessages.id, messageId),
+      eq(coachMessages.memberId, member.id),
+    ))
+}
+
+export async function deleteCoachConversationAction() {
+  const member = await getAuthenticatedMember()
+
+  await db
+    .delete(coachMessages)
+    .where(eq(coachMessages.memberId, member.id))
+}
+
 export async function markMemberMessagesRead(memberId: string) {
   await requireAdmin()
 

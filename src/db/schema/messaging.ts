@@ -11,6 +11,7 @@ export const coachMessages = pgTable('coach_messages', {
   senderCoachId: uuid('sender_coach_id').references(() => coaches.id),
   content: text('content').notNull(),
   readAt: timestamp('read_at', { withTimezone: true }),
+  pinnedAt: timestamp('pinned_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

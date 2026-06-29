@@ -48,6 +48,7 @@ export function AdminConversationView({ memberId, initialMessages }: Props) {
       senderCoachId: null,
       content,
       readAt: null,
+      pinnedAt: null,
       createdAt: new Date(),
     }
     setMessages((prev) => [...prev, optimistic])

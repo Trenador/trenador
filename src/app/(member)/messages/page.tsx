@@ -5,6 +5,7 @@ import { getAuthenticatedMember } from '@/actions/_auth'
 import { CoachConversation } from '@/components/messages/coach-conversation'
 import { requireActiveSubscription } from '@/lib/subscription'
 import { getOrAssignCoach } from '@/lib/coaches'
+import { AdvisorHeaderActions } from './advisor-header-actions'
 import MessagesLoading from './loading'
 
 export default function MessagesPage() {
@@ -31,6 +32,9 @@ async function MessagesContent() {
         <OpenSidebarButton />
         <span className="block h-1.5 w-1.5 rounded-full bg-emerald-500" />
         <span className="label-mono normal-case tracking-[0.15em]">{headerName}</span>
+        <div className="ml-auto">
+          <AdvisorHeaderActions />
+        </div>
       </div>
       <CoachConversation initialMessages={messages} coach={coach} />
     </div>

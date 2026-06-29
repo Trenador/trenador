@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition } from 'react'
+import { useState, useEffect, useRef, useTransition, useOptimistic } from 'react'
+import { Pin } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { messageTimestamp } from '@/lib/format-date'
 import { Composer } from '@/components/chat/composer'
-import { sendCoachMessage, markCoachMessagesRead } from '@/actions/messages'
+import { sendCoachMessage, markCoachMessagesRead, pinCoachMessageAction } from '@/actions/messages'
 import type { CoachMessage } from '@/db/schema'
 
 type CoachInfo = {
@@ -17,9 +18,7 @@ type Props = {
   coach: CoachInfo | null
 }
 
-
-function CoachAvatar({ coach, size = 8 }: { coach: CoachInfo | null; size?: number }) {
-  const px = size * 4
+function CoachAvatar({ coach }: { coach: CoachInfo | null }) {
   if (coach?.photoUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -42,6 +41,11 @@ export function CoachConversation({ initialMessages, coach }: Props) {
   const [messages, setMessages] = useState(initialMessages)
   const [isPending, startTransition] = useTransition()
 
+  // optimistic pin state: messageId → pinnedAt Date | null
+  const [optimisticPins, setOptimisticPins] = useOptimistic<Map<string, Date | null>>(
+    new Map(initialMessages.filter(m => m.pinnedAt).map(m => [m.id, m.pinnedAt as Date]))
+  )
+
   const firstName = coach?.displayName.split(' ')[0] ?? 'your advisor'
 
   useEffect(() => {
@@ -62,10 +66,25 @@ export function CoachConversation({ initialMessages, coach }: Props) {
       senderCoachId: null,
       content,
       readAt: null,
+      pinnedAt: null,
       createdAt: new Date(),
     }
     setMessages(prev => [...prev, optimistic])
     startTransition(async () => { await sendCoachMessage(content) })
+  }
+
+  function handlePinMessage(msg: CoachMessage) {
+    const isCurrentlyPinned = optimisticPins.has(msg.id)
+    const pin = !isCurrentlyPinned
+    startTransition(async () => {
+      setOptimisticPins(prev => {
+        const next = new Map(prev)
+        if (pin) next.set(msg.id, new Date())
+        else next.delete(msg.id)
+        return next
+      })
+      await pinCoachMessageAction(msg.id, pin)
+    })
   }
 
   return (
@@ -88,6 +107,7 @@ export function CoachConversation({ initialMessages, coach }: Props) {
           {messages.map(msg => {
             const isCoach = msg.senderRole === 'coach'
             const ts = messageTimestamp(msg.createdAt)
+            const isPinned = optimisticPins.has(msg.id)
 
             if (isCoach) {
               return (
@@ -99,7 +119,20 @@ export function CoachConversation({ initialMessages, coach }: Props) {
                     <p className="text-[15px] leading-relaxed text-foreground">
                       {msg.content}
                     </p>
-                    <span className="label-mono normal-case tracking-[0.1em]">{ts}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="label-mono normal-case tracking-[0.1em]">{ts}</span>
+                      <button
+                        type="button"
+                        onClick={() => handlePinMessage(msg)}
+                        aria-label={isPinned ? 'Unpin message' : 'Pin message'}
+                        className={cn(
+                          'inline-flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-foreground/[0.06]',
+                          isPinned ? 'text-accent hover:text-accent' : 'text-muted-foreground hover:text-foreground',
+                        )}
+                      >
+                        <Pin className={cn('h-3 w-3', isPinned && 'fill-current')} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               )
