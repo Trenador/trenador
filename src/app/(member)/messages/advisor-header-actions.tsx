@@ -1,10 +1,11 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SquarePen, MoreVertical, Pin, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { deleteCoachConversationAction } from '@/actions/messages'
 import {
   DropdownMenu,
@@ -16,6 +17,12 @@ import {
 export function AdvisorHeaderActions() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [pinned, setPinned] = useState(false)
+
+  function handlePin() {
+    setPinned(p => !p)
+    toast.success(pinned ? 'Chat unpinned' : 'Chat pinned')
+  }
 
   function handleDelete() {
     startTransition(async () => {
@@ -42,8 +49,9 @@ export function AdvisorHeaderActions() {
           <MoreVertical className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem disabled>
-            <Pin className="h-4 w-4" /> Pin chat
+          <DropdownMenuItem onClick={handlePin}>
+            <Pin className={cn('h-4 w-4', pinned && 'fill-current text-accent')} />
+            {pinned ? 'Unpin chat' : 'Pin chat'}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleDelete} disabled={isPending}>
             <Trash2 className="h-4 w-4" /> Delete chat

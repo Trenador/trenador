@@ -107,6 +107,7 @@ export function CoachConversation({ initialMessages, coach }: Props) {
 
   const firstName = coach?.displayName.split(' ')[0] ?? 'your advisor'
   const [openerTs, setOpenerTs] = useState<string | null>(null)
+  const [openerPinned, setOpenerPinned] = useState(false)
 
   useEffect(() => {
     setOpenerTs(messageTimestamp(new Date()))
@@ -171,7 +172,20 @@ export function CoachConversation({ initialMessages, coach }: Props) {
                 Hi — {firstName} here, your advisor. How can I help you today?
               </p>
               {openerTs && (
-                <span className="label-mono normal-case tracking-[0.1em]">{openerTs}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="label-mono normal-case tracking-[0.1em]">{openerTs}</span>
+                  <button
+                    type="button"
+                    onClick={() => setOpenerPinned(p => !p)}
+                    aria-label={openerPinned ? 'Unpin message' : 'Pin message'}
+                    className={cn(
+                      'inline-flex h-5 w-5 items-center justify-center rounded transition-colors hover:bg-foreground/[0.06]',
+                      openerPinned ? 'text-accent hover:text-accent' : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    <Pin className={cn('h-3 w-3', openerPinned && 'fill-current')} />
+                  </button>
+                </div>
               )}
             </div>
           </div>
