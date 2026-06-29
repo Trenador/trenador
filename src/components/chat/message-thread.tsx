@@ -34,6 +34,7 @@ type Props = {
   initialMessage: string | undefined
   initialAttachments?: ComposerAttachment[]
   initialPinnedAt?: Date | null
+  coachName?: string
 }
 
 type SeedPrompt = {
@@ -127,7 +128,7 @@ function ScrollToBottomButton() {
   )
 }
 
-export function MessageThread({ threadId, initialMessages, initialMessage, initialAttachments, initialPinnedAt }: Props) {
+export function MessageThread({ threadId, initialMessages, initialMessage, initialAttachments, initialPinnedAt, coachName }: Props) {
   const router = useRouter()
   const hasSentInitial = useRef(false)
   const [isPinned, setIsPinned] = useState(!!initialPinnedAt)
@@ -261,20 +262,27 @@ export function MessageThread({ threadId, initialMessages, initialMessage, initi
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-background">
       {/* 60px header */}
-      <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-border/70 pl-2 pr-3 lg:pl-5">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('shell:open-sidebar'))}
-            aria-label="Open sidebar"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground lg:hidden"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
-          <span className="block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          <span className="label-mono">AI</span>
+      <div className="relative flex h-[60px] shrink-0 items-center border-b border-border/70 pl-2 pr-3 lg:pl-5">
+        {/* Left: hamburger (mobile only) */}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('shell:open-sidebar'))}
+          aria-label="Open sidebar"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground lg:hidden"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+
+        {/* Center: online dot + coach/AI label */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+          <span className="block h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+          <span className="label-mono tracking-[0.15em]">
+            {coachName ? coachName.toUpperCase() : 'AI'}
+          </span>
         </div>
-        <div className="flex items-center gap-0.5">
+
+        {/* Right: actions */}
+        <div className="ml-auto flex items-center gap-0.5">
           <Link
             href="/chat"
             aria-label="New chat"
