@@ -13,6 +13,7 @@ import { adminGetCoaches } from '@/actions/admin'
 
 type View = 'inbox' | 'users' | 'workouts' | 'coaches'
 type Coach = { id: string; displayName: string; isAuthor?: boolean }
+export type ThreadMember = { id: string; displayName: string; photoUrl: string | null; assignedCoachId: string | null }
 
 const TABS: { key: View; label: string; icon: React.ElementType }[] = [
   { key: 'inbox', label: 'Inbox', icon: Inbox },
@@ -27,18 +28,21 @@ export function AdminDashboard() {
   const view = (searchParams.get('view') ?? 'inbox') as View
   const initialThreadId = searchParams.get('t')
   const [coaches, setCoaches] = useState<Coach[]>([])
+  const [pendingThread, setPendingThread] = useState<ThreadMember | null>(null)
 
   const setView = (v: View) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('view', v)
     params.delete('t')
+    setPendingThread(null)
     router.push(`/admin?${params.toString()}`)
   }
 
-  const openInboxThread = (memberId: string) => {
+  const openInboxThread = (member: ThreadMember) => {
+    setPendingThread(member)
     const params = new URLSearchParams(searchParams.toString())
     params.set('view', 'inbox')
-    params.set('t', memberId)
+    params.set('t', member.id)
     router.push(`/admin?${params.toString()}`)
   }
 
@@ -98,7 +102,7 @@ export function AdminDashboard() {
 
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-hidden">
-        {view === 'inbox' && <AdminInbox coaches={coaches} initialThreadId={initialThreadId} />}
+        {view === 'inbox' && <AdminInbox coaches={coaches} initialThreadId={initialThreadId} pendingThread={pendingThread} />}
         {view === 'users' && <AdminUsers coaches={coaches} onMessage={openInboxThread} />}
         {view === 'workouts' && <AdminWorkouts coaches={coaches} />}
         {view === 'coaches' && <AdminCoaches onCoachesChange={setCoaches} />}

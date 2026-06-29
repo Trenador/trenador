@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn, getInitials } from '@/lib/utils'
 import { inboxBucket, inboxRelative } from '@/lib/format-date'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
+import type { ThreadMember } from './admin-dashboard'
 import { Mail, MailOpen, Pencil, Trash2, Check, X, Send } from 'lucide-react'
 import { MobileFilterButton, MobileFilterSheet, type FilterSection } from './admin-filter-sheet'
 import {
@@ -40,7 +41,7 @@ type Message = {
 type Coach = { id: string; displayName: string }
 
 
-export function AdminInbox({ coaches, initialThreadId }: { coaches: Coach[]; initialThreadId?: string | null }) {
+export function AdminInbox({ coaches, initialThreadId, pendingThread }: { coaches: Coach[]; initialThreadId?: string | null; pendingThread?: ThreadMember | null }) {
   const [conversations, setConversations] = useState<InboxItem[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
@@ -59,9 +60,35 @@ export function AdminInbox({ coaches, initialThreadId }: { coaches: Coach[]; ini
   const scrollEndRef = useRef<HTMLDivElement | null>(null)
   const replyRef = useRef<HTMLTextAreaElement>(null)
 
+  // When coming from the Users page, open the panel immediately with data already in client state
+  useEffect(() => {
+    if (!pendingThread) return
+    const stub: InboxItem = {
+      memberId: pendingThread.id,
+      displayName: pendingThread.displayName,
+      photoUrl: pendingThread.photoUrl,
+      assignedCoachId: pendingThread.assignedCoachId,
+      lastMessageText: '',
+      lastMessageFrom: 'coach',
+      lastMessageAt: new Date().toISOString(),
+      unreadCount: 0,
+    }
+    setConversations((prev) => prev.some((c) => c.memberId === pendingThread.id) ? prev : [stub, ...prev])
+    setActiveThreadId(pendingThread.id)
+    adminGetConversation(pendingThread.id).then((msgs) => setMessages(msgs as Message[]))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const load = useCallback(async () => {
     const data = await adminGetInbox()
-    setConversations(data)
+    setConversations((prev) => {
+      const merged = [...data] as InboxItem[]
+      // keep any stub that isn't in the real data yet
+      for (const stub of prev) {
+        if (!merged.some((c) => c.memberId === stub.memberId)) merged.unshift(stub)
+      }
+      return merged
+    })
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -83,32 +110,13 @@ export function AdminInbox({ coaches, initialThreadId }: { coaches: Coach[]; ini
   // auto-scroll to bottom of thread
   useEffect(() => { scrollEndRef.current?.scrollIntoView({ block: 'end' }) }, [activeThreadId, messages.length])
 
-  // open initial thread from URL param once conversations load (or synthesize stub for new threads)
+  // URL deep-link: open thread after inbox data loads (e.g. page refresh with ?t=...)
   useEffect(() => {
-    if (!initialThreadId || activeThreadId) return
+    if (!initialThreadId || activeThreadId || conversations.length === 0) return
     const conv = conversations.find((c) => c.memberId === initialThreadId)
-    if (conv) {
-      openThread(conv.memberId, conv.lastMessageAt)
-    } else if (conversations.length >= 0) {
-      // member has no messages yet — fetch their info and create a stub conversation
-      adminGetMemberBasic(initialThreadId).then((member) => {
-        if (!member) return
-        const stub: InboxItem = {
-          memberId: member.id,
-          displayName: member.displayName,
-          photoUrl: member.photoUrl,
-          assignedCoachId: member.assignedCoachId,
-          lastMessageText: '',
-          lastMessageFrom: 'coach',
-          lastMessageAt: new Date().toISOString(),
-          unreadCount: 0,
-        }
-        setConversations((prev) => prev.some((c) => c.memberId === member.id) ? prev : [stub, ...prev])
-        setActiveThreadId(member.id)
-      })
-    }
+    if (conv) openThread(conv.memberId, conv.lastMessageAt)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialThreadId])
+  }, [initialThreadId, conversations.length])
 
   // mark thread read when opened
   const openThread = useCallback((memberId: string, lastAt: string) => {

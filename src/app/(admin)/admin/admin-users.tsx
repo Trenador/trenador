@@ -5,7 +5,9 @@ import { cn, getInitials } from '@/lib/utils'
 import { fmtLongDate, relativeAge } from '@/lib/format-date'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { Mail, MessageSquare, Plus, UserPlus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { adminGetMembers, adminAssignCoach, adminResendInvite, adminInviteUser } from '@/actions/admin'
+import type { ThreadMember } from './admin-dashboard'
 
 type Member = {
   id: string
@@ -32,7 +34,7 @@ function splitName(displayName: string) {
   return { firstName: parts[0] ?? '', lastName: parts.slice(1).join(' ') }
 }
 
-export function AdminUsers({ coaches, onMessage }: { coaches: Coach[]; onMessage?: (memberId: string) => void }) {
+export function AdminUsers({ coaches, onMessage }: { coaches: Coach[]; onMessage?: (member: ThreadMember) => void }) {
   const [rows, setRows] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
@@ -171,13 +173,14 @@ export function AdminUsers({ coaches, onMessage }: { coaches: Coach[]; onMessage
                           {coaches.map((c) => <option key={c.id} value={c.id}>{c.displayName}</option>)}
                         </select>
                       </div>
-                      <button
-                        onClick={() => onMessage?.(r.id)}
+                      <Button
+                        size="icon-sm"
+                        variant="outline"
                         title="Open conversation"
-                        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+                        onClick={() => onMessage?.({ id: r.id, displayName: r.displayName, photoUrl: r.photoUrl, assignedCoachId: r.assignedCoachId })}
                       >
-                        <MessageSquare className="h-4 w-4" />
-                      </button>
+                        <MessageSquare className="h-3.5 w-3.5" />
+                      </Button>
                       <button
                         onClick={() => resendInvite(r)}
                         disabled={!r.email || resendingId === r.id}
@@ -236,13 +239,14 @@ export function AdminUsers({ coaches, onMessage }: { coaches: Coach[]; onMessage
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => onMessage?.(r.id)}
+                          <Button
+                            size="icon-sm"
+                            variant="outline"
                             title="Open conversation"
-                            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                            onClick={() => onMessage?.({ id: r.id, displayName: r.displayName, photoUrl: r.photoUrl, assignedCoachId: r.assignedCoachId })}
                           >
-                            <MessageSquare className="h-4 w-4" />
-                          </button>
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </Button>
                           <button
                             onClick={() => resendInvite(r)}
                             disabled={!r.email || resendingId === r.id}
