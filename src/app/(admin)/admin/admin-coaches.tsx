@@ -47,6 +47,8 @@ type DraftCoach = {
 
 const SPECIALTIES = ['Strength', 'Hypertrophy', 'Conditioning', 'Mobility', 'Nutrition', 'Recovery', 'Powerlifting', 'Olympic Lifting', 'Endurance']
 
+const US_MAJOR_CITIES = ["New York, NY","Los Angeles, CA","Chicago, IL","Houston, TX","Phoenix, AZ","Philadelphia, PA","San Antonio, TX","San Diego, CA","Dallas, TX","Austin, TX","Jacksonville, FL","San Jose, CA","Fort Worth, TX","Columbus, OH","Indianapolis, IN","Charlotte, NC","San Francisco, CA","Seattle, WA","Denver, CO","Washington, DC","Nashville, TN","Oklahoma City, OK","El Paso, TX","Boston, MA","Portland, OR","Las Vegas, NV","Detroit, MI","Memphis, TN","Louisville, KY","Baltimore, MD","Milwaukee, WI","Albuquerque, NM","Tucson, AZ","Fresno, CA","Sacramento, CA","Mesa, AZ","Kansas City, MO","Atlanta, GA","Omaha, NE","Colorado Springs, CO","Raleigh, NC","Long Beach, CA","Virginia Beach, VA","Miami, FL","Oakland, CA","Minneapolis, MN","Tulsa, OK","Tampa, FL","New Orleans, LA","Cleveland, OH","Honolulu, HI","Orlando, FL","Pittsburgh, PA","St. Louis, MO","Cincinnati, OH","Irvine, CA","Durham, NC","Buffalo, NY","Reno, NV","Boise, ID","Fort Lauderdale, FL","Salt Lake City, UT","Birmingham, AL","Grand Rapids, MI","Tallahassee, FL","Knoxville, TN","Providence, RI"]
+
 function slugify(s: string): string {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || `coach-${Date.now()}`
 }
@@ -358,10 +360,15 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
             </div>
 
             {/* Coach sign-in email */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Coach sign-in email</label>
-              <p className="text-[11px] text-muted-foreground">Auth account for this coach. Leave blank to keep existing link.</p>
-              <input value={draft.signInEmail} onChange={(e) => setDraft({ ...draft, signInEmail: e.target.value })} placeholder="coach@example.com" type="email" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+            <div className="space-y-1.5 rounded-lg border border-border/60 px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Coach sign-in email</label>
+                {editing?.signInEmail && (
+                  <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600">Linked</span>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">Email of the auth account this coach signs in with. Leave blank to keep the existing link; enter a single space to clear it.</p>
+              <input value={draft.signInEmail} onChange={(e) => setDraft({ ...draft, signInEmail: e.target.value })} placeholder={editing?.signInEmail ? 'Already linked — type new email to change' : 'coach@example.com'} type="email" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
             </div>
 
             {/* Available for new users */}
@@ -388,7 +395,10 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">City</label>
-                <input value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} placeholder="Miami" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <input list="us-major-cities" value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} placeholder="Start typing a city…" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                <datalist id="us-major-cities">
+                  {US_MAJOR_CITIES.map((c) => <option key={c} value={c} />)}
+                </datalist>
               </div>
             </div>
 
@@ -401,7 +411,7 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
             {/* Headline */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Headline</label>
-              <input value={draft.headline} onChange={(e) => setDraft({ ...draft, headline: e.target.value })} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              <textarea rows={2} value={draft.headline} onChange={(e) => setDraft({ ...draft, headline: e.target.value })} className="w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" />
             </div>
 
             {/* Bio */}
@@ -444,11 +454,16 @@ export function AdminCoaches({ onCoachesChange }: { onCoachesChange?: (coaches: 
                     <ImageIcon className="h-5 w-5" />
                   )}
                 </div>
-                <div>
+                <div className="flex flex-col gap-1.5">
                   <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 transition-colors">
-                    {uploading ? 'Uploading…' : 'Upload image'}
+                    {uploading ? 'Uploading…' : draft.photoUrl ? 'Replace' : 'Upload image'}
                   </button>
-                  <p className="mt-1 text-[11px] text-muted-foreground">PNG / JPG up to 5 MB.</p>
+                  {draft.photoUrl && (
+                    <button type="button" onClick={() => setDraft((d) => ({ ...d, photoUrl: '' }))} className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                      <X className="h-3.5 w-3.5" /> Remove
+                    </button>
+                  )}
+                  <p className="text-[11px] text-muted-foreground">PNG / JPG up to 5 MB.</p>
                 </div>
               </div>
               <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handlePhotoSelect} />
