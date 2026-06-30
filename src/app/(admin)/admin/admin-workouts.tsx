@@ -312,7 +312,7 @@ export function AdminWorkouts({ coaches }: { coaches: Coach[] }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium">{w.title}</div>
-                      <div className="truncate text-[11px] text-muted-foreground">{w.category} · {w.level} · {w.durationMinutes ? `${w.durationMinutes}min` : '—'}</div>
+                      <div className="truncate text-[11px] text-muted-foreground">{w.category} · {w.level} · {w.durationMinutes ? `${w.durationMinutes} min` : '—'}</div>
                     </div>
                     <StatusPill published={!!w.publishedAt} />
                   </div>
@@ -357,7 +357,7 @@ export function AdminWorkouts({ coaches }: { coaches: Coach[] }) {
                       <td className="px-5 py-3"><StatusPill published={!!w.publishedAt} /></td>
                       <td className="px-5 py-3 text-muted-foreground">{w.category ?? '—'}</td>
                       <td className="px-5 py-3 text-muted-foreground">{w.level ?? '—'}</td>
-                      <td className="px-5 py-3 text-muted-foreground">{w.durationMinutes ? `${w.durationMinutes}min` : '—'}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{w.durationMinutes ? `${w.durationMinutes} min` : '—'}</td>
                       <td className="px-5 py-3 text-muted-foreground">{coach?.displayName ?? '—'}</td>
                       <td className="px-5 py-3">
                         <div className="flex shrink-0 items-center justify-end gap-1">
