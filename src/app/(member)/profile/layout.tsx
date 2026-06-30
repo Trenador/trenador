@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { getThreads } from '@/actions/chat'
 import { ChatShell } from '@/components/chat/chat-shell'
 import { getAuthenticatedMember } from '@/actions/_auth'
+import { requireActiveSubscription } from '@/lib/subscription'
 import { signAvatarUrl } from '@/lib/avatar'
 
 function AppShellSkeleton() {
@@ -22,6 +23,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 }
 
 async function ProfileLayoutContent({ children }: { children: React.ReactNode }) {
+  await requireActiveSubscription()
   const [threads, member] = await Promise.all([getThreads(), getAuthenticatedMember()])
   const avatarUrl = await signAvatarUrl(member.photoUrl ?? null)
 
