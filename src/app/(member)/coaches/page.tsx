@@ -3,7 +3,6 @@ import { coaches } from '@/db/schema'
 import { eq, asc } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
 import { APP_CONFIG } from '@/lib/config'
-import { requireActiveSubscription } from '@/lib/subscription'
 import { CoachesBrowser } from './coaches-browser'
 
 async function getActiveCoaches() {
@@ -30,7 +29,6 @@ async function getActiveCoaches() {
 }
 
 export default async function CoachesPage() {
-  await requireActiveSubscription()
   const rows = await getActiveCoaches()
   const available = rows.filter(c => c.active)
   return <CoachesBrowser coaches={available} />
