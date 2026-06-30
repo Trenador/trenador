@@ -246,7 +246,7 @@ export default function LoginPage() {
           />
           <div className="w-full max-w-sm space-y-6">
             <div className="space-y-1">
-              <h1 className="text-4xl font-bold tracking-tight">Today is your day.</h1>
+              <h1 className="text-4xl font-bold tracking-tight">Fitness Reimagined.</h1>
               <p className="mt-2 text-sm text-muted-foreground">Access top workouts by elite coaches.</p>
             </div>
             {desktopFormContent}
