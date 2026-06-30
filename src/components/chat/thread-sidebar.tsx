@@ -237,7 +237,7 @@ export function ThreadSidebar({
       >
         {/* Header: logo + collapse */}
         <div className="flex h-[60px] items-center justify-between pl-5 pr-3">
-          <div className="w-[42%] sm:w-[60%]">
+          <div className="w-28">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/trenador-logo-mark.svg" alt="Trenador" className="h-auto w-full object-contain" />
           </div>
