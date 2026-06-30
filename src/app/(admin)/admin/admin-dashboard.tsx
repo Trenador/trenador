@@ -60,7 +60,7 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
+    <div className="admin-shell flex h-dvh w-screen flex-col overflow-hidden bg-background text-foreground">
       {/* Top bar */}
       <header className="flex h-[56px] shrink-0 items-center justify-between gap-2 px-3 sm:px-4">
         {/* Logo + ADMIN label */}
