@@ -119,6 +119,13 @@
   }
 }
 
+/* Admin: show pointer on all interactive elements */
+.admin-shell button:not(:disabled),
+.admin-shell a,
+.admin-shell [role="button"] {
+  cursor: pointer;
+}
+
 @layer utilities {
   .font-serif {
     font-family: var(--font-serif);
