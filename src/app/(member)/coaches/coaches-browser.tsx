@@ -230,9 +230,13 @@ export function CoachesBrowser({ coaches }: { coaches: Coach[] }) {
           </div>
 
           <div className="mt-8 space-y-2">
-            {filtered.length === 0 ? (
+            {coaches.length === 0 ? (
               <div className="py-16 text-center text-sm text-muted-foreground">
-                No coaches match your filters.
+                No coaches have been added yet.
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="py-16 text-center text-sm text-muted-foreground">
+                No coaches match your search.
               </div>
             ) : (
               filtered.map(coach => <CoachCard key={coach.id} coach={coach} />)

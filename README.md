@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trenador
 
-## Getting Started
+AI fitness coaching web app for PowerhouseSoFlo (Powerhouse Gym — Miami & Fort Lauderdale). Members get an AI coach, the gym's workout library, a personal builder, and direct messaging with human coaches — all behind a 7-day free trial subscription.
 
-First, run the development server:
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript (strict) |
+| UI | React 19, Tailwind CSS v4, shadcn |
+| Database | Supabase (Postgres + Auth + Storage) |
+| ORM | Drizzle |
+| AI | Anthropic Claude (Sonnet 4.6 for chat, Haiku 4.5 for titles) |
+| Payments | Stripe |
+| Rate limiting | Upstash Redis |
+| Email | Resend |
+| Hosting | Vercel |
+
+## Setup
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/Trenador/trenador.git
+cd trenador
+npm install
+```
+
+### 2. Environment variables
+
+```bash
+cp .env.example .env.local
+```
+
+Fill in all values in `.env.local`. See `.env.example` for descriptions and where to get each one.
+
+### 3. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Migrations are managed with Drizzle and applied manually.
 
-## Learn More
+```bash
+# Generate a migration after schema changes
+npm run db:generate
 
-To learn more about Next.js, take a look at the following resources:
+# Inspect the database in a browser UI
+npm run db:studio
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+After generating a migration, review the SQL in `src/db/migrations/`, then apply it to your Supabase project via the SQL editor.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project docs
 
-## Deploy on Vercel
+| Doc | File |
+|---|---|
+| Product requirements | `docs/PRD.md` |
+| Architecture & data model | `docs/ARCHITECTURE.md` |
+| Design system | `docs/DESIGN_SYSTEM.md` |
+| Launch checklist | `docs/ROADMAP.md` |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+See `CLAUDE.md` for development conventions, the auth/subscription flow, and git workflow rules.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Git workflow
+
+All changes go through a PR — never commit directly to `main`. See `CLAUDE.md` §8 for the full rules.

@@ -1,5 +1,8 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { getCoachConversation } from '@/actions/messages'
+
+export const metadata: Metadata = { title: 'Messages' }
 import { OpenSidebarButton } from '@/components/chat/open-sidebar-button'
 import { getAuthenticatedMember } from '@/actions/_auth'
 import { CoachConversation } from '@/components/messages/coach-conversation'

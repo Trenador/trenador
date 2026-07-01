@@ -1,5 +1,8 @@
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { getAuthenticatedMember } from '@/actions/_auth'
+
+export const metadata: Metadata = { title: 'Chat' }
 import { ChatWelcomeClient } from './welcome-client'
 import ChatLoading from './loading'
 
