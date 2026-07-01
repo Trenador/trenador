@@ -22,7 +22,10 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Trenador',
+  title: {
+    default: 'Trenador',
+    template: '%s | Trenador',
+  },
   description: 'Your fitness concierge on tap.',
 }
 

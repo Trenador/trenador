@@ -504,7 +504,11 @@ export function WorkoutLibraryClient({ workouts }: { workouts: Workout[] }) {
           </div>
 
           <div className="mt-8">
-            {filtered.length === 0 ? (
+            {workouts.length === 0 ? (
+              <div className="py-16 text-center text-sm text-muted-foreground">
+                No workouts have been published yet.
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="py-16 text-center text-sm text-muted-foreground">
                 No workouts match your filters.
               </div>

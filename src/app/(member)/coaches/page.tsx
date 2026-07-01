@@ -1,4 +1,7 @@
+import type { Metadata } from 'next'
 import { db } from '@/db'
+
+export const metadata: Metadata = { title: 'Coaches' }
 import { coaches } from '@/db/schema'
 import { eq, asc } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
