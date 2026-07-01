@@ -1,9 +1,0 @@
-[     277ms] Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
-    at As (https://dev.trenador.com/assets/index-QbLJsLSc.js:9:31361)
-    at Cb (https://dev.trenador.com/assets/index-QbLJsLSc.js:9:82834)
-    at rw (https://dev.trenador.com/assets/index-QbLJsLSc.js:9:117134)
-    at $R (https://dev.trenador.com/assets/index-QbLJsLSc.js:9:117106)
-    at BR (https://dev.trenador.com/assets/index-QbLJsLSc.js:9:116961)
-    at Jb (https://dev.trenador.com/assets/index-QbLJsLSc.js:9:112441)
-    at gw (https://dev.trenador.com/assets/index-QbLJsLSc.js:9:124618)
-    at MessagePort.F (https://dev.trenador.com/assets/index-QbLJsLSc.js:2:11124)

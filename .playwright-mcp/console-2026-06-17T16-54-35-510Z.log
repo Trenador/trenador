@@ -1,3 +1,0 @@
-[      81ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://dev.trenador.com/signup:0
-[     336ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://gjrqrqchimclkdlmruzw.supabase.co/rest/v1/admin_workouts?select=data%2Cstatus&order=created_at.desc:0
-[     350ms] [ERROR] Failed to load resource: the server responded with a status of 401 () @ https://gjrqrqchimclkdlmruzw.supabase.co/rest/v1/admin_coaches?select=data&order=created_at.desc:0
