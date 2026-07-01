@@ -879,7 +879,6 @@ export function MyWorkoutClient({ workout }: { workout: Workout }) {
                       })}
                     </div>
 
-                    {/* Week action bar — matches phchat: Add week | Duplicate week | Delete week */}
                     <div className="mb-3 flex items-stretch overflow-hidden rounded-lg border border-border/60 bg-background">
                       <button
                         type="button"
